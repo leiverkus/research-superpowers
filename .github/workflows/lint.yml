@@ -1,0 +1,134 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Schema, lint, and contract checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: Plugin manifest is valid JSON
+        run: |
+          python -c "import json; m = json.load(open('.claude-plugin/plugin.json')); print(f\"plugin: {m['name']} v{m['version']}\")"
+
+      - name: Marketplace manifest is valid JSON
+        run: |
+          python -c "import json; m = json.load(open('.claude-plugin/marketplace.json')); assert m['plugins'], 'no plugins listed'; print(f\"marketplace: {m['name']}, {len(m['plugins'])} plugin(s)\")"
+
+      - name: Plugin and marketplace versions match
+        run: |
+          plugin_v=$(python -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          mp_v=$(python -c "import json; m=json.load(open('.claude-plugin/marketplace.json')); print(m['plugins'][0]['version'])")
+          if [ "$plugin_v" != "$mp_v" ]; then
+            echo "::error::plugin.json version ($plugin_v) does not match marketplace.json plugin version ($mp_v)"
+            exit 1
+          fi
+          echo "both at v$plugin_v"
+
+      - name: Frontmatter schema is valid JSON
+        run: |
+          python -c "import json; json.load(open('schema/knowledge-frontmatter.schema.json'))"
+          echo "schema/knowledge-frontmatter.schema.json: valid"
+
+      - name: Schema mirror is in sync
+        run: |
+          diff -q schema/knowledge-frontmatter.schema.json \
+                  templates/research-project-template/schema/knowledge-frontmatter.schema.json
+          echo "template mirror: in sync"
+
+      - name: Wiki lint on example project
+        run: |
+          cd examples/example-project
+          python scripts/lint-wiki.py
+
+      - name: Agent contract — every agent references an existing skill
+        run: |
+          failed=0
+          for f in agents/*.md; do
+            impl=$(grep '^implements:' "$f" | awk '{print $2}')
+            if [ -z "$impl" ]; then
+              echo "::error file=$f::missing 'implements:' field"
+              failed=1
+              continue
+            fi
+            if [ ! -d "skills/$impl" ]; then
+              echo "::error file=$f::implements '$impl' but skills/$impl does not exist"
+              failed=1
+            fi
+          done
+          [ $failed -eq 0 ] && echo "all 6 agents reference valid skills"
+          exit $failed
+
+      - name: Skill frontmatter is valid YAML
+        run: |
+          python <<'PY'
+          import sys, re, pathlib, yaml
+          failed = 0
+          for path in sorted(pathlib.Path("skills").glob("*/SKILL.md")):
+              text = path.read_text(encoding="utf-8")
+              m = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+              if not m:
+                  print(f"::error file={path}::no YAML frontmatter")
+                  failed = 1
+                  continue
+              try:
+                  fm = yaml.safe_load(m.group(1))
+              except yaml.YAMLError as e:
+                  print(f"::error file={path}::invalid YAML frontmatter: {e}")
+                  failed = 1
+                  continue
+              if not fm or "name" not in fm or "description" not in fm:
+                  print(f"::error file={path}::frontmatter missing 'name' or 'description'")
+                  failed = 1
+          if not failed:
+              print("all skill frontmatter valid")
+          sys.exit(failed)
+          PY
+
+      - name: Issue templates are valid YAML
+        run: |
+          for f in .github/ISSUE_TEMPLATE/*.yml; do
+            python -c "import yaml; yaml.safe_load(open('$f'))"
+            echo "  ✓ $f"
+          done
+
+      - name: Markdown links in docs/ resolve (file refs only, anchors skipped)
+        run: |
+          python <<'PY'
+          import re, sys, pathlib
+          failed = 0
+          for doc in sorted(pathlib.Path("docs").glob("*.md")):
+              text = doc.read_text(encoding="utf-8")
+              for match in re.finditer(r"\]\(([^)\s]+)\)", text):
+                  target = match.group(1)
+                  if target.startswith(("http://", "https://", "#", "mailto:")):
+                      continue
+                  # Strip anchor fragment
+                  path = target.split("#", 1)[0]
+                  if not path:
+                      continue
+                  resolved = (doc.parent / path).resolve()
+                  if not resolved.exists():
+                      print(f"::error file={doc}::broken link: {target} → {resolved}")
+                      failed = 1
+          if not failed:
+              print("all internal doc links resolve")
+          sys.exit(failed)
+          PY
