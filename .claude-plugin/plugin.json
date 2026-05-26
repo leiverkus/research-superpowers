@@ -1,6 +1,5 @@
 {
   "name": "research-superpowers",
-  "displayName": "Research Superpowers",
   "description": "Skill-driven research workflow for Claude Code: idea → literature → ingest → analysis → draft → peer-review → publication. Methodology-aware (hermeneutic / quantitative / mixed). MCP-aware: optional dao-paper-search-mcp + dao-searxng-mcp integration for verified citations and source-class detection. Built for theology, biblical archaeology, and digital humanities.",
   "version": "0.3.0",
   "author": {
@@ -10,7 +9,6 @@
   "license": "MIT",
   "homepage": "https://github.com/leiverkus/research-superpowers",
   "repository": "https://github.com/leiverkus/research-superpowers",
-  "bugs": "https://github.com/leiverkus/research-superpowers/issues",
   "keywords": [
     "research",
     "academic-writing",
