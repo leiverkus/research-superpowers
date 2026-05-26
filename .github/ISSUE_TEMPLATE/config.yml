@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/leiverkus/research-superpowers/tree/main/docs
+    about: Installation, quickstart, tutorial, concepts, skill authoring, MCP setup.
+  - name: 💬 Question or discussion
+    url: https://github.com/leiverkus/research-superpowers/discussions
+    about: Have a question that isn't a bug or feature request? Start a discussion.

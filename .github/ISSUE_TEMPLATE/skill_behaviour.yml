@@ -1,0 +1,84 @@
+name: 🎯 Skill behaviour
+description: A skill misfires, doesn't trigger when expected, or its checklist is off.
+title: "[skill] "
+labels: ["skill-behaviour"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for issues with a specific skill — wrong checklist step, missed trigger, unclear red-flag, etc. For requests to add a new skill, use the "New skill proposal" template instead.
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill?
+      options:
+        - brainstorming-research
+        - writing-research-plan
+        - literature-review
+        - ingest-source
+        - executing-research-plan
+        - drafting-manuscript
+        - requesting-peer-review
+        - finishing-a-research-project
+        - using-research-powers
+        - wiki-lint
+        - semantic-wiki-review
+        - grant-finder
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Kind of issue
+      options:
+        - Skill didn't trigger when it should have
+        - Skill triggered when it shouldn't have
+        - Checklist step is wrong or unclear
+        - SOFT-GATE behaviour is wrong (blocked silently / didn't ask for reason / ignored the override log)
+        - Red flag is unclear or misleading
+        - Output (file, frontmatter, template) doesn't match the skill's promise
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: methodology
+    attributes:
+      label: Project methodology (from CLAUDE.md frontmatter)
+      placeholder: "hermeneutic / quantitative / mixed"
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger
+    attributes:
+      label: What did you say to trigger the skill?
+      description: Exact wording, if possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: What did the skill do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should it have done?
+      description: Reference the SKILL.md section if possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Plugin version, host (Claude Code / OpenCode), host version.
+      placeholder: "research-superpowers 0.3.0, Claude Code 2.x.x"
+    validations:
+      required: true

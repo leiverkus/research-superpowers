@@ -1,0 +1,93 @@
+name: 🐛 Bug report
+description: Something doesn't work as documented.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Before filing, please check that the behaviour you're seeing isn't documented as intentional in [`docs/concepts.md`](https://github.com/leiverkus/research-superpowers/blob/main/docs/concepts.md) (especially around SOFT-GATEs and methodology branching).
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Run `/plugin list` in Claude Code, or check `.claude-plugin/plugin.json`.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - Claude Code
+        - OpenCode
+        - Both
+        - Other (specify in details)
+    validations:
+      required: true
+
+  - type: input
+    id: host-version
+    attributes:
+      label: Host version
+      placeholder: "claude 2.x.x  or  opencode 1.x.x"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5  /  Ubuntu 24.04  /  Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what did the plugin do (or fail to do)?
+      placeholder: I invoked `ingest-source` on a PDF and …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: Quoting the docs section that describes the expected behaviour is helpful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Minimum steps to reproduce. If the issue depends on a specific PDF, please note this (you don't need to share the PDF).
+      placeholder: |
+        1. `cp -r templates/research-project-template my-project && cd my-project`
+        2. Drop X PDF into `input/bibliography/`
+        3. In Claude Code: "ingest the X PDF"
+        4. Observe: …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: From `knowledge/_meta/log.qmd`, `knowledge/_meta/gate-overrides.log`, or the Claude Code session transcript. Redact anything sensitive.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I ran `python scripts/lint-wiki.py` in the affected project and pasted any errors above.
+          required: false
+        - label: I checked the [migration guide](https://github.com/leiverkus/research-superpowers/blob/main/docs/migration-v0.2-to-v0.3.md) for v0.3.0.
+          required: false

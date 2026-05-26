@@ -1,0 +1,70 @@
+name: ✨ New skill proposal
+description: Propose a new skill for the research workflow.
+title: "[skill-proposal] "
+labels: ["enhancement", "new-skill"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Authoring a new skill is a real commitment — the criteria in [`docs/skill-authoring.md`](https://github.com/leiverkus/research-superpowers/blob/main/docs/skill-authoring.md) are intentionally restrictive ("If it's one prompt's worth of reasoning, it's not a skill"). Read that first, then file this proposal so we can discuss before you open a PR.
+
+  - type: input
+    id: name
+    attributes:
+      label: Proposed skill name
+      description: kebab-case verb-phrase or noun-phrase
+      placeholder: "rename-scientific-pdf  /  managing-research-data  /  …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: phase
+    attributes:
+      label: Where in the workflow does this fit?
+      description: Is it a new phase, a sub-skill of an existing phase, or a cross-cutting flexible skill (like `wiki-lint`)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger
+    attributes:
+      label: What would trigger it?
+      description: Concrete user phrases (one per line), and/or conditions that should auto-trigger it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: artefacts
+    attributes:
+      label: What artefacts does it produce?
+      description: File paths, frontmatter fields, BibTeX entries, etc. A skill should leave at least one verifiable artefact on disk.
+    validations:
+      required: true
+
+  - type: textarea
+    id: gate
+    attributes:
+      label: Does it have a SOFT-GATE? If yes, what's the precondition?
+      description: Optional. Many skills don't need a gate. If yours does, state the named, verifiable condition.
+
+  - type: textarea
+    id: existing
+    attributes:
+      label: Why isn't this covered by an existing skill?
+      description: If it overlaps with `ingest-source` / `executing-research-plan` / etc., explain the sharp boundary.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: criteria
+    attributes:
+      label: Criteria check (from `docs/skill-authoring.md`)
+      options:
+        - label: It is genuinely recurring (not a one-off).
+          required: true
+        - label: It has a verifiable completion criterion.
+          required: true
+        - label: It is large enough that a checklist + red-flag table would catch mistakes.
+          required: true
+        - label: It does not duplicate an existing skill's procedural content.
+          required: true

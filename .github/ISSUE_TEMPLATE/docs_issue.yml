@@ -1,0 +1,34 @@
+name: 📖 Documentation issue
+description: Broken link, unclear instruction, missing context, outdated example.
+title: "[docs] "
+labels: ["documentation"]
+body:
+  - type: input
+    id: file
+    attributes:
+      label: Which file?
+      description: Path within the repo, e.g. `docs/installation.md` or `skills/ingest-source/SKILL.md`.
+      placeholder: "docs/installation.md"
+    validations:
+      required: true
+
+  - type: input
+    id: section
+    attributes:
+      label: Which section?
+      description: Heading or line range.
+      placeholder: "## Recommended path — Step 2"
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong?
+      description: Broken link, missing prerequisite, ambiguous step, stale screenshot, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (optional)
+      description: If you'd open a PR, describe the wording you'd use.
