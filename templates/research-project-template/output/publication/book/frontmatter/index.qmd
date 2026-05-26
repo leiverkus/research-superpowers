@@ -1,7 +1,7 @@
 ---
-title: "Vorwort"
+title: "Foreword"
 ---
 
-# Vorwort {.unnumbered}
+# Foreword {.unnumbered}
 
-> [Vorwort oder Danksagung hier einfügen.]
+> [Insert foreword or acknowledgements here.]

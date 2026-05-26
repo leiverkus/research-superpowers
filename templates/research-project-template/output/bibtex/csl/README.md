@@ -1,18 +1,18 @@
-# Citation Style Language (CSL) Dateien
+# Citation Style Language (CSL) files
 
-Hier liegen die CSL-Dateien, die das Zitationsformat steuern.
+This folder contains the CSL files that control the citation format.
 
-## Enthaltene Stile
+## Included styles
 
-- `chicago-author-date-de.csl` — Chicago Manual of Style (Author-Date),
-  deutsche Anpassung. Standard für dieses Projekt.
 - `chicago-author-date.csl` — Chicago Manual of Style (Author-Date),
-  englische Originalversion.
+  English original. Default for this project.
+- `chicago-author-date-de.csl` — Chicago Manual of Style (Author-Date),
+  German adaptation.
 
-## Anderen Stil verwenden
+## Using a different style
 
-1. CSL-Datei aus dem Zotero Style Repository herunterladen:
+1. Download a CSL file from the Zotero Style Repository:
    https://www.zotero.org/styles
-2. In diesen Ordner legen.
-3. In `_quarto.yml` bzw. im Frontmatter der `.qmd`-Datei den
-   `csl:`-Pfad anpassen.
+2. Place it in this folder.
+3. Adjust the `csl:` path in `_quarto.yml` or in the frontmatter of the
+   `.qmd` file.

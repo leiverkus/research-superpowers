@@ -1,7 +1,0 @@
----
-title: "Fazit und Ausblick"
----
-
-# Fazit und Ausblick {#sec-fazit}
-
-> [Zusammenfassung, Schlussfolgerungen, offene Fragen, Ausblick.]

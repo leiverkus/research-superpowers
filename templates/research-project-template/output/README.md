@@ -1,63 +1,61 @@
-# Output-Vorlagen: Abhängigkeiten
+# Output templates: dependencies
 
-## Erforderliche Software
+## Required software
 
-### Quarto (alle Vorlagen)
+### Quarto (all templates)
 ```bash
 # macOS
 brew install quarto
 
-# Oder direkt von https://quarto.org/docs/get-started/
+# Or directly from https://quarto.org/docs/get-started/
 ```
 
-### LaTeX (für PDF-Ausgabe)
+### LaTeX (for PDF output)
 ```bash
-# Empfohlen: TinyTeX via Quarto
+# Recommended: TinyTeX via Quarto
 quarto install tinytex
 
-# Alternativ: MacTeX (vollständig, ~4 GB)
+# Alternative: MacTeX (full, ~4 GB)
 brew install --cask mactex
 ```
 
-### Fonts (für PDF mit KOMA-Script)
+### Fonts (for PDF with KOMA-Script)
 
-Die Vorlagen verwenden folgende Fonts, die ggf. installiert
-werden müssen:
+The templates use the following fonts, which may need to be installed:
 
 ```bash
-# Linux Libertine / Linux Biolinum (Fließtext)
+# Linux Libertine / Linux Biolinum (body text)
 # Download: https://libertine-fonts.org/
-# macOS: .otf-Dateien in ~/Library/Fonts/ kopieren
+# macOS: copy .otf files into ~/Library/Fonts/
 
-# Fira Code (Monospace / Code)
+# Fira Code (monospace / code)
 brew install font-fira-code
-# Oder: https://github.com/tonsky/FiraCode/releases
+# Or: https://github.com/tonsky/FiraCode/releases
 ```
 
-**Falls die Fonts nicht installiert werden sollen**, können die
-`mainfont`, `sansfont` und `monofont`-Einträge in `_quarto.yml`
-bzw. im Frontmatter der `.qmd`-Dateien entfernt oder durch
-System-Fonts ersetzt werden. Quarto verwendet dann die
-LaTeX-Standardschriften.
+**If you do not want to install the fonts**, the `mainfont`, `sansfont`,
+and `monofont` entries in `_quarto.yml` or in the frontmatter of the
+`.qmd` files can be removed or replaced with system fonts. Quarto will
+then use the LaTeX default fonts.
 
-### Python (für Lint-Skript)
+### Python (for the lint script)
 ```bash
-# PyYAML wird für lint-wiki.py benötigt
+# PyYAML is required for lint-wiki.py
 pip install pyyaml
 ```
 
-## Schnelltest
+## Quick test
 
 ```bash
-# Wiki als Website bauen
+# Build the wiki as a website
 cd knowledge && make wiki
 
-# Artikel als PDF bauen
+# Build the article as PDF
 cd output/publication/article && make pdf
 
-# Buch als HTML bauen
+# Build the book as HTML
 cd output/publication/book && make html
 
-# Präsentation als Reveal.js bauen
+# Build the presentation as Reveal.js
 cd output/presentation && make slides
 ```

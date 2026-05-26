@@ -1,20 +1,20 @@
-# Makefile für Quarto-Artikel
-# Verwendung: make pdf | make latex | make html | make docx | make all | make clean
+# Makefile for the Quarto article
+# Usage: make pdf | make latex | make html | make docx | make all | make clean
 
 QUARTO := quarto
-SOURCE := artikel.qmd
+SOURCE := article.qmd
 OUTPUT_DIR := _output
 
 .PHONY: all pdf latex html docx clean preview help
 
-## Alle Formate gleichzeitig bauen
+## Build all formats at once
 all: pdf html docx
 
 ## PDF (KOMA-Script scrartcl)
 pdf:
 	$(QUARTO) render $(SOURCE) --to pdf --output-dir $(OUTPUT_DIR)
 
-## LaTeX-Quellcode (ohne PDF-Kompilierung)
+## LaTeX source (without PDF compilation)
 latex:
 	$(QUARTO) render $(SOURCE) --to pdf --no-compile --output-dir $(OUTPUT_DIR)
 
@@ -22,27 +22,27 @@ latex:
 html:
 	$(QUARTO) render $(SOURCE) --to html --output-dir $(OUTPUT_DIR)
 
-## Word-Dokument
+## Word document
 docx:
 	$(QUARTO) render $(SOURCE) --to docx --output-dir $(OUTPUT_DIR)
 
-## Live-Vorschau im Browser (HTML)
+## Live preview in the browser (HTML)
 preview:
 	$(QUARTO) preview $(SOURCE)
 
-## Build-Artefakte entfernen
+## Remove build artefacts
 clean:
 	rm -rf $(OUTPUT_DIR)
 	rm -rf .quarto
 	rm -f *.tex *.log *.aux
 
-## Hilfe anzeigen
+## Show help
 help:
-	@echo "Verfügbare Targets:"
-	@echo "  make pdf      — PDF mit KOMA-Script (scrartcl)"
-	@echo "  make latex    — LaTeX-Quellcode (.tex)"
-	@echo "  make html     — HTML-Seite"
-	@echo "  make docx     — Word-Dokument"
-	@echo "  make all      — Alle Formate"
-	@echo "  make preview  — Live-Vorschau (HTML)"
-	@echo "  make clean    — Build-Artefakte entfernen"
+	@echo "Available targets:"
+	@echo "  make pdf      — PDF with KOMA-Script (scrartcl)"
+	@echo "  make latex    — LaTeX source (.tex)"
+	@echo "  make html     — HTML page"
+	@echo "  make docx     — Word document"
+	@echo "  make all      — All formats"
+	@echo "  make preview  — Live preview (HTML)"
+	@echo "  make clean    — Remove build artefacts"

@@ -1,0 +1,8 @@
+---
+title: "State of the field"
+---
+
+# State of the field {#sec-state-of-the-field}
+
+> [Overview of the state of research. Can be taken from synthesis pages
+> in `knowledge/synthesis/`.]

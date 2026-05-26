@@ -3,31 +3,31 @@ project:
   output-dir: _output
 
 book:
-  title: "Titel der Monographie"
-  subtitle: "Untertitel"
+  title: "Monograph title"
+  subtitle: "Subtitle"
   author:
-    - name: "Vorname Nachname"
+    - name: "Firstname Lastname"
       orcid: "0000-0000-0000-0000"
-      affiliation: "Hochschule / Institut"
-    - name: "Zweite Person"
-      affiliation: "Hochschule / Institut"
+      affiliation: "Institution / Institute"
+    - name: "Second Author"
+      affiliation: "Institution / Institute"
   date: today
-  date-format: "D. MMMM YYYY"
-  language: de
+  date-format: "D MMMM YYYY"
+  language: en
   chapters:
     - frontmatter/index.qmd
-    - text/01-einleitung.qmd
-    - text/02-forschungsstand.qmd
-    - text/03-methodik.qmd
-    - text/04-ergebnisse.qmd
-    - text/05-diskussion.qmd
-    - text/06-fazit.qmd
+    - text/01-introduction.qmd
+    - text/02-state-of-the-field.qmd
+    - text/03-methodology.qmd
+    - text/04-results.qmd
+    - text/05-discussion.qmd
+    - text/06-conclusion.qmd
     - backmatter/references.qmd
   appendices:
-    - backmatter/anhang-a.qmd
+    - backmatter/appendix-a.qmd
 
 bibliography: ../../bibtex/references.bib
-csl: ../../bibtex/csl/chicago-author-date-de.csl
+csl: ../../bibtex/csl/chicago-author-date.csl
 
 format:
   html:
@@ -35,7 +35,7 @@ format:
     toc: true
     toc-depth: 3
     number-sections: true
-    lang: de
+    lang: en
   pdf:
     documentclass: scrbook
     classoption:
@@ -52,21 +52,21 @@ format:
     toc-depth: 3
     lof: true
     lot: true
-    lang: de
+    lang: en
     include-in-header:
       - template/_preamble.tex
   docx:
     toc: true
     toc-depth: 3
     number-sections: true
-    lang: de
+    lang: en
   epub:
     toc: true
     toc-depth: 3
-    lang: de
+    lang: en
 
 crossref:
-  fig-prefix: "Abb."
+  fig-prefix: "Fig."
   tbl-prefix: "Tab."
-  sec-prefix: "Kap."
-  eq-prefix: "Gl."
+  sec-prefix: "Sect."
+  eq-prefix: "Eq."

@@ -1,0 +1,7 @@
+---
+title: "Appendix A"
+---
+
+# Appendix A: Data overview {#sec-appendix-a}
+
+> [Supplementary tables, figures, catalogues.]

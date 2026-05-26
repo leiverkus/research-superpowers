@@ -1,0 +1,7 @@
+---
+title: "Methodology"
+---
+
+# Methodology {#sec-methodology}
+
+> [Description of the methods used, data sources, analytical procedures.]

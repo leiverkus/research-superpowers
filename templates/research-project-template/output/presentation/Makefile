@@ -1,16 +1,16 @@
-# Makefile für Quarto-Präsentation
-# Verwendung: make slides | make pptx | make beamer | make beamer-latex | make handout | make all | make clean
+# Makefile for the Quarto presentation
+# Usage: make slides | make pptx | make beamer | make beamer-latex | make handout | make all | make clean
 
 QUARTO := quarto
-SOURCE := vortrag.qmd
+SOURCE := talk.qmd
 OUTPUT_DIR := _output
 
 .PHONY: all slides pptx beamer beamer-latex handout clean preview help
 
-## Alle Formate gleichzeitig bauen
+## Build all formats at once
 all: slides pptx beamer handout
 
-## Reveal.js HTML-Slides (Standardformat für Vorträge)
+## Reveal.js HTML slides (default format for talks)
 slides:
 	$(QUARTO) render $(SOURCE) --to revealjs --output-dir $(OUTPUT_DIR)
 
@@ -22,32 +22,32 @@ pptx:
 beamer:
 	$(QUARTO) render $(SOURCE) --to beamer --output-dir $(OUTPUT_DIR)
 
-## LaTeX Beamer Quellcode (ohne PDF-Kompilierung)
+## LaTeX Beamer source (without PDF compilation)
 beamer-latex:
 	$(QUARTO) render $(SOURCE) --to beamer --no-compile --output-dir $(OUTPUT_DIR)
 
-## Handout (A4 PDF mit allen Inhalten, kein Folienformat)
+## Handout (A4 PDF with all content, not slide format)
 handout:
 	$(QUARTO) render $(SOURCE) --to pdf --output-dir $(OUTPUT_DIR)
 
-## Live-Vorschau der Slides im Browser
+## Live preview of the slides in the browser
 preview:
 	$(QUARTO) preview $(SOURCE)
 
-## Build-Artefakte entfernen
+## Remove build artefacts
 clean:
 	rm -rf $(OUTPUT_DIR)
 	rm -rf .quarto
 	rm -f *.tex *.log *.aux *.nav *.snm *.toc *.vrb
 
-## Hilfe anzeigen
+## Show help
 help:
-	@echo "Verfügbare Targets:"
-	@echo "  make slides       — Reveal.js HTML-Slides"
-	@echo "  make pptx         — PowerPoint-Datei"
+	@echo "Available targets:"
+	@echo "  make slides       — Reveal.js HTML slides"
+	@echo "  make pptx         — PowerPoint file"
 	@echo "  make beamer       — LaTeX Beamer PDF"
-	@echo "  make beamer-latex — LaTeX Beamer Quellcode (.tex)"
+	@echo "  make beamer-latex — LaTeX Beamer source (.tex)"
 	@echo "  make handout      — Handout (A4 PDF)"
-	@echo "  make all          — Alle Formate"
-	@echo "  make preview      — Live-Vorschau (Reveal.js)"
-	@echo "  make clean        — Build-Artefakte entfernen"
+	@echo "  make all          — All formats"
+	@echo "  make preview      — Live preview (Reveal.js)"
+	@echo "  make clean        — Remove build artefacts"

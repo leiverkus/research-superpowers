@@ -1,8 +1,8 @@
 ---
-title: "Literaturverzeichnis"
+title: "References"
 ---
 
-# Literaturverzeichnis {.unnumbered}
+# References {.unnumbered}
 
 ::: {#refs}
 :::
