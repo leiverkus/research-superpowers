@@ -31,7 +31,7 @@ than overridden — the override is an audit trail, not a substitute.
 ## Checklist
 
 1. **Locate the lint script** — `scripts/lint-wiki.py` in the project root (from template)
-2. **Run it** — `python scripts/lint-wiki.py`
+2. **Run it** — `python scripts/lint-wiki.py`. **If Python or PyYAML or the script itself is missing, take the Python-free fallback path below.**
 3. **Parse output** into categories: errors, warnings, orphans
 4. **Fix errors inline** (missing frontmatter fields, broken wikilinks, invalid `type` values)
 5. **Assess warnings** — stale pages, status inconsistency, empty sections — decide with user: fix / defer / ignore
@@ -39,6 +39,44 @@ than overridden — the override is an audit trail, not a substitute.
 7. **Re-run lint** until exit 0 on errors
 8. **Log** the run in `knowledge/_meta/log.qmd` with summary (N errors fixed, N warnings deferred)
 9. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
+
+## Python-free fallback
+
+For users on Cowork or any environment without a shell — or any project where `python3` / `pyyaml` / `scripts/lint-wiki.py` are simply not available — the skill performs frontmatter validation inline.
+
+**Trigger the fallback automatically when:**
+- `scripts/lint-wiki.py` does not exist in the project, OR
+- the Bash tool is not available, OR
+- running the script returns a "command not found" error for `python3` or `python`, OR
+- the user explicitly says "lint without Python" or "use the inline check"
+
+**Tell the user upfront:**
+> "Running wiki-lint in fallback mode (no Python). This checks frontmatter but skips wikilink resolution and orphan detection — those would cost too many tokens on a full wiki scan. For a complete check, install Python+PyYAML and use the `scripts/lint-wiki.py` script. Recommended for projects above ~20 pages."
+
+**Fallback procedure:**
+
+1. Read `schema/knowledge-frontmatter.schema.json` from the project root. If absent, read the plugin's copy (the plugin ships one).
+2. List every `knowledge/**/*.qmd` file (excluding files prefixed `_beispiel-`).
+3. For each file: parse the YAML frontmatter (the block between the first two `---` lines) and validate against:
+   - `required` fields exist and are non-empty
+   - `type` is one of `entity | concept | source | synthesis`
+   - `status` is one of `draft | review | stable`
+   - `author` is one of `human | llm | mixed`
+   - `created` and `updated` match the ISO date pattern `^\d{4}-\d{2}-\d{2}$`
+   - if `type: source`, then `bibkey` is present
+   - if `wikidata_qid` is present, it matches `^Q\d+$`
+   - if `idai_gazetteer_id` is present, it matches `^\d+$`
+4. Report any failures in the same format as the Python script: `MISSING: <path> — required field '<field>' is missing` / `INVALID: <path> — <field>='<value>' (allowed: …)`.
+5. Print a status summary: total pages, draft/review/stable distribution.
+6. **Explicitly skip** wikilink resolution and orphan detection. State this in the output so the user knows what's not covered.
+
+**What the fallback does NOT do:**
+
+- Broken-wikilink detection (would need to read every page's body, then cross-reference — O(N²) in tokens).
+- Orphan-page detection (same reason).
+- Gate-override-rate reporting (the override log lives in the project; the fallback could read it but the Python script's output format is more concise).
+
+If those checks are needed and Python isn't an option, dispatch the `wiki-linter` subagent (`agents/wiki-linter.md`) — it has a fresh context budget and can afford the full scan once per session.
 
 ## Process Flow
 

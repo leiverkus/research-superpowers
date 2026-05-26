@@ -2,6 +2,8 @@
 
 This guide walks you through installing `research-superpowers` step by step. No prior experience with Claude Code plugins is assumed. If you've used Claude Code plugins before, the [Quickstart in the README](../README.md#installation) covers the same ground in 30 seconds.
 
+**No terminal, no Python, no git?** Skip this page and read [`installation-cowork.md`](installation-cowork.md) instead — the click-only path takes 3–5 minutes and works fully in Cowork.
+
 Total time: **5–10 minutes** for the recommended path.
 
 ## Before you start

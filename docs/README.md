@@ -24,6 +24,8 @@ claude plugins install /path/to/research-superpowers
 
 After install, start a session inside a research project (scaffold one from `templates/research-project-template/` first). The assistant gets a compact skill index at SessionStart and loads individual skills on demand.
 
+**Step-by-step install for non-technical users:** see [`installation.md`](installation.md). **Cowork or no terminal at all:** see [`installation-cowork.md`](installation-cowork.md) — uses the new `scaffold-research-project` skill so no `cp` commands are needed.
+
 ## Install (OpenCode)
 
 OpenCode v1.x reads `SKILL.md` files natively from `.claude/skills/<name>/SKILL.md` ([OpenCode docs](https://opencode.ai/docs/skills/)). Symlink or copy the plugin's `skills/` directory under your project's `.claude/`:

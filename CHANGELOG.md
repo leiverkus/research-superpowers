@@ -4,6 +4,29 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-05-27
+
+Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes. See [`docs/migration-v0.3-to-v0.4.md`](docs/migration-v0.3-to-v0.4.md).
+
+### Added
+
+- **`skills/scaffold-research-project/SKILL.md`** — conversational project scaffolding. Asks for project name, parent directory, methodology, discipline, and languages; copies the template tree via Claude's Read+Write tools (no `cp -r`); patches CLAUDE.md frontmatter with the user's answers; optionally initialises git via Bash if available. Designed for Cowork (no shell) and as a friendlier setup for any first-time user. Skill total: 12 → 13.
+- **Python-free fallback in `skills/wiki-lint/SKILL.md`** — when `scripts/lint-wiki.py`, `python3`, or `pyyaml` are missing, the skill validates frontmatter inline. Tells the user explicitly that wikilink resolution and orphan detection require the Python script (those checks are O(N²) in tokens for a full-wiki scan).
+- **`docs/installation-cowork.md`** — click-only install path. What you need (just Claude), install via `/plugin marketplace add`, scaffold via natural language, what each "give up" actually costs (Python / Git / Quarto), troubleshooting, when to upgrade to the full setup.
+- **`docs/migration-v0.3-to-v0.4.md`** — short note: purely additive, existing users keep their CLI flow.
+- **README and `docs/installation.md` and `docs/README.md`** — cross-pointers to the Cowork install path.
+
+### Changed
+
+- `.claude-plugin/plugin.json` — version 0.3.0 → 0.4.0; description appended: "Works in Claude Code and Cowork — no terminal required for the core workflow."
+- `.claude-plugin/marketplace.json` — version 0.4.0 (sync); description appended; new `cowork` tag added.
+
+### Removed / Fixed
+
+None.
+
+---
+
 ## [0.3.0] — 2026-05-27
 
 First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md) and [`docs/migration-v0.2-to-v0.3.md`](docs/migration-v0.2-to-v0.3.md).

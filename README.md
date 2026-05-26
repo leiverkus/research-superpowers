@@ -42,6 +42,8 @@ If you write Python ML papers with frozen RCT hypotheses, this plugin's discipli
 
 **New here?** The full [`docs/installation.md`](docs/installation.md) walks through everything step by step — prerequisites, the three install paths, verification, troubleshooting. Allow 5–10 minutes.
 
+**Cowork user or no terminal?** [`docs/installation-cowork.md`](docs/installation-cowork.md) is the click-only path — just Claude, no Python, no Git. Allow 3–5 minutes.
+
 **Familiar with Claude Code plugins?** Three lines:
 
 ```text
@@ -144,6 +146,7 @@ Phase graph with hermeneutic back-edges and SOFT-GATE semantics: [`docs/phase-fl
 | File | Purpose |
 |---|---|
 | [`docs/installation.md`](docs/installation.md) | Step-by-step install with prerequisites, paths, troubleshooting |
+| [`docs/installation-cowork.md`](docs/installation-cowork.md) | Click-only install path for Cowork / non-terminal users |
 | [`docs/quickstart.md`](docs/quickstart.md) | 5 minutes from install to first ingest |
 | [`docs/tutorial.md`](docs/tutorial.md) | End-to-end walkthrough on a realistic mini-project |
 | [`docs/concepts.md`](docs/concepts.md) | SOFT-GATE pattern, methodology branching, SOT pattern — the *why* |
