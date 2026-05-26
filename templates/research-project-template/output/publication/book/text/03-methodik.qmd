@@ -1,0 +1,7 @@
+---
+title: "Methodik"
+---
+
+# Methodik {#sec-methodik}
+
+> [Beschreibung der verwendeten Methoden, Datenquellen, Analyseverfahren.]

@@ -1,0 +1,57 @@
+---
+title: "Chronology Debate, Iron Age II (Levant)"
+type: synthesis
+created: 2026-04-19
+updated: 2026-04-19
+tags: [chronology, iron-age, levant, radiocarbon]
+sources:
+  - "[[finkelstein-piasetzky-2003]]"
+hypothesis: "H1 — Iron IIA/B transition between 880–830 BCE (Low Chronology)"
+status: draft
+author: llm
+---
+
+## Research Question
+
+Does the totality of the published 14C dates from the Levant (2001–2024),
+re-modelled with IntCal20, support the *Low* or the *High Chronology*?
+
+## Line of Argument
+
+The debate between *Low* and *High Chronology* can be broken down into three
+methodological levels:
+
+1. **Data selection:** Which measurements count as phase-diagnostic?
+2. **Calibration:** Which curve (IntCal13/20/22) is used?
+3. **Modelling:** Uniform priors or informative priors per phase?
+
+Finkelstein & Piasetzky (2003) take a clear position on level 1 (fewer
+measurements, consistent phase assignment) and on level 3 (uniform priors).
+Mazar's counter-position (2011, still to be ingested) primarily targets
+level 1.
+
+Our re-analysis addresses level 2 (calibration-curve sensitivity) and
+provides a unified frame for level 3.
+
+## Evidence (from sources currently ingested)
+
+- Finkelstein & Piasetzky (2003) report 835 ± 15 BCE for the *Iron IIA/B*
+  transition (OxCal 3.10, IntCal98) [@finkelstein-piasetzky-2003, p. 290]
+- They argue for systematic inter-laboratory differences of roughly 10 years
+  as a contribution to the observed scatter [@finkelstein-piasetzky-2003, p. 295]
+
+## Open Questions
+
+- How does 835 ± 15 BCE shift under IntCal20 / IntCal22?
+- Are there new measurements (2010–2024) that change the phase assignment?
+- What role do the Tel Rehov measurements since Regev et al. 2020 play?
+
+## Implications (provisional)
+
+*Pending until further sources have been ingested and the re-modelling has
+been carried out.* The hypothesis is pre-registered in
+`input/ideas/low-chronology-plan.md`.
+
+---
+
+**Note:** Status is `draft`. Only the user sets `stable` after review.

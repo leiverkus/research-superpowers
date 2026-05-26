@@ -1,0 +1,72 @@
+project:
+  type: book
+  output-dir: _output
+
+book:
+  title: "Titel der Monographie"
+  subtitle: "Untertitel"
+  author:
+    - name: "Vorname Nachname"
+      orcid: "0000-0000-0000-0000"
+      affiliation: "Hochschule / Institut"
+    - name: "Zweite Person"
+      affiliation: "Hochschule / Institut"
+  date: today
+  date-format: "D. MMMM YYYY"
+  language: de
+  chapters:
+    - frontmatter/index.qmd
+    - text/01-einleitung.qmd
+    - text/02-forschungsstand.qmd
+    - text/03-methodik.qmd
+    - text/04-ergebnisse.qmd
+    - text/05-diskussion.qmd
+    - text/06-fazit.qmd
+    - backmatter/references.qmd
+  appendices:
+    - backmatter/anhang-a.qmd
+
+bibliography: ../../bibtex/references.bib
+csl: ../../bibtex/csl/chicago-author-date-de.csl
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    lang: de
+  pdf:
+    documentclass: scrbook
+    classoption:
+      - twoside
+      - open=right
+      - BCOR=15mm
+    papersize: a4
+    fontsize: 11pt
+    mainfont: "Linux Libertine O"
+    sansfont: "Linux Biolinum O"
+    monofont: "Fira Code"
+    number-sections: true
+    toc: true
+    toc-depth: 3
+    lof: true
+    lot: true
+    lang: de
+    include-in-header:
+      - template/_preamble.tex
+  docx:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    lang: de
+  epub:
+    toc: true
+    toc-depth: 3
+    lang: de
+
+crossref:
+  fig-prefix: "Abb."
+  tbl-prefix: "Tab."
+  sec-prefix: "Kap."
+  eq-prefix: "Gl."

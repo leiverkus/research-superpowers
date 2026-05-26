@@ -1,0 +1,56 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/extensions.json
+
+# Team-Kollaboration: Nextcloud-Symlinks und extern synchronisierte Ordner
+input/data-shared
+input/data-nextcloud
+
+# Team-Kollaboration: Zotero-Export wird lokal generiert, nicht in Git
+output/bibtex/references.bib
+
+# Large data files (track with Git LFS or exclude)
+input/data/**/*.tif
+input/data/**/*.shp
+input/data/**/*.dbf
+input/data/**/*.shx
+input/data/**/*.prj
+input/data/**/*.gpkg
+*.sqlite
+
+# Output build artifacts
+output/publication/**/_output/
+output/publication/**/_site/
+output/publication/**/_book/
+output/publication/**/.quarto/
+output/publication/**/*.tex
+output/publication/**/*.log
+output/publication/**/*.aux
+output/presentation/_output/
+output/presentation/.quarto/
+output/presentation/*.tex
+output/presentation/*.log
+output/presentation/*.aux
+output/presentation/*.nav
+output/presentation/*.snm
+output/presentation/*.toc
+output/presentation/*.vrb
+
+# Wiki build artifacts
+knowledge/_site/
+knowledge/.quarto/
+
+# CI/CD
+public/
+
+output/data-analysis/__pycache__/
+output/data-analysis/.ipynb_checkpoints/
+output/app/__pycache__/
+output/app/venv/
+output/app/node_modules/
+
+# Keep directory structure
+!**/.gitkeep

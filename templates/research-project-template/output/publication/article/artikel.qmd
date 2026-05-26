@@ -1,0 +1,92 @@
+---
+title: "Article title"
+subtitle: "Subtitle"
+author:
+  - name: "Firstname Lastname"
+    orcid: "0000-0000-0000-0000"
+    affiliation: "Institution / Institute"
+    corresponding: true
+    email: "firstname.lastname@institution.edu"
+  - name: "Second Author"
+    affiliation: "Institution / Institute"
+date: today
+date-format: "D MMMM YYYY"
+lang: en
+
+abstract: |
+  > [Insert abstract here. Short summary of the article: question,
+  > methodology, key findings, conclusion. Typically 150–300 words.]
+
+keywords:
+  - keyword 1
+  - keyword 2
+  - keyword 3
+
+bibliography: ../bibtex/references.bib
+csl: ../bibtex/csl/chicago-author-date.csl
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    lang: en
+  pdf:
+    documentclass: scrartcl
+    papersize: a4
+    fontsize: 11pt
+    mainfont: "Linux Libertine O"
+    sansfont: "Linux Biolinum O"
+    monofont: "Fira Code"
+    number-sections: true
+    toc: false
+    lang: en
+    include-in-header:
+      - _preamble.tex
+  docx:
+    toc: true
+    number-sections: true
+    lang: en
+
+crossref:
+  fig-prefix: "Fig."
+  tbl-prefix: "Tab."
+  sec-prefix: "Sect."
+  eq-prefix: "Eq."
+
+number-sections: true
+---
+
+# Introduction {#sec-introduction}
+
+> [Problem statement, research question, structure of the article.]
+
+# State of the field {#sec-state-of-the-field}
+
+> [Overview of relevant literature.]
+
+# Methodology {#sec-methodology}
+
+> [Data sources, analytical procedures, technical implementation.]
+
+# Results {#sec-results}
+
+> [Presentation of results with figures and tables.]
+
+# Discussion {#sec-discussion}
+
+> [Interpretation, comparison, limitations.]
+
+# Conclusion {#sec-conclusion}
+
+> [Summary and outlook.]
+
+# Acknowledgements {.unnumbered}
+
+> [Funding notes, acknowledgements.]
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

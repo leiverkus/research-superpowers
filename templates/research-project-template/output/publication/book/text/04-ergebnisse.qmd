@@ -1,0 +1,7 @@
+---
+title: "Ergebnisse"
+---
+
+# Ergebnisse {#sec-ergebnisse}
+
+> [Darstellung der Ergebnisse.]

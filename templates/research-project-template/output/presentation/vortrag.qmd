@@ -1,0 +1,132 @@
+---
+title: "Talk title"
+subtitle: "Subtitle / conference name"
+author:
+  - name: "Firstname Lastname"
+    affiliation: "Institution / Institute"
+date: today
+date-format: "D MMMM YYYY"
+lang: en
+
+bibliography: ../bibtex/references.bib
+csl: ../bibtex/csl/chicago-author-date.csl
+
+format:
+  revealjs:
+    theme: default
+    slide-number: true
+    show-slide-number: all
+    progress: true
+    hash-type: number
+    center: false
+    transition: fade
+    width: 1920
+    height: 1080
+    margin: 0.1
+    lang: en
+    footer: "Lastname — Short title — Conference 2026"
+    logo: ""  # path to logo, e.g. images/logo.png
+    title-slide-attributes:
+      data-background-color: "#2d3436"
+  pptx:
+    slide-level: 2
+    lang: en
+  beamer:
+    theme: metropolis
+    fontsize: 11pt
+    aspectratio: 169
+    lang: en
+    mainfont: "Linux Libertine O"
+    sansfont: "Linux Biolinum O"
+  pdf:
+    documentclass: scrartcl
+    papersize: a4
+    fontsize: 11pt
+    mainfont: "Linux Libertine O"
+    number-sections: true
+    toc: true
+    lang: en
+
+crossref:
+  fig-prefix: "Fig."
+  tbl-prefix: "Tab."
+---
+
+# Introduction
+
+## Research question
+
+> [Central research question]
+
+## Outline
+
+1. State of the field
+2. Methodology
+3. Results
+4. Discussion
+5. Conclusion
+
+# State of the field
+
+## Prior work
+
+> [Overview of relevant literature]
+
+## Research gap
+
+> [What is missing? Where does this project step in?]
+
+# Methodology
+
+## Data and sources
+
+> [Data basis, sources]
+
+## Analytical approach
+
+> [Methods, tools, software]
+
+# Results
+
+## Key finding 1
+
+> [Description with figure or table]
+
+## Key finding 2
+
+> [Description with figure or table]
+
+# Discussion
+
+## Interpretation
+
+> [What do the results mean in the context of the state of the field?]
+
+## Limitations
+
+> [Constraints, open questions]
+
+# Conclusion
+
+## Summary
+
+> [Key claims in 3–5 points]
+
+## Outlook
+
+> [Next steps, open questions]
+
+## Thank you {.center}
+
+Contact: firstname.lastname@institution.edu
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+# Backup slides {.appendix visibility="uncounted"}
+
+## Additional data
+
+> [Supplementary slides for discussion after the talk]

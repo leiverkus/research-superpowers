@@ -1,0 +1,75 @@
+---
+title: "Low Chronology Iron Age II — A Re-Analysis with IntCal20"
+author: "Patrick Leiverkus"
+date: 2026-04-19
+bibliography: ../../bibtex/references.bib
+format:
+  pdf:
+    documentclass: scrartcl
+    number-sections: true
+    cite-method: biblatex
+---
+
+# Introduction {#sec-intro}
+
+<!-- TARGET: ~1200 words. HARD GATE: synthesis [[chronology-debate]] status ≥ review. -->
+
+The debate over the chronology of the Iron Age II in the southern Levant has
+been, since its reformulation by Finkelstein, one of the methodologically
+most intensive controversies in Palestinian archaeology of the past
+twenty-five years [@finkelstein-piasetzky-2003, p. 283].
+
+<!-- To follow: state of research, research question, hypothesis statement. -->
+
+# Methods {#sec-methods}
+
+<!-- TARGET: ~1500 words. Carry over the pre-registered method from the plan. -->
+
+## Data Sources
+
+## Bayesian Model (OxCal 4.4)
+
+## Sensitivity Analysis
+
+# Results {#sec-results}
+
+<!-- TARGET: ~2000 words. No cherry-picking; pre-registration comparison is mandatory. -->
+
+## Phase Boundaries (IntCal20)
+
+## Sensitivity to Calibration Curve
+
+## Comparison with Previous Models
+
+# Discussion {#sec-discussion}
+
+<!-- TARGET: ~2500 words. Hypothesis resolution, limitations. -->
+
+## Hypothesis Resolution
+
+Against the pre-registration (H1: 880–830 BCE, *Low Chronology*), the
+outcome **[to be inserted from Task 5]** is to be assessed.
+
+## Limitations
+
+## Implications for Biblical Historiography
+
+# Conclusion {#sec-conclusion}
+
+<!-- TARGET: ~500 words. -->
+
+# Reproducibility
+
+All analyses are reproducible from `output/data-analysis/`:
+
+- **Code:** `extract.py`, `oxcal/phases.oxcal`, `sensitivity.py`
+- **Data:** `input/data/c14-levant-ironage.csv` (CC-BY)
+- **Environment:** Python 3.11, OxCal 4.4, see `requirements.txt`
+- **Entry:** `python output/data-analysis/main.py`
+- **Seed:** 20260419
+- **Repo / DOI:** *[to be filled in by finish-project]*
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

@@ -1,0 +1,30 @@
+{
+  "name": "leiverkus-research",
+  "displayName": "Leiverkus Research Tools",
+  "description": "Plugins for LLM-assisted scientific research — currently: research-superpowers (skill-driven research workflow for theology, biblical archaeology, ancient history, and digital humanities).",
+  "owner": {
+    "name": "Patrick Leiverkus",
+    "email": "leiverkus@gmail.com",
+    "url": "https://github.com/leiverkus"
+  },
+  "plugins": [
+    {
+      "name": "research-superpowers",
+      "source": ".",
+      "description": "Skill-driven research workflow: idea → literature → ingest → draft → peer review → publication. Methodology-aware (hermeneutic / quantitative / mixed), with SOFT-GATE audit trails and optional MCP integration for verified citations.",
+      "version": "0.3.0",
+      "homepage": "https://github.com/leiverkus/research-superpowers",
+      "license": "MIT",
+      "category": "research",
+      "tags": [
+        "research",
+        "academic-writing",
+        "literature-review",
+        "peer-review",
+        "digital-humanities",
+        "biblical-archaeology",
+        "theology"
+      ]
+    }
+  ]
+}

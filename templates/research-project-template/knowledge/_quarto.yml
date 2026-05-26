@@ -1,0 +1,47 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "**/*.qmd"
+    - "!_beispiel-*.qmd"
+
+website:
+  title: "Research Wiki"
+  search: true
+  navbar:
+    left:
+      - text: "Index"
+        href: _meta/index.qmd
+      - text: "Log"
+        href: _meta/log.qmd
+      - text: "Entities"
+        href: entities/
+      - text: "Concepts"
+        href: concepts/
+      - text: "Sources"
+        href: sources/
+      - text: "Synthesis"
+        href: synthesis/
+
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - section: "Entities"
+        contents: entities/*.qmd
+      - section: "Concepts"
+        contents: concepts/*.qmd
+      - section: "Sources"
+        contents: sources/*.qmd
+      - section: "Synthesis"
+        contents: synthesis/*.qmd
+
+bibliography: ../output/bibtex/references.bib
+csl: ../output/bibtex/csl/chicago-author-date.csl
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    lang: en

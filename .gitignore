@@ -1,0 +1,49 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Editors
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node (for any future tooling)
+node_modules/
+npm-debug.log*
+
+# Quarto / rendered outputs
+_site/
+_book/
+_freeze/
+*.qmd~
+.quarto/
+
+# Example project: generated artefacts (the inputs and source-of-truth qmd files are tracked)
+examples/example-project/output/**/_site/
+examples/example-project/output/**/_book/
+examples/example-project/knowledge/_site/
+examples/example-project/knowledge/_book/
+
+# Locally rendered PDFs and intermediate LaTeX
+*.pdf
+!docs/**/*.pdf
+*.aux
+*.log
+*.out
+*.toc
+
+# Secrets / local config
+.env
+.env.local

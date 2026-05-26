@@ -1,0 +1,209 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ─── Wiki ───────────────────────────────────────────
+    {
+      "label": "Wiki: Build HTML site",
+      "type": "shell",
+      "command": "quarto render",
+      "options": { "cwd": "${workspaceFolder}/knowledge" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Wiki: Live preview",
+      "type": "shell",
+      "command": "quarto preview",
+      "options": { "cwd": "${workspaceFolder}/knowledge" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Wiki: Lint",
+      "type": "shell",
+      "command": "python3 scripts/lint-wiki.py",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "test",
+      "problemMatcher": []
+    },
+
+    // ─── Article ────────────────────────────────────────
+    {
+      "label": "Article → PDF",
+      "type": "shell",
+      "command": "quarto render artikel.qmd --to pdf --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Article → HTML",
+      "type": "shell",
+      "command": "quarto render artikel.qmd --to html --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Article → Word",
+      "type": "shell",
+      "command": "quarto render artikel.qmd --to docx --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Article → LaTeX",
+      "type": "shell",
+      "command": "quarto render artikel.qmd --to pdf --no-compile --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Article: Live preview",
+      "type": "shell",
+      "command": "quarto preview artikel.qmd",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+
+    // ─── Book ───────────────────────────────────────────
+    {
+      "label": "Book → PDF",
+      "type": "shell",
+      "command": "quarto render --to pdf",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Book → HTML",
+      "type": "shell",
+      "command": "quarto render --to html",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Book → Word",
+      "type": "shell",
+      "command": "quarto render --to docx",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Book → E-Book",
+      "type": "shell",
+      "command": "quarto render --to epub",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Book → LaTeX",
+      "type": "shell",
+      "command": "quarto render --to pdf --no-compile",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Book: Live preview",
+      "type": "shell",
+      "command": "quarto preview",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+
+    // ─── Presentation ───────────────────────────────────
+    {
+      "label": "Presentation → Reveal.js slides",
+      "type": "shell",
+      "command": "quarto render vortrag.qmd --to revealjs --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Presentation → PowerPoint",
+      "type": "shell",
+      "command": "quarto render vortrag.qmd --to pptx --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Presentation → Beamer PDF",
+      "type": "shell",
+      "command": "quarto render vortrag.qmd --to beamer --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Presentation → Beamer LaTeX",
+      "type": "shell",
+      "command": "quarto render vortrag.qmd --to beamer --no-compile --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Presentation → Handout (A4 PDF)",
+      "type": "shell",
+      "command": "quarto render vortrag.qmd --to pdf --output-dir _output",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Presentation: Live preview",
+      "type": "shell",
+      "command": "quarto preview vortrag.qmd",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+
+    // ─── Clean ──────────────────────────────────────────
+    {
+      "label": "Clean: Wiki",
+      "type": "shell",
+      "command": "rm -rf _site .quarto",
+      "options": { "cwd": "${workspaceFolder}/knowledge" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: Article",
+      "type": "shell",
+      "command": "rm -rf _output .quarto *.tex *.log *.aux",
+      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: Book",
+      "type": "shell",
+      "command": "rm -rf _output .quarto",
+      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: Presentation",
+      "type": "shell",
+      "command": "rm -rf _output .quarto *.tex *.log *.aux *.nav *.snm *.toc *.vrb",
+      "options": { "cwd": "${workspaceFolder}/output/presentation" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: All",
+      "type": "shell",
+      "command": "rm -rf knowledge/_site knowledge/.quarto output/publication/article/_output output/publication/article/.quarto output/publication/book/_output output/publication/book/.quarto output/presentation/_output output/presentation/.quarto",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

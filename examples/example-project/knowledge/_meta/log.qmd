@@ -1,0 +1,26 @@
+---
+title: "Workflow Log"
+type: concept
+created: 2026-04-18
+updated: 2026-04-19
+status: stable
+author: human
+---
+
+## Workflow Log
+
+Append-only log of all workflow events. Format:
+
+```
+- YYYY-MM-DD · <event> · <slug> · <details>
+```
+
+Events: `brainstorm` | `plan` | `ingest` | `synthesis` | `draft` | `review` |
+`deviation` | `finish`
+
+---
+
+- 2026-04-18 · brainstorm · low-chronology · design signed off → input/ideas/low-chronology-design.md
+- 2026-04-19 · plan · low-chronology · pre-registered → input/ideas/low-chronology-plan.md
+- 2026-04-19 · ingest · finkelstein-piasetzky-2003 · source page + 5 entities + BibTeX
+- 2026-04-19 · synthesis · chronology-debate · status=draft (1 source)

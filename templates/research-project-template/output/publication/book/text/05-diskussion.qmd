@@ -1,0 +1,8 @@
+---
+title: "Diskussion"
+---
+
+# Diskussion {#sec-diskussion}
+
+> [Einordnung der Ergebnisse, Vergleich mit dem Forschungsstand,
+> Limitationen.]

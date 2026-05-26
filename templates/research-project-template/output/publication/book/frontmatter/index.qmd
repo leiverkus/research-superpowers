@@ -1,0 +1,7 @@
+---
+title: "Vorwort"
+---
+
+# Vorwort {.unnumbered}
+
+> [Vorwort oder Danksagung hier einfügen.]

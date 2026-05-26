@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# SessionStart hook for research-superpowers plugin.
+# Injects a compact skill index (hooks/session-context.md, ~25 lines) so the
+# assistant knows what skills exist and when to invoke them. Full SKILL.md
+# content is loaded on-demand via the Skill tool — not at session start.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+index_content=$(cat "${PLUGIN_ROOT}/hooks/session-context.md" 2>&1 || echo "Error reading session-context.md")
+
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+index_escaped=$(escape_for_json "$index_content")
+session_context="<research-superpowers>\n${index_escaped}\n</research-superpowers>"
+
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
+else
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
+fi
+
+exit 0

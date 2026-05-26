@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/leiverkus/research-superpowers/schema/knowledge-frontmatter.schema.json",
+  "title": "Research Wiki Frontmatter",
+  "description": "Frontmatter schema for knowledge/**/*.qmd pages in research projects using the research-superpowers plugin. Single source of truth — consumed by scripts/lint-wiki.py and VS Code yaml.schemas, referenced by skills.",
+  "type": "object",
+  "required": ["title", "type", "created", "updated", "status", "author"],
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable page title."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["entity", "concept", "source", "synthesis"],
+      "description": "Page type. entity = person/place/artefact/institution; concept = theory/method/term; source = cited work; synthesis = cross-source argument."
+    },
+    "created": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO YYYY-MM-DD. Set once at creation."
+    },
+    "updated": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO YYYY-MM-DD. Bump on every substantive edit."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "review", "stable"],
+      "description": "draft = being written; review = structurally complete, awaits human check; stable = human-reviewed, citable. Only the user sets stable — agents must not self-promote."
+    },
+    "author": {
+      "type": "string",
+      "enum": ["human", "llm", "mixed"],
+      "description": "Who produced the content. human = user; llm = unreviewed LLM; mixed = LLM draft + human edits."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Topical tags. Free vocabulary."
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Wikilinks to source pages, e.g. \"[[finkelstein-2003]]\"."
+    },
+    "bibkey": {
+      "type": "string",
+      "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib."
+    },
+    "hypothesis": {
+      "type": "string",
+      "description": "Linked hypothesis slug from the research plan. Used on type = synthesis."
+    },
+    "bibliography": {
+      "type": "string",
+      "description": "Relative path to the project's BibTeX file (typically ../../output/bibtex/references.bib). Optional per page — usually set globally in _quarto.yml."
+    },
+    "methodology": {
+      "type": "string",
+      "enum": ["hermeneutic", "quantitative", "mixed"],
+      "description": "Optional override for project-level methodology. Drives whether pre-registration gates apply. Defaults to the project-level setting in the root CLAUDE.md / _quarto.yml."
+    },
+    "wikidata_qid": {
+      "type": "string",
+      "pattern": "^Q[0-9]+$",
+      "description": "Wikidata entity ID (e.g. Q173799 for Tel Megiddo). Used on type=entity. Resolvable via dao-paper-search-mcp resolve_author / resolve_site."
+    },
+    "idai_gazetteer_id": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "iDAI.gazetteer ID (e.g. 2048473). Used on type=entity for archaeological places. Resolvable via dao-paper-search-mcp resolve_site."
+    },
+    "gnd_id": {
+      "type": "string",
+      "pattern": "^[0-9X-]+$",
+      "description": "GND (Gemeinsame Normdatei) authority record (e.g. 118533533). Used on type=entity for persons in German-language scholarship."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "source" } }, "required": ["type"] },
+      "then": { "required": ["bibkey"] }
+    }
+  ]
+}

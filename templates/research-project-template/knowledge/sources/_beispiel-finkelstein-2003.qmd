@@ -1,0 +1,51 @@
+---
+title: "Finkelstein 2003"
+type: source
+created: 2026-04-17
+updated: 2026-04-17
+tags: [chronology, iron-age, stratigraphy]
+sources: []
+status: draft
+author: llm
+bibliography: ../../output/bibtex/references.bib
+citekey: finkelstein2003
+---
+
+# Finkelstein 2003 {#sec-source-finkelstein-2003}
+
+## Bibliographic info
+
+> Finkelstein, I. (2003). *Publication title*. Publisher/Journal.
+
+Citekey: `@finkelstein2003`
+
+## Core theses
+
+1. The conventional chronology of Iron Age I–IIA in the southern
+   Levant is set roughly 50–75 years too high.
+2. The monumental architecture traditionally attributed to Solomon
+   originates from the Omride dynasty (9th c. BCE).
+3. > [Further core theses]
+
+## Methodology
+
+- Stratigraphic re-analysis of key sites
+  ([[entity-tel-megiddo]], Hazor, Gezer)
+- Comparative ceramic typology
+- Integration of Egyptian synchronisms
+
+## Relevant results
+
+> [Concrete data, tables, findings from the source that matter for
+> your own research question.]
+
+## Own assessment
+
+> [Critical evaluation: strengths and weaknesses of the argument,
+> relevance for your own project, open questions.]
+
+## Connections
+
+- Defines the concept: [[concept-low-chronology]]
+- Concerns the place: [[entity-tel-megiddo]]
+- Contradicts: [[source-mazar-2005]] (if available)

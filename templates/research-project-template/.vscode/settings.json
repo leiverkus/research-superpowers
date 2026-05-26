@@ -1,0 +1,48 @@
+{
+  "foam.files.noteExtensions": ["qmd", "md"],
+  "foam.edit.linkReferenceDefinitions": "withExtensions",
+  "foam.files.ignore": [
+    ".vscode/**",
+    "output/**/*.pdf",
+    "output/**/_output/**",
+    "output/**/_site/**",
+    "input/data/**/*.shp",
+    "input/data/**/*.tif",
+    "knowledge/_site/**",
+    "node_modules/**"
+  ],
+  "foam.graph.titleMaxLength": 60,
+  "foam.openDailyNote.directory": "input/notes",
+  "foam.placeholders.exclude": [
+    "output/**"
+  ],
+  "files.associations": {
+    "*.qmd": "quarto"
+  },
+  "yaml.schemas": {
+    "./schema/knowledge-frontmatter.schema.json": "knowledge/**/*.qmd"
+  },
+  "workbench.editorAssociations": {
+    "*.qmd": "quarto.visualEditor"
+  },
+  "editor.wordWrap": "on",
+  "files.autoSave": "onFocusChange",
+  "markdown.preview.breaks": true,
+  "[quarto]": {
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    }
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    }
+  },
+  "git.enableSmartCommit": true,
+  "git.autofetch": true
+}

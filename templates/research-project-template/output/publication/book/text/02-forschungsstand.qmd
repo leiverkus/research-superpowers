@@ -1,0 +1,8 @@
+---
+title: "Forschungsstand"
+---
+
+# Forschungsstand {#sec-forschungsstand}
+
+> [Überblick über den Stand der Forschung. Kann aus Synthesis-Seiten
+> in `knowledge/synthesis/` übernommen werden.]

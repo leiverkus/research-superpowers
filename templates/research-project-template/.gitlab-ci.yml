@@ -1,0 +1,83 @@
+# GitLab CI/CD Pipeline
+# Baut das Wiki und die Publikation bei jedem Push auf main
+# und deployt als GitLab Pages.
+
+image: ghcr.io/quarto-dev/quarto:latest
+
+variables:
+  QUARTO_PRINT_STACK: "true"
+
+stages:
+  - build
+  - deploy
+
+# Wiki als HTML-Website bauen
+build-wiki:
+  stage: build
+  script:
+    - cd knowledge
+    - quarto render
+  artifacts:
+    paths:
+      - knowledge/_site/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - knowledge/**/*
+        - output/bibtex/**/*
+
+# Artikel als HTML bauen (optional)
+build-article:
+  stage: build
+  script:
+    - cd output/publication/article
+    - quarto render artikel.qmd --to html --output-dir _output
+  artifacts:
+    paths:
+      - output/publication/article/_output/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - output/publication/article/**/*
+        - output/bibtex/**/*
+
+# Buch als HTML-Website bauen (optional)
+build-book:
+  stage: build
+  script:
+    - cd output/publication/book
+    - quarto render --to html
+  artifacts:
+    paths:
+      - output/publication/book/_output/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - output/publication/book/**/*
+        - output/bibtex/**/*
+
+# GitLab Pages deployen
+pages:
+  stage: deploy
+  dependencies:
+    - build-wiki
+    - build-article
+    - build-book
+  script:
+    - mkdir -p public
+    # Wiki als Hauptseite
+    - cp -r knowledge/_site/* public/ 2>/dev/null || true
+    # Artikel unter /article/
+    - mkdir -p public/article
+    - cp -r output/publication/article/_output/* public/article/ 2>/dev/null || true
+    # Buch unter /book/
+    - mkdir -p public/book
+    - cp -r output/publication/book/_output/* public/book/ 2>/dev/null || true
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
