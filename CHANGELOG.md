@@ -51,6 +51,26 @@ None.
 
 ---
 
+## [0.3.1] — 2026-05-27 (post-release housekeeping, rolled into v0.4.0)
+
+> Documented retroactively. These changes shipped to `main` between the v0.3.0 and v0.4.0 tags (commits `0e884ae`, `5432dda`, `c521d5a`) but were not separately tagged. Anyone installing `@v0.4.0` or later already has them.
+
+### Added
+
+- **`.github/ISSUE_TEMPLATE/`** — four YAML-form issue templates: `bug_report.yml`, `skill_behaviour.yml` (skill-dropdown + kind-of-issue), `new_skill.yml` (with the four skill-authoring criteria as required checkboxes), `docs_issue.yml`; plus `config.yml` disabling blank issues and pointing to docs + GitHub Discussions.
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — type-of-change checkbox, verification commands matching `CONTRIBUTING.md`, language-convention + SOFT-GATE-preservation checklist, CHANGELOG and migration-note reminders.
+- **`.github/workflows/lint.yml`** — CI on every push to `main` and on every PR. 13 steps: plugin + marketplace manifests valid JSON; plugin and marketplace versions match; schema valid + mirror in sync; `python scripts/lint-wiki.py` exits 0 on `examples/example-project/`; every `agents/*.md` `implements:` references an existing skill; every `skills/*/SKILL.md` has valid YAML frontmatter with `name` + `description`; every `.github/ISSUE_TEMPLATE/*.yml` valid YAML; every internal Markdown link in `docs/*.md` resolves on disk.
+- **README Lint status badge** (`actions/workflows/lint.yml/badge.svg`).
+- **15 GitHub repository topics** for discoverability: `claude-code`, `claude-plugin`, `opencode`, `mcp`, `research`, `academic-writing`, `literature-review`, `peer-review`, `digital-humanities`, `biblical-archaeology`, `theology`, `ancient-history`, `hermeneutics`, `quarto`, `wiki`.
+
+### Fixed
+
+- **`.claude-plugin/marketplace.json`** — `claude plugin validate` (v2.1.132) rejected two fields. Removed root `displayName` (unrecognized). Changed `"source": "."` to `"source": "./"` (validator requires the explicit relative-path form).
+- **`.claude-plugin/plugin.json`** — removed `displayName` and `bugs` (both unrecognized by the validator on 2.1.132). Bug reporting still discoverable via the `repository` URL.
+- End-to-end install flow verified: `claude plugin marketplace add ./` → `claude plugin install research-superpowers@leiverkus-research` loads at v0.3.0 cleanly.
+
+---
+
 ## [0.3.0] — 2026-05-27
 
 First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md) and [`docs/migration-v0.2-to-v0.3.md`](docs/migration-v0.2-to-v0.3.md).
