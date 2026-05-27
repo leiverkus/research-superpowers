@@ -12,18 +12,26 @@ Optional but recommended: see [`recommended-mcps.md`](recommended-mcps.md) for `
 
 ## 1. Install the plugin
 
-```bash
-# Claude Code
-claude plugins install /path/to/research-superpowers
+Open Claude Code in any directory, then:
+
+```
+/plugin marketplace add leiverkus/research-superpowers
+/plugin install research-superpowers@leiverkus-research
 ```
 
-OpenCode users: symlink the skills into your project's `.claude/skills/`:
+Restart Claude Code (`exit`, then `claude` again). You should see a "Research Superpowers" notice on session start.
+
+**OpenCode users:** symlink the skills into your project's `.claude/skills/`:
 
 ```bash
-ln -s /path/to/research-superpowers/skills .claude/skills
+git clone https://github.com/leiverkus/research-superpowers ~/code/research-superpowers
+cd /path/to/your-research-project
+ln -s ~/code/research-superpowers/skills .claude/skills
 ```
 
 (OpenCode reads SKILL.md files natively from `.claude/skills/<name>/SKILL.md`.)
+
+Need more detail or hit a snag? See [`installation.md`](installation.md) — all three install paths, prerequisites, and troubleshooting.
 
 ## 2. Scaffold a research project
 
