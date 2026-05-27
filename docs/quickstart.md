@@ -45,34 +45,33 @@ The `scaffold-research-project` skill takes over and asks you four questions (pr
 
 ## 3. Drop a source PDF
 
-Put a scholarly PDF you want to read into `input/bibliography/`. The plugin's `ingest-source` skill knows how to handle PDFs (and uses OCR if scanned).
+Navigate to the project the scaffold created, then copy a PDF into `input/bibliography/`:
 
 ```bash
+cd ~/Documents/my-first-research-project   # adjust to your actual project path
 cp ~/Downloads/finkelstein-2003-low-chronology.pdf input/bibliography/
 ```
+
+The `ingest-source` skill handles PDFs and falls back to OCR for scanned pages.
 
 ## 4. Open Claude Code in the project and trigger ingest
 
 ```bash
-cd my-project
 claude
 ```
 
-In Claude Code, say:
+Say:
 
 > Ingest the Finkelstein 2003 PDF from input/bibliography/.
 
-The assistant will:
+The skill will ask for a **focus** — a single sentence saying what angle this project takes on the source (e.g. "Low Chronology arguments relevant to Iron Age IIA stratigraphy"). If you skip it, the skill proposes your research question as the default and asks you to confirm.
 
-1. Recognise this as a source-ingest task and invoke the `ingest-source` skill.
-2. Read the PDF in full.
-3. Derive a slug (`finkelstein-2003`), extract bibliographic data, identify entities (people, places, concepts).
-4. Create:
-   - `knowledge/sources/finkelstein-2003.qmd` — the source page (frontmatter + theses + methodology + entities + verbatim quotes)
-   - `knowledge/entities/<entity>.qmd` — one per new entity (stubs you can expand later)
-   - one entry appended to `output/bibtex/references.bib`
-   - one line in `knowledge/_meta/log.qmd`
-5. Run `scripts/lint-wiki.py` and show you any issues.
+After ingest the assistant will have:
+
+1. Created `knowledge/sources/finkelstein-2003.qmd` — a focus-driven source page (claims relevant to your project, not a generic summary)
+2. Created `knowledge/entities/<entity>.qmd` for each new person, site, or concept found
+3. Appended one BibTeX entry to `output/bibtex/references.bib`
+4. Logged the ingest in `knowledge/_meta/log.qmd`
 
 You review the diff, accept or revise, commit.
 
@@ -89,8 +88,9 @@ The lint script should exit 0 (all frontmatter valid, all wikilinks resolve).
 
 ## What to do next
 
-- **More sources?** Repeat step 3 + 4. After ~5 sources you'll want to start a synthesis page — ask Claude to "create a synthesis page on `<topic>` from the ingested sources" (this triggers `executing-research-plan`'s synthesis routing).
-- **Bigger project?** Start formally: ask "let's research X" — that triggers `brainstorming-research`, which produces a design doc and (after your approval) a research plan. Then `executing-research-plan` runs the plan.
+- **More sources?** Repeat step 3 + 4. The wiki builds up incrementally — each ingest appends, never overwrites.
+- **Ready to synthesise?** Ask "let's plan the research on X" — that triggers `brainstorming-research`, then `writing-research-plan`, then `executing-research-plan`, which dispatches synthesis, analysis, and draft tasks from the plan.
+- **Informal synthesis?** For a quick cross-source question without a formal plan, just ask it — Claude reads the relevant source pages and answers from the wiki.
 - **Drafting?** Once at least one synthesis page is `status: stable`, ask "draft chapter on X" — that triggers `drafting-manuscript`.
 - **Full walkthrough?** Read [`tutorial.md`](tutorial.md) — same workflow, larger example, every phase narrated.
 - **Concepts?** [`concepts.md`](concepts.md) explains the SOFT-GATE pattern, methodology branching, SOT pattern.
