@@ -191,7 +191,7 @@ After forking, edit these files:
    journal (CSL style, document class, fonts)
 4. **`.gitlab-ci.yml`** — URL and paths for your GitLab instance
 
-The example pages (prefix `_beispiel-`) in `knowledge/` show the expected
+The example pages (prefix `_example-`) in `knowledge/` show the expected
 style and can be deleted once you have your own content.
 
 ## License

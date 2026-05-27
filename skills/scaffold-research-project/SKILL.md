@@ -81,7 +81,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `schema/knowledge-frontmatter.schema.json`
    - `scripts/lint-wiki.py`
    - `input/` (with its `bibliography/`, `data/`, `description/`, `ideas/`, `notes/` subdirectories — the `description/project-description.md` template file goes too)
-   - `knowledge/` (with `_meta/`, `_quarto.yml`, `Makefile`, the four `_beispiel-*.qmd` files in `entities/`, `concepts/`, `sources/`, `synthesis/`, plus an empty `assets/` and `_meta/log.qmd`, `_meta/index.qmd`)
+   - `knowledge/` (with `_meta/`, `_quarto.yml`, `Makefile`, the four `_example-*.qmd` files in `entities/`, `concepts/`, `sources/`, `synthesis/`, plus an empty `assets/` and `_meta/log.qmd`, `_meta/index.qmd`)
    - `output/` (`bibtex/references.bib`, `bibtex/csl/`, `publication/article/article.qmd`, `publication/book/_quarto.yml` and chapters, `presentation/talk.qmd`, plus their Makefiles)
 
 9. **Patch CLAUDE.md frontmatter** with the user's answers. Read the new `CLAUDE.md`, replace the placeholder frontmatter block at the top:

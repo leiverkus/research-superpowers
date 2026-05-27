@@ -169,32 +169,32 @@ Optional fields (e.g. `tags`, `sources`, `hypothesis`, `bibliography`,
 ## Page types
 
 For each page type an example file lives in the respective folder
-(prefix `_beispiel-`). These files serve as templates for style,
+(prefix `_example-`). These files serve as templates for style,
 structure, and frontmatter, and are ignored during wiki rendering.
 
 ### Entity (`knowledge/entities/`)
 People, places, sites, institutions, artefacts, software projects.
 Structure: short description → relevance to the research question →
 relationships to other entities → sources.
-Example: `_beispiel-tel-megiddo.qmd`
+Example: `_example-tel-megiddo.qmd`
 
 ### Concept (`knowledge/concepts/`)
 Theories, methods, technical terms, technical concepts.
 Structure: definition → context in research → related concepts →
 critical perspectives → sources.
-Example: `_beispiel-low-chronology.qmd`
+Example: `_example-low-chronology.qmd`
 
 ### Source (`knowledge/sources/`)
 Summary of a single source from `input/bibliography/`.
 Structure: bibliographic info → core theses → methodology → relevant
 results → own assessment → connections to other pages.
-Example: `_beispiel-finkelstein-2003.qmd`
+Example: `_example-finkelstein-2003.qmd`
 
 ### Synthesis (`knowledge/synthesis/`)
 Cross-cutting analyses that connect several sources and concepts.
 Structure: research question → argumentation → evidence from sources →
 open questions → implications for your own work.
-Example: `_beispiel-chronologie-debatte.qmd`
+Example: `_example-chronologie-debatte.qmd`
 
 ## Workflows
 

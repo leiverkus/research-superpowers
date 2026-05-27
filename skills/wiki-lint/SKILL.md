@@ -56,7 +56,7 @@ For users on Cowork or any environment without a shell — or any project where 
 **Fallback procedure:**
 
 1. Read `schema/knowledge-frontmatter.schema.json` from the project root. If absent, read the plugin's copy (the plugin ships one).
-2. List every `knowledge/**/*.qmd` file (excluding files prefixed `_beispiel-`).
+2. List every `knowledge/**/*.qmd` file (excluding files prefixed `_example-`).
 3. For each file: parse the YAML frontmatter (the block between the first two `---` lines) and validate against:
    - `required` fields exist and are non-empty
    - `type` is one of `entity | concept | source | synthesis`
