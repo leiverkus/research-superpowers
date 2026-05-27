@@ -1,0 +1,63 @@
+digraph research_flow {
+    rankdir=TB;
+    node [shape=box, style=rounded];
+
+    start [shape=doublecircle, label="Idea / prompt"];
+    brainstorm [label="brainstorming-research"];
+    design_gate [shape=diamond, label="Design doc\nsigned off?"];
+    plan [label="writing-research-plan"];
+    prereg_gate [shape=diamond, label="Plan ready?\n(quant: pre-registered,\nherm: ready)"];
+    litrev [label="literature-review"];
+    ingest [label="ingest-source (loop)"];
+    sources_gate [shape=diamond, label="Sources\nsufficient?"];
+    execute [label="executing-research-plan"];
+    review_gate [shape=diamond, label="Review pass\n(quant: spec+quality,\nherm: synthesis)"];
+    synthesis_gate [shape=diamond, label="Synthesis\nstable?"];
+    draft [label="drafting-manuscript"];
+    peer [label="requesting-peer-review"];
+    finish [label="finishing-a-research-project"];
+    done [shape=doublecircle, label="Published /\narchived"];
+
+    subgraph cluster_flex {
+        label="Flexible skills (context-triggered)";
+        style=dashed;
+        lint [label="wiki-lint"];
+        semrev [label="semantic-wiki-review"];
+        grant [label="grant-finder"];
+    }
+
+    // Forward (standard run)
+    start -> brainstorm;
+    brainstorm -> design_gate;
+    design_gate -> plan [label="yes"];
+    design_gate -> brainstorm [label="no, iterate"];
+    plan -> prereg_gate;
+    prereg_gate -> litrev [label="yes"];
+    prereg_gate -> plan [label="no, refine"];
+    litrev -> ingest;
+    ingest -> sources_gate;
+    sources_gate -> ingest [label="no, more"];
+    sources_gate -> execute [label="yes"];
+    execute -> review_gate;
+    review_gate -> execute [label="no, fix"];
+    review_gate -> synthesis_gate [label="yes"];
+    synthesis_gate -> draft [label="yes"];
+    synthesis_gate -> execute [label="no, more synthesis"];
+    draft -> peer;
+    peer -> finish;
+    finish -> done;
+
+    // Hermeneutic back-edges — legitimate circle, not failure
+    edge [color="#1e8449", style=bold, fontcolor="#1e8449"];
+    ingest -> plan [label="reading revises\nresearch question", constraint=false];
+    draft -> execute [label="writing exposes\nanalysis gap", constraint=false];
+    peer -> draft [label="reviewer demands\nrevision", constraint=false];
+    edge [color=black, style=solid, fontcolor=black];
+
+    // Flexible skills — advisory, not a phase
+    ingest -> lint [style=dotted];
+    draft -> lint [style=dotted, label="soft-gate"];
+    finish -> lint [style=dotted, label="soft-gate"];
+    draft -> semrev [style=dotted, label="before stable"];
+    finish -> grant [style=dotted, label="follow-up"];
+}
