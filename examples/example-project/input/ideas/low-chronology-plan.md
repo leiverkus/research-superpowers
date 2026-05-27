@@ -1,155 +1,132 @@
-# Low Chronology Iron Age II — Research Plan
+---
+title: "Iron Age IIA Chronology in the Southern Levant — Research Plan"
+type: plan
+created: 2026-04-19
+updated: 2026-04-19
+status: ready
+author: mixed
+design: "[[low-chronology-design]]"
+methodology: hermeneutic
+---
 
-**Status:** pre-registered (2026-04-19 — Patrick Leiverkus)
+# Iron Age IIA Chronology in the Southern Levant — Research Plan
+
 **Slug:** `low-chronology-iron-age`
-**Design:** `input/ideas/low-chronology-iron-age-design.md`
-**Output target:** article (*Radiocarbon* or *Ägypten und Levante*)
+**Design:** [`input/ideas/low-chronology-design.md`](low-chronology-design.md)
+**Output target:** journal article (~6,000 words), *Tel Aviv* or *Near Eastern Archaeology*
+**Language:** en
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `research-superpowers:executing-research-plan` to run this plan task by task.
+
+**Research Question:** Did the central Negev fortresses fall within the chronological window of the early *Iron IIA* (10th c. BCE), as Cohen 1979 argued, or later (9th c. BCE), as the *Low Chronology* of Finkelstein 1999 / 2003 requires?
+
+**Method sketch (hermeneutic):** Close reading of the foundational positions and the *Forschungsstand* literature; per-source ingest with a focus aligned to that source's contribution to the Negev-fortress sub-question; synthesis traces the argument structure of the debate; draft argues for one of the three interpretive outcomes named in the design (regional variation / one-resolution / Forschungsstand reading).
+
+**Expected source corpus:** Cohen 1979, Finkelstein 1999 / 2003, Finkelstein & Piasetzky 2003, Mazar 2011, Regev et al. 2020, plus ~15 further A/B-rated *Forschungsstand* sources from a literature-review pass.
+
+**Iteration expectation:** Multiple cycles between `ingest-source` and this plan are expected. The hermeneutic circle is constitutive: each ingest may sharpen the project's question; that's logged in `knowledge/_meta/log.qmd` as the loop runs, not held against the original framing.
 
 ---
 
-## Research Question
+## Data Sources
 
-Does a re-analysis of all published 14C dates from Megiddo, Hazor, Gezer, and
-Tel Rehov (2001–2024), using IntCal20 and a unified Bayesian phase model,
-support Finkelstein's *Low Chronology*, Mazar's *High Chronology*, or
-neither?
+- [[finkelstein-piasetzky-2003]] — *already ingested* (focus: 14C reconciliation between Low and Modified Conventional Chronologies)
+- [[mazar-2011]] — stub ingested (focus: Modified Conventional Chronology response to the Low Chronology)
+- [[regev-et-al-2020]] — stub ingested (focus: current Tel Rehov 14C dataset)
+- Cohen 1979 — *ingest pending* (focus: stratigraphic and ceramic argument for 10th-c. Negev fortress horizon)
+- Finkelstein 1999 — *ingest pending* (focus: Low Chronology methodology)
+- Finkelstein 2003 — *ingest pending* (focus: Low Chronology applied to Megiddo and the southern Levant)
 
-## Hypothesis (pre-registered — FROZEN)
-
-> H1: The unified Bayesian model with IntCal20 yields phase posteriors whose
-> 68% HPD intervals for the *Iron IIA → IIB* transition fall between
-> 880 and 830 BCE (*Low Chronology*).
->
-> H0: The transition falls between 930 and 880 BCE (*High Chronology*) or
-> is wider than 80 years (indeterminate).
-
-## Falsification Criteria
-
-- **H1 rejected** if the 68% HPD median > 890 BCE OR the HPD width > 80 years.
-- **H1 confirmed** if the 68% HPD median ≤ 880 BCE AND the HPD width ≤ 80 years.
-- **Indeterminate** if calibration sensitivity > 20 years' variance between
-  IntCal13 / IntCal20 / IntCal22.
-
-## Method
-
-1. **Data ingest:** All 14C measurements from the key publications (see
-   below) compiled as a structured table (`input/data/c14-levant-ironage.csv`):
-   lab ID, site, stratum, material, conventional age, σ, context, publication.
-2. **Bayesian model (OxCal 4.4):** Phase model with boundary priors after
-   Bronk Ramsey (2009); IntCal20 as default.
-3. **Sensitivity analysis:** Re-run with IntCal13 and IntCal22; comparison
-   of phase posteriors.
-4. **Interpretation:** Check against the pre-registration. Deviation log
-   for any divergent findings.
-
-## Data Sources (ingest required)
-
-- `[[finkelstein-piasetzky-2003]]` — *Low Chronology* argument
-- `[[finkelstein-piasetzky-2011]]` — 14C update
-- `[[mazar-2011]]` — *High Chronology* response
-- `[[regev-et-al-2020]]` — Tel Rehov dataset
-- `[[bronk-ramsey-2009]]` — Bayesian methodology
-- `[[reimer-et-al-2020]]` — IntCal20
-
-Dataset: `input/data/c14-levant-ironage.csv` (produced in Task 2).
+Forschungsstand literature: discovered by a `literature-review` pass; ingested per source under a project-question-aligned focus.
 
 ---
 
 ## Tasks
 
-### Task 1: Literature & Source Ingest
+### Task 1: Literature review
 
-- [ ] Literature-scout dispatch (OpenAlex, IxTheo, Zenon-DAI, 2001–2026)
-- [ ] Ingest `[[finkelstein-piasetzky-2003]]`
-- [ ] Ingest `[[finkelstein-piasetzky-2011]]`
-- [ ] Ingest `[[mazar-2011]]`
-- [ ] Ingest `[[regev-et-al-2020]]`
-- [ ] Ingest `[[bronk-ramsey-2009]]`
-- [ ] Ingest `[[reimer-et-al-2020]]`
-- [ ] Ingest ≥ 8 further A/B-rated sources from scout output
-- [ ] Wiki-lint green
-- [ ] Synthesis: `[[chronology-debate]]` status draft
+**Files:** `input/bibliography/literaturguide.md`, `output/bibtex/references.bib`
 
-### Task 2: Data Extraction
+- [ ] Dispatch `literature-scout` (OpenAlex, IxTheo, Zenon-DAI, Propylaeum), 1979–2025
+- [ ] Screen and grade (A/B/C). Minimum 15 A/B sources
+- [ ] Generate `literaturguide.md` in 9-section format
+- [ ] Update `references.bib`
 
-- Files: `input/data/c14-levant-ironage.csv`, `output/data-analysis/extract.py`
-- [ ] Python script to parse the appendix tables (PDF → CSV)
-- [ ] Manual validation (sample n=20)
-- [ ] Spec review (complete against sources?) + quality review (units, σ)
-- [ ] Commit `c14-levant-ironage.csv` with SHA log
+### Task 2: Ingest foundational sources
 
-### Task 3: Bayesian model in OxCal
+**Files:** `knowledge/sources/*.qmd`, `knowledge/entities/*.qmd`
 
-- Files: `output/data-analysis/oxcal/phases.oxcal`, `output/data-analysis/oxcal/run.sh`
-- [ ] Write the OxCal input file (4 phases: *Iron I*, *IIA early*, *IIA late*, *IIB*)
-- [ ] Run the model, check convergence (A-index ≥ 60)
-- [ ] Export posteriors as JSON
-- [ ] Spec review + quality review
+- [ ] Cohen 1979 — focus: "Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon"
+- [ ] Finkelstein 1999 — focus: "Low Chronology methodology and the regional argument"
+- [ ] Finkelstein 2003 — focus: "Low Chronology applied to monumental architecture, implications for Negev"
+- [ ] (Finkelstein & Piasetzky 2003 already ingested; re-ingest only if the focus drifts)
+- [ ] Wiki-lint exits 0
 
-### Task 4: Sensitivity Analysis
+### Task 3: Ingest *Forschungsstand* sources
 
-- Files: `output/data-analysis/sensitivity.py`, `output/data-analysis/results/sensitivity.json`
-- [ ] Re-run with IntCal13, IntCal22
-- [ ] Posterior comparison (median, 68% HPD width)
-- [ ] Heatmap `output/data-analysis/results/sensitivity.png`
-- [ ] Spec review + quality review
+**Files:** `knowledge/sources/*.qmd`
 
-### Task 5: Synthesis & Interpretation
+- [ ] Ingest ≥ 8 further A/B-rated sources from the literature-review output, each with a per-source focus statement
+- [ ] Each ingest produces source page + entity stubs + BibTeX entry + log line
+- [ ] Wiki-lint exits 0 after each batch of 3 ingests
 
-- Files: `knowledge/synthesis/chronology-debate.qmd`
-- [ ] Compare results against the pre-registration (H1 / H0 / indeterminate)
-- [ ] Deviation log if divergent
-- [ ] Status → `review` (not `stable`: only the user sets that)
+### Task 4: Synthesise the chronology debate
 
-### Task 6: Draft Article
+**Files:** `knowledge/synthesis/chronology-debate.qmd`
 
-- Files: `output/publication/article/main.qmd` (sections: Introduction / Methods /
-  Results / Discussion / Conclusion), target ~9,000 words
-- [ ] Skeleton + sign-off
-- [ ] Draft section by section (6 sections)
-- [ ] Citations exclusively from `output/bibtex/references.bib`
-- [ ] `make render` exit code 0
-- [ ] Word count ± 10%
+- [ ] Trace argument structure: data selection, calibration, phase modelling, framework choice
+- [ ] Map which side hinges on which evidence at each level
+- [ ] Reference each source via its focus block(s)
+- [ ] Apply Critical-Thinking checklist (`executing-research-plan`) before marking ready
+- [ ] User sets `status: stable` after review (agents never self-promote)
 
-### Task 7: Peer Review
+### Task 5: Draft article
 
-- [ ] Dispatch a constructive reviewer (archaeology focus)
-- [ ] Dispatch an adversarial reviewer (Bayesian-methodology focus)
-- [ ] Review documentation in `output/publication/article/reviews/2026-MM-DD-review.md`
-- [ ] Walk major issues with the user
+**Files:** `output/publication/article/article.qmd`
 
-### Task 8: Finish
+- [ ] Confirm `wiki-lint` exits 0
+- [ ] Skeleton: Introduction → Forschungsstand → Argument structure of the debate → The Negev case → Discussion → Conclusion
+- [ ] Sign-off on skeleton with user
+- [ ] Draft section by section, ~6,000 words ±15%
+- [ ] Inline citations as `[@bibkey, p. XX]` only from `output/bibtex/references.bib`
+- [ ] `quarto render` exits 0
 
-- [ ] `/finish-project` closing checklist
-- [ ] Zenodo DOI
-- [ ] Reproducibility statement
-- [ ] Submission handoff (cover-letter draft)
+### Task 6: Peer review
+
+**Files:** `output/publication/article/reviews/`
+
+- [ ] Dispatch constructive reviewer (archaeology focus)
+- [ ] Dispatch adversarial reviewer (Bayesian-methodology focus, even though we don't run a model — the methodological framing must still hold up)
+- [ ] Classify each issue Major / Minor / Editorial
+- [ ] Walk user through each with accept / reject / defer decisions
+
+### Task 7: Finish
+
+- [ ] Closing checklist (see `finishing-a-research-project`)
+- [ ] Zenodo DOI for the manuscript + supplementary
+- [ ] Submission handoff (cover letter draft)
 
 ---
 
 ## Verification
 
+The project is complete when:
+
 - [ ] `scripts/lint-wiki.py` exits 0
-- [ ] ≥ 14 sources ingested with `status: stable` (set by the user)
-- [ ] `knowledge/synthesis/chronology-debate.qmd` status ≥ `review`
-- [ ] `output/data-analysis/results/sensitivity.json` reproducible
-  (seed fixed, environment lockfile present)
-- [ ] `make render` produces PDF without warnings
-- [ ] Hypothesis explicitly evaluated (confirmed / refuted / inconclusive)
-- [ ] Peer-review document on file
+- [ ] ≥ 15 sources ingested under focus statements, all with `status: stable` (set by the user)
+- [ ] `knowledge/synthesis/chronology-debate.qmd` has `status: stable`
+- [ ] `quarto render` on `output/publication/article/` produces PDF without warnings
+- [ ] Peer-review round completed with all Major issues resolved or explicitly deferred with rationale
+- [ ] Manuscript explicitly commits to one of the three interpretive outcomes (regional variation / one-resolution / Forschungsstand reading)
+- [ ] Zenodo deposit logged
 
-## Deviations Log
+## Hermeneutic-revision log
 
-Every deviation from this plan is noted here AND in `knowledge/_meta/log.qmd`.
-Format:
-
-```
-- YYYY-MM-DD · deviation · plan=low-chronology-iron-age · <what changed and why>
-```
+Hermeneutic projects expect the research question to shift through engagement with sources. Revisions to this plan are logged in `knowledge/_meta/log.qmd` with date and rationale; the design doc is the stable anchor, the plan accretes.
 
 **So far:** —
 
 ---
 
-**Pre-registration sign-off:** 2026-04-19, Patrick Leiverkus
-**Next:** `/execute-plan`
+**Sign-off:** 2026-04-19, Patrick Leiverkus (status: ready — no pre-registration required for this hermeneutic project)
+**Next:** `executing-research-plan` skill

@@ -4,6 +4,30 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] — 2026-05-28
+
+Post-release housekeeping for the example project. Brings every file under `examples/example-project/` into alignment with v0.3 (SOFT-GATE / methodology-aware) and v0.5 (focus-driven ingest). No skill or schema changes.
+
+### Changed
+
+- **`examples/example-project/input/ideas/low-chronology-design.md`** — rewritten as a hermeneutic design doc (matches the project's `methodology: hermeneutic` declared in `input/description/project-description.md`). Removes references to a quantitative OxCal re-analysis; reframes as close reading of the foundational positions plus *Forschungsstand* with three plausible interpretive outcomes (regional variation / one-resolution / Forschungsstand reading).
+- **`examples/example-project/input/ideas/low-chronology-plan.md`** — `status: pre-registered` → `status: ready`; removed `Hypothesis` and `Falsification Criteria` blocks (not used in hermeneutic projects); added `methodology: hermeneutic` and `Method sketch` / `Iteration expectation` blocks per v0.3 plan template. Task list rewritten around close reading + per-source focus-driven ingest, dropping the Bayesian / OxCal data-analysis tasks.
+- **`examples/example-project/knowledge/synthesis/chronology-debate.qmd`** — modernised to v0.5 conventions: references the focus-driven Finkelstein-Piasetzky source page properly (via the `## Focus: 14C reconciliation` block); adds an argument-structure map over the four levels of the debate (data selection / calibration / phase modelling / framework choice); incorporates the new Mazar 2011 and Regev et al. 2020 stubs. Status: `review` (was: `draft`).
+- **`examples/example-project/output/publication/article/main.qmd`** — rewritten as a hermeneutic article skeleton (Introduction → State of the Field → Argument Structure → Negev Case → Discussion → Conclusion). Dropped Reproducibility section with OxCal seeds (no quantitative analysis to reproduce).
+- **`examples/example-project/knowledge/_meta/log.qmd`** — updated to reflect the new event sequence (plan `status: ready` rather than `pre-registered`; new ingests for Mazar 2011 and Regev et al. 2020; synthesis promoted to `review`).
+
+### Added
+
+- **`examples/example-project/knowledge/sources/mazar-2011.qmd`** — new focus-driven source page with one focus block ("the Modified Conventional Chronology response to the Low Chronology"), demonstrating the v0.5 structure on the Mazar counter-position.
+- **`examples/example-project/knowledge/sources/regev-et-al-2020.qmd`** — new focus-driven source page with one focus block ("the current Tel Rehov 14C dataset and re-modelling under IntCal20").
+- **BibTeX entries for `mazar-2011` and `regev-et-al-2020`** in `examples/example-project/output/bibtex/references.bib`.
+
+### Removed / Fixed
+
+- Stale "not yet ingested" markers for `mazar-2011` and `regev-et-al-2020` across the example project — these are now real stub source pages.
+
+---
+
 ## [0.5.0] — 2026-05-27
 
 Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures. See [`docs/migration-v0.4-to-v0.5.md`](docs/migration-v0.4-to-v0.5.md).
