@@ -59,18 +59,37 @@ Output: `input/bibliography/literaturguide.md` with ~18 sources graded A/B/C, pl
 
 ## Phase 4 — Ingest, one source at a time (skill: `ingest-source`)
 
-You say "ingest the Cohen 1979 PDF." The skill:
+You say "ingest the Cohen 1979 PDF." The skill first asks for a **focus** — what *this project* takes from *this source* — and proposes the project's research question as the default:
 
-1. Reads the PDF in full (not just abstract).
+> Default focus from `input/description/project-description.md`: «Did the central Negev fortresses fall within the 10th c. BCE (Cohen 1979) or later (Low Chronology)?» Use this for the ingest, or refine? E.g. for Cohen 1979 specifically you might say "focus on Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon".
+
+You refine — the project research question is too broad for *this* source. You give: *"Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon."*
+
+The skill then:
+
+1. Reads the PDF in full **under that focus** (not just abstract; reads with the focus question actively in mind, marking anything that bears on it).
 2. Derives slug `cohen-1979`.
-3. Creates `knowledge/sources/cohen-1979.qmd` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979`).
-4. Extracts entities: `cohen` (person), `negev-fortresses` (concept/site cluster), `tel-arad` (place), `kadesh-barnea` (place), `iron-age-iia` (concept), `high-chronology` (concept).
+3. Creates `knowledge/sources/cohen-1979.qmd` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979`) and a body containing exactly one `## Focus: <your focus> — <date>` block (claims, direct quotes, explicit boundary of what the source does *not* address), a one-paragraph `## Other content in this source` note, and union `## Mentioned entities` + `## Connections` sections.
+4. Extracts entities **relevant to the focus**: `cohen` (person), `negev-fortresses` (concept), `tel-arad` (place), `kadesh-barnea` (place), `iron-age-iia` (concept), `high-chronology` (concept). Entities unrelated to the focus (e.g. Cohen's brief excursus on Phoenician trade) are not extracted now — they stay in the PDF until a future re-ingest needs them.
 5. Creates an entity page for each new one.
 6. Writes the BibTeX entry.
-7. Appends a line to `knowledge/_meta/log.qmd`.
+7. Appends a line to `knowledge/_meta/log.qmd`: `- 2026-05-28 · ingest · [[cohen-1979]] · focus: «Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon»`.
 8. Runs `python scripts/lint-wiki.py` — exits 0.
 
-You repeat for Finkelstein 1999, Finkelstein & Piasetzky 2003, Mazar 2011, plus 2–3 more from the literature guide that turn out to be cited heavily.
+You repeat for Finkelstein 1999, Finkelstein & Piasetzky 2003, Mazar 2011, plus 2–3 more from the literature guide that turn out to be cited heavily. Each gets its own focus, refined from the project research question.
+
+**Re-ingest later with a different focus.** When you start drafting the chapter on regional variation — say 6 weeks later — you realise you need Cohen 1979 again, this time for his typological comparison between the central Negev and the Beersheva Valley. You ingest again:
+
+> "Ingest Cohen 1979 focused on the typological comparison with the Beersheva Valley."
+
+The skill detects `knowledge/sources/cohen-1979.qmd` already exists with one focus block, and switches to **append mode**:
+
+> Source `cohen-1979` is already ingested with 1 focus block:
+> - 2026-05-28: "Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon"
+>
+> Proceeding will append a new focus block for: "the typological comparison with the Beersheva Valley".
+
+You confirm; the skill appends a new `## Focus: …` block at the bottom of the existing page (before `## Other content in this source`), updates the "other content" paragraph if new aspects emerge, and unions any new entities into `## Mentioned entities`. The first focus block stays untouched. One bibkey, one wiki page, two lenses.
 
 If you have `dao-paper-search-mcp`, the entity pages get populated with `wikidata_qid` (for people) and `idai_gazetteer_id` (for places) — `resolve_author("Israel Finkelstein")` returns `Q461571`; `resolve_site("Tel Megiddo")` returns `2048473`. These authority IDs let you deduplicate later and pull canonical metadata.
 

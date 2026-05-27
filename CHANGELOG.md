@@ -4,6 +4,30 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-05-27
+
+Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures. See [`docs/migration-v0.4-to-v0.5.md`](docs/migration-v0.4-to-v0.5.md).
+
+### Changed
+
+- **`skills/ingest-source/SKILL.md`** — substantial restructure. New `focus` input (smart-default from `input/description/project-description.md`). New Step 1 "Determine focus" (proposes project research question, asks user to confirm or refine; refuses to proceed without confirmed focus). New Step 5 "Check for existing source page" + re-ingest detection branch (append mode preserves prior focus blocks; replaces `## Other content in this source`; unions `## Mentioned entities` and `## Connections`; legacy-wrap option for pre-v0.5 pages). New Source Page Template body (stacked `## Focus:` blocks; explicit `## Boundary: what this source does NOT address`; one-paragraph `## Other content in this source`). Old generic sections (`Core Theses`, `Method`, `Relevant Findings`, `Positioning`) removed from the spec.
+- **`agents/source-ingester.md`** — output report extended: `### Focus`, `### Re-ingest mode` (`fresh` | `append-section` | `update-existing-focus` | `legacy-wrap`); `### Claims relevant to focus` replaces `### Core theses`; `### Boundary noted` echoes the explicit boundary statement. Min. 1 verbatim quote *per focus block* (was: min. 2 per ingest).
+- **`templates/research-project-template/knowledge/sources/_beispiel-finkelstein-2003.qmd`** — rewritten with two stacked focus blocks demonstrating the append pattern.
+- **`examples/example-project/knowledge/sources/finkelstein-piasetzky-2003.qmd`** — rewritten with one realistic focus block aligned to the example project's research question.
+
+### Added
+
+- **`examples/example-project/input/description/project-description.md`** — new file. The example project now has a proper research question file so the smart-default focus elicitation has something to read.
+- **`docs/concepts.md` § "Wiki is purpose-built, not a generic archive"** — explains the why behind focus-driven ingest, the append-on-reingest pattern, and how this differs from RAG.
+- **`docs/migration-v0.4-to-v0.5.md`** — covers the structural change, the optional re-ingest with legacy-wrap, and what stays unchanged.
+- **`docs/tutorial.md` § Phase 4** — walkthrough updated to demonstrate focus elicitation, focus refinement, and re-ingest with a different focus on the same source.
+
+### Removed / Fixed
+
+None (the removal of the generic body sections from the SKILL.md *spec* is a template change, not a removal from existing wiki pages).
+
+---
+
 ## [0.4.0] — 2026-05-27
 
 Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes. See [`docs/migration-v0.3-to-v0.4.md`](docs/migration-v0.3-to-v0.4.md).

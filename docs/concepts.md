@@ -62,6 +62,25 @@ Two skills audit the wiki, and they do *different* things:
 
 Earlier versions promised semantic checks in `wiki-lint`. They were never implemented. v0.2 split the work so the lint script only claims what it actually does, and the LLM work lives in its own skill that's invoked manually.
 
+## Wiki is purpose-built, not a generic archive
+
+This is the principle behind the focus-driven `ingest-source` skill (introduced in v0.5).
+
+A generic RAG system indexes the full text of every document so anything can be retrieved. The result is faithful to the source but agnostic about what *you* need from it — and in practice, retrieval surfaces a lot of irrelevant material that the LLM then has to filter on every query.
+
+This plugin takes the opposite stance. A source page documents **what your project takes from a source under a specific focus**, not a generic summary. Each ingest answers a per-source question: *for the project's research question, and for the specific aspect you're working on right now, what does this source actually contribute?* The skill asks for that focus (proposing the project's research question as the default) and extracts only the claims, quotes, and entities that bear on it. The raw PDF stays in `input/bibliography/` as the canonical "everything"; the wiki is the curated interpretation.
+
+When a new focus emerges — say you're working on a different chapter that draws on the same source from a different angle — you re-ingest. The skill detects the existing source page and **appends** a new `## Focus: …` block rather than overwriting the previous one. One wiki page accretes multiple lenses over the project's life. The bibkey stays the same; later focuses just add new bullets, new quotes, new entities.
+
+Two structural honesty conventions support this:
+
+- **`## Boundary: what this source does NOT address (within this focus)`** — every focus block explicitly names what's *not* there. Researchers reading the page later (or downstream skills like `drafting-manuscript`) know exactly where the source's reach ends.
+- **`## Other content in this source`** — one paragraph noting major topics not extracted under any current focus. A signpost to the PDF in case a future re-ingest needs them. Replaced (not appended to) on each re-ingest.
+
+The trade-off: source pages are thinner than a full summary, and a colleague who later wants a "what does Finkelstein 2003 say overall?" view has to read the PDF or trigger a re-ingest with a broader focus. We think that's the right trade — it keeps the wiki aligned with the project rather than pretending to be a personal library.
+
+This is also why the skill never silently overwrites an existing source page. The wiki is treated as accumulated interpretation, not a regenerable summary.
+
 ## MCPs are soft-preference, not required
 
 The plugin ships standalone. Two recommended MCPs ([`dao-paper-search-mcp`](https://github.com/leiverkus/dao-paper-search-mcp) and [`dao-searxng-mcp`](https://github.com/leiverkus/dao-searxng-mcp)) add structurally verified citations and source-class detection — exactly the discipline problems the plugin's red flags talk about. Each skill that benefits from these MCPs has an "MCP Optimisation (recommended)" section that names the soft-preference: *if* the MCP is available, use it; otherwise stay on the documented manual path.
