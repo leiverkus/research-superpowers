@@ -95,8 +95,7 @@ research-superpowers/
     ├── frontmatter-schema.md     # narrative pointer to schema/
     ├── phase-flow.md             # graph with hermeneutic back-edges
     ├── skill-authoring.md        # how to add or change a skill
-    ├── skill-contract.md         # SOT pattern + inputs/outputs format
-    └── migration-v0.1-to-v0.2.md
+    └── skill-contract.md         # SOT pattern + inputs/outputs format
 ```
 
 ## Authoring new skills
@@ -106,10 +105,6 @@ See [`skill-authoring.md`](skill-authoring.md) — template, language convention
 ## Frontmatter
 
 Every `knowledge/**/*.qmd` page follows the central schema. See [`frontmatter-schema.md`](frontmatter-schema.md) for the narrative pointer; [`schema/knowledge-frontmatter.schema.json`](../schema/knowledge-frontmatter.schema.json) for the normative definition.
-
-## Migrating from v0.1
-
-See [`migration-v0.1-to-v0.2.md`](migration-v0.1-to-v0.2.md) and [`../CHANGELOG.md`](../CHANGELOG.md).
 
 ## License
 
