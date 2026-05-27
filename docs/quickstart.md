@@ -35,32 +35,13 @@ Need more detail or hit a snag? See [`installation.md`](installation.md) — all
 
 ## 2. Scaffold a research project
 
-Copy the template anywhere on disk:
+Open Claude Code in any directory and say:
 
-```bash
-cp -r /path/to/research-superpowers/templates/research-project-template my-project
-cd my-project
-```
+> Scaffold a new research project.
 
-Edit the frontmatter at the top of `CLAUDE.md` — set `methodology`, `discipline`, and `languages` to match your project:
+The `scaffold-research-project` skill takes over and asks you four questions (project name, parent directory, methodology, discipline). After you confirm, it copies the template tree, patches `CLAUDE.md` with your answers, and optionally initialises git — no terminal commands needed.
 
-```yaml
----
-methodology: hermeneutic   # hermeneutic | quantitative | mixed
-discipline: "Biblical Archaeology"
-languages: [en, de]
----
-```
-
-(`hermeneutic` is the default and right for most theology / archaeology / DH projects. See [`concepts.md`](concepts.md) for when to choose `quantitative` or `mixed`.)
-
-Initialise git and create the bibliography directory:
-
-```bash
-git init
-mkdir -p input/bibliography output/bibtex
-touch output/bibtex/references.bib
-```
+(`hermeneutic` is the default methodology and right for most theology / archaeology / DH projects. See [`concepts.md`](concepts.md) for when to choose `quantitative` or `mixed`.)
 
 ## 3. Drop a source PDF
 
