@@ -1,6 +1,17 @@
 ---
 name: wiki-lint
 description: Use to validate the knowledge wiki — frontmatter completeness, broken wikilinks, orphaned pages, status consistency. Wraps `scripts/lint-wiki.py` from the research project template. Required before drafting and before finishing.
+inputs:
+  - name: project_root
+    description: Absolute path to the research project root
+    required: true
+outputs:
+  - path: knowledge/**/*.qmd
+    kind: modified
+  - path: knowledge/_meta/log.qmd
+    kind: appended
+agents:
+  - wiki-linter
 ---
 
 # Wiki Lint

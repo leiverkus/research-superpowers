@@ -107,4 +107,4 @@ For now, the constraint is editorial — when changing a workflow, change the Sk
 
 ## When NOT to follow this pattern
 
-Some skills are pure-human guidance (no subagent dispatch, no command shortcut) — e.g. `brainstorming-research`, `wiki-lint`. These declare neither `inputs:` nor `outputs:` nor `agents:`. They are loaded via the `Skill` tool only, and their content is the whole story.
+Some skills are pure-human guidance (no subagent dispatch, no command shortcut) — e.g. `brainstorming-research`. These declare neither `inputs:` nor `outputs:` nor `agents:`. They are loaded via the `Skill` tool only, and their content is the whole story.
