@@ -7,6 +7,10 @@ tags: [chronology, iron-age, radiocarbon, tel-rehov]
 bibkey: regev-et-al-2020
 status: review
 author: llm
+relations:
+  - target: finkelstein-piasetzky-2003
+    type: builds-on
+    confidence: extracted
 ---
 
 ## Bibliographic Reference

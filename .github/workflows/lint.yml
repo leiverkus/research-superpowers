@@ -58,6 +58,26 @@ jobs:
           cd examples/example-project
           python scripts/lint-wiki.py
 
+      - name: Graph build on example project
+        run: |
+          cd examples/example-project
+          python scripts/wiki-to-graph.py --out-dir /tmp/graph
+          python <<'PY'
+          import json
+          from xml.etree import ElementTree as ET
+          d = json.load(open("/tmp/graph/graph.json"))
+          s = d["stats"]
+          # Counts track the example-project fixture; update if the example wiki changes.
+          assert s["nodes"] == 5, f"expected 5 nodes, got {s['nodes']}"
+          assert s["edges"] == 16, f"expected 16 edges, got {s['edges']}"
+          assert s["relations_total"] == 3, f"expected 3 relations, got {s['relations_total']}"
+          assert d["god_nodes"], "god_nodes is empty"
+          assert d["bridges"], "bridges is empty"
+          ET.parse("/tmp/graph/graph.graphml")  # must be well-formed XML
+          print(f"graph: {s['nodes']} nodes, {s['edges']} edges, "
+                f"{len(d['god_nodes'])} god_nodes, {len(d['bridges'])} bridge(s) — OK")
+          PY
+
       - name: Agent contract — every agent references an existing skill
         run: |
           failed=0

@@ -48,5 +48,8 @@ output/app/__pycache__/
 output/app/venv/
 output/app/node_modules/
 
+# Generated knowledge-graph export (scripts/wiki-to-graph.py)
+graphify-out/
+
 # Keep directory structure
 !**/.gitkeep
