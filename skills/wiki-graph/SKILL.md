@@ -1,6 +1,6 @@
 ---
 name: wiki-graph
-description: Use to build and analyse the knowledge wiki as a graph. Runs `scripts/wiki-to-graph.py` (from the research project template) to export graph.json / graph.graphml, then answers structure questions grounded in the result — most-connected pages (god nodes), entities that bridge otherwise-unconnected sources, relation types and confidence (inferred vs grounded), clusters and weak spots. Triggers include "build/show me a knowledge graph", "map the wiki", "graph view of my research", "which entity connects or bridges my sources", "what are the most connected or central pages", "find surprising connections", "where are the gaps or weak links in the wiki", "export the wiki to Gephi/yEd". For frontmatter and wikilink validation use `wiki-lint`; for content and claim audit use `semantic-wiki-review`.
+description: Use to build and analyse the knowledge wiki as a graph. Runs `scripts/wiki-to-graph.py` (from the research project template) to export an interactive self-contained graph.html (open in any browser, no install) plus graph.json / graph.graphml, then answers structure questions grounded in the result — most-connected pages (god nodes), entities that bridge otherwise-unconnected sources, relation types and confidence (inferred vs grounded), clusters and weak spots. Triggers include "build/show me a knowledge graph", "map the wiki", "graph view of my research", "which entity connects or bridges my sources", "what are the most connected or central pages", "find surprising connections", "where are the gaps or weak links in the wiki", "export the wiki to Gephi/yEd". For frontmatter and wikilink validation use `wiki-lint`; for content and claim audit use `semantic-wiki-review`.
 inputs:
   - name: project_root
     description: Absolute path to the research project root
@@ -12,6 +12,8 @@ inputs:
     description: Number of god nodes to report (default 15)
     required: false
 outputs:
+  - path: knowledge/_meta/graph/graph.html
+    kind: created
   - path: knowledge/_meta/graph/graph.json
     kind: created
   - path: knowledge/_meta/graph/graph.graphml
@@ -50,11 +52,11 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 
 1. **Locate the script** — `scripts/wiki-to-graph.py` in the project root (from the template). If it is missing, offer to copy it from the template (or scaffold the project); if Python/PyYAML are unavailable, take the **fallback** below.
 2. **Lint first (recommended)** — broken wikilinks become dangling edges and skew the picture. If `wiki-lint` has not run recently, suggest it; note any override.
-3. **Build the graph** — `python scripts/wiki-to-graph.py` (add `--top-n N` if the user wants more/fewer god nodes). It writes `knowledge/_meta/graph/graph.json` and `knowledge/_meta/graph/graph.graphml`.
+3. **Build the graph** — `python scripts/wiki-to-graph.py` (add `--top-n N` if the user wants more/fewer god nodes). It writes `graph.html` (interactive, self-contained), `graph.json`, and `graph.graphml` into `knowledge/_meta/graph/`.
 4. **Read `graph.json`** — never answer from memory of the wiki; read the actual export.
 5. **Answer the question grounded in the data** (see "Reading the output"). If no specific question was asked, give the overview: god nodes, bridges, inference-rate, and any dangling/orphan signal.
 6. **Be honest about confidence and gaps** (see "Honesty rules"). If the user asks about a connection that is not in the graph, say so — and offer to add a `relations` entry or a wikilink rather than asserting it.
-7. **Offer Gephi/yEd** — if the user wants a visual layout, point them to `knowledge/_meta/graph/graph.graphml`.
+7. **Offer the viz** — for an interactive look, point the user to `knowledge/_meta/graph/graph.html` (opens in any browser, no install; filter/search/click). For heavy layout or community detection, `graph.graphml` opens in Gephi/yEd.
 8. **Persist an insight (optional, with consent)** — if the analysis yields a standalone finding the user wants to keep, write a `knowledge/synthesis/<slug>.md` page with `status: draft`, `author: llm`. Never self-promote to `review`/`stable`.
 9. **Log** the run in `knowledge/_meta/log.md`: date, `graph`, question (or "overview"), node/edge counts, headline finding.
 

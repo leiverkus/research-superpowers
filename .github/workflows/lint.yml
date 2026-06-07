@@ -63,7 +63,7 @@ jobs:
           cd examples/example-project
           python scripts/wiki-to-graph.py --out-dir /tmp/graph
           python <<'PY'
-          import json
+          import json, os
           from xml.etree import ElementTree as ET
           d = json.load(open("/tmp/graph/graph.json"))
           s = d["stats"]
@@ -74,8 +74,11 @@ jobs:
           assert d["god_nodes"], "god_nodes is empty"
           assert d["bridges"], "bridges is empty"
           ET.parse("/tmp/graph/graph.graphml")  # must be well-formed XML
+          html = open("/tmp/graph/graph.html", encoding="utf-8").read()
+          assert "cytoscape" in html and "const GRAPH" in html, "graph.html missing lib or data"
           print(f"graph: {s['nodes']} nodes, {s['edges']} edges, "
-                f"{len(d['god_nodes'])} god_nodes, {len(d['bridges'])} bridge(s) — OK")
+                f"{len(d['god_nodes'])} god_nodes, {len(d['bridges'])} bridge(s), "
+                f"html {len(html)//1024}KB — OK")
           PY
 
       - name: Agent contract — every agent references an existing skill

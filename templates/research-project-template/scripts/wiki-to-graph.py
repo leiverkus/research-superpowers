@@ -9,6 +9,11 @@ it can be opened in Gephi/yEd (GraphML) or queried programmatically (JSON).
 What it produces (under --out-dir, default ``knowledge/_meta/graph/``):
   * ``graph.json``    — nodes, edges, and two derived lists (god_nodes, bridges)
   * ``graph.graphml`` — the same graph for Gephi / yEd / Cytoscape
+  * ``graph.html``    — a self-contained interactive viz (open in any browser;
+    no install, no network) — written only if ``scripts/vendor/cytoscape.min.js``
+    is present. Filter by node type / relation type / confidence, search, click
+    a node to highlight its neighbourhood. Covers everyday exploration without
+    Gephi/yEd.
 
 Nodes
   One node per wiki page. ``type`` is taken verbatim from the page frontmatter
@@ -376,6 +381,244 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
     return path
 
 
+def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -> Path | None:
+    """Write a self-contained interactive HTML viz (cytoscape.js, inlined).
+
+    Returns the path, or None if the vendored library is missing (the script
+    still produces graph.json / graph.graphml in that case).
+    """
+    if not vendor_path.exists():
+        return None
+    lib = vendor_path.read_text(encoding="utf-8").replace("</script", "<\\/script")
+
+    # Degree per node + bridge flag, baked into cytoscape element data.
+    degree: dict[str, int] = {n["id"]: 0 for n in nodes}
+    for e in edges:
+        degree[e["source"]] = degree.get(e["source"], 0) + 1
+        degree[e["target"]] = degree.get(e["target"], 0) + 1
+    bridge_ids = {b["id"] for b in bridges}
+
+    cy_nodes = [
+        {"data": {
+            "id": n["id"], "type": n["type"], "subtype": n.get("subtype"),
+            "title": n.get("title", n["id"]), "status": n.get("status", ""),
+            "degree": degree.get(n["id"], 0), "bridge": 1 if n["id"] in bridge_ids else 0,
+        }}
+        for n in nodes
+    ]
+    cy_edges = [
+        {"data": {
+            "id": f"e{i}", "source": e["source"], "target": e["target"],
+            "relation_type": e["relation_type"], "confidence": e["confidence"],
+            "weight": e.get("weight", 1),
+        }}
+        for i, e in enumerate(edges)
+    ]
+    data_json = json.dumps(
+        {"nodes": cy_nodes, "edges": cy_edges, "stats": {**stats, "nodes": len(nodes), "edges": len(edges)}},
+        ensure_ascii=False,
+    ).replace("</", "<\\/")
+
+    html = (
+        _HTML_HEAD
+        + "<script>\n" + lib + "\n</script>\n"
+        + "<script>const GRAPH = " + data_json + ";</script>\n"
+        + "<script>\n" + _APP_JS + "\n</script>\n"
+        + _HTML_TAIL
+    )
+    path = out_dir / "graph.html"
+    path.write_text(html, encoding="utf-8")
+    return path
+
+
+_HTML_HEAD = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiki knowledge graph</title>
+<style>
+  :root { --bg:#fafafa; --panel:#fff; --line:#e3e3e3; --ink:#333; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; height:100%; font:13px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); }
+  #app { display:flex; height:100%; }
+  #cy { flex:1; background:var(--bg); }
+  #side { width:280px; border-left:1px solid var(--line); background:var(--panel); padding:14px; overflow-y:auto; }
+  #side h1 { font-size:15px; margin:0 0 2px; }
+  #side .muted { color:#888; font-size:11px; margin-bottom:12px; }
+  fieldset { border:1px solid var(--line); border-radius:6px; margin:0 0 12px; padding:8px 10px; }
+  legend { font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#666; padding:0 4px; }
+  label.row { display:flex; align-items:center; gap:7px; padding:2px 0; cursor:pointer; }
+  .swatch { width:12px; height:12px; border-radius:3px; display:inline-block; flex:none; }
+  #search { width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
+  .btn { display:inline-block; padding:5px 10px; margin:2px 4px 2px 0; border:1px solid var(--line);
+         border-radius:6px; background:#fff; cursor:pointer; font-size:12px; }
+  .btn:hover { background:#f0f0f0; }
+  #info { font-size:12px; }
+  #info .t { font-weight:600; font-size:13px; }
+  #info .k { color:#888; }
+  #info ul { margin:6px 0 0; padding-left:16px; }
+  #info li { margin:1px 0; }
+  .pill { display:inline-block; padding:0 6px; border-radius:10px; font-size:10px; background:#eee; color:#555; }
+  .legend-note { font-size:11px; color:#777; margin-top:4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="cy"></div>
+  <div id="side">
+    <h1>Knowledge graph</h1>
+    <div class="muted" id="stats"></div>
+
+    <input id="search" placeholder="Search a page…" autocomplete="off">
+
+    <div style="margin:8px 0">
+      <span class="btn" id="fit">Fit</span>
+      <span class="btn" id="relayout">Re-layout</span>
+      <span class="btn" id="reset">Reset</span>
+    </div>
+
+    <fieldset>
+      <legend>Node types</legend>
+      <div id="type-filters"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Edges</legend>
+      <label class="row"><input type="checkbox" id="show-wikilinks" checked> Wikilinks</label>
+      <label class="row"><input type="checkbox" id="show-typed" checked> Typed relations</label>
+      <label class="row"><input type="checkbox" id="show-inferred" checked> incl. inferred</label>
+      <div class="legend-note">Typed = purple · inferred = dashed · gold ring = bridge</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Selection</legend>
+      <div id="info"><span class="k">Click a node.</span></div>
+    </fieldset>
+  </div>
+</div>
+"""
+
+_APP_JS = r"""
+const PALETTE = {entity:'#4e79a7', concept:'#59a14f', source:'#e15759', synthesis:'#b07aa1', unknown:'#9c9c9c'};
+const sz = d => 14 + 4 * Math.sqrt(d || 1);
+
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: { nodes: GRAPH.nodes, edges: GRAPH.edges },
+  wheelSensitivity: 0.25,
+  style: [
+    { selector: 'node', style: {
+        'background-color': e => PALETTE[e.data('type')] || PALETTE.unknown,
+        'width': e => sz(e.data('degree')), 'height': e => sz(e.data('degree')),
+        'label': 'data(title)', 'font-size': 6, 'color': '#222',
+        'text-valign': 'bottom', 'text-halign': 'center',
+        'text-wrap': 'wrap', 'text-max-width': 90, 'min-zoomed-font-size': 7 } },
+    { selector: 'node[bridge = 1]', style: { 'border-width': 3, 'border-color': '#e6a000' } },
+    { selector: 'node.sel', style: { 'border-width': 4, 'border-color': '#111' } },
+    { selector: 'edge', style: {
+        'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
+        'width': e => Math.min(1 + (e.data('weight')||1) * 0.3, 4),
+        'line-color': '#cfcfcf', 'target-arrow-color': '#cfcfcf', 'opacity': 0.5,
+        'arrow-scale': 0.7 } },
+    { selector: 'edge[relation_type != "wikilink"]', style: {
+        'line-color': '#7b5cff', 'target-arrow-color': '#7b5cff', 'width': 2, 'opacity': 0.9 } },
+    { selector: 'edge[confidence = "inferred"]', style: { 'line-style': 'dashed' } },
+    { selector: 'edge[confidence = "ambiguous"]', style: { 'line-style': 'dotted' } },
+    { selector: 'edge.lbl', style: {
+        'label': 'data(relation_type)', 'font-size': 6, 'color': '#444',
+        'text-background-color': '#fff', 'text-background-opacity': 0.85, 'text-background-padding': 1 } },
+    { selector: '.faded', style: { 'opacity': 0.07, 'text-opacity': 0.07 } }
+  ],
+  layout: { name: 'cose', animate: false, padding: 30, nodeRepulsion: 9000, idealEdgeLength: 70, nestingFactor: 0.9 }
+});
+
+// Stats line
+const s = GRAPH.stats;
+const infRate = s.relations_total ? Math.round(100 * s.relations_inferred_or_ambiguous / s.relations_total) : 0;
+document.getElementById('stats').textContent =
+  `${s.nodes} nodes · ${s.edges} edges · ${s.relations_total||0} typed (${infRate}% inferred)`;
+
+// Type filters (built from data)
+const types = [...new Set(GRAPH.nodes.map(n => n.data.type))].sort();
+const tf = document.getElementById('type-filters');
+types.forEach(t => {
+  const id = 'tf-' + t;
+  const lab = document.createElement('label'); lab.className = 'row';
+  lab.innerHTML = `<input type="checkbox" id="${id}" checked>
+    <span class="swatch" style="background:${PALETTE[t]||PALETTE.unknown}"></span>${t}`;
+  tf.appendChild(lab);
+  lab.querySelector('input').addEventListener('change', applyFilters);
+});
+['show-wikilinks','show-typed','show-inferred'].forEach(id =>
+  document.getElementById(id).addEventListener('change', applyFilters));
+
+function applyFilters() {
+  const on = t => document.getElementById('tf-' + t).checked;
+  cy.nodes().forEach(n => n.style('display', on(n.data('type')) ? 'element' : 'none'));
+  const wl = document.getElementById('show-wikilinks').checked;
+  const typed = document.getElementById('show-typed').checked;
+  const inf = document.getElementById('show-inferred').checked;
+  cy.edges().forEach(e => {
+    const isWiki = e.data('relation_type') === 'wikilink';
+    let show = isWiki ? wl : typed;
+    if (show && !isWiki && !inf && e.data('confidence') !== 'extracted') show = false;
+    e.style('display', show ? 'element' : 'none');
+  });
+}
+
+function clearHi() { cy.elements().removeClass('faded lbl'); cy.nodes().removeClass('sel'); }
+
+function selectNode(n) {
+  clearHi();
+  const nb = n.closedNeighborhood();
+  cy.elements().difference(nb).addClass('faded');
+  nb.edges().addClass('lbl');
+  n.addClass('sel');
+  showInfo(n);
+}
+
+function showInfo(n) {
+  const id = n.id();
+  const out = GRAPH.edges.filter(e => e.data.source === id && e.data.relation_type !== 'wikilink');
+  const inc = GRAPH.edges.filter(e => e.data.target === id && e.data.relation_type !== 'wikilink');
+  const li = e => `<li>${e.data.relation_type} <span class="k">(${e.data.confidence})</span> → ${e.data.target}</li>`;
+  const liIn = e => `<li>${e.data.source} <span class="k">(${e.data.confidence})</span> → ${e.data.relation_type}</li>`;
+  document.getElementById('info').innerHTML =
+    `<div class="t">${n.data('title')}</div>
+     <div class="k">${id}</div>
+     <div style="margin:4px 0"><span class="pill">${n.data('type')}</span>
+       <span class="pill">${n.data('status')}</span>
+       <span class="pill">deg ${n.data('degree')}</span>
+       ${n.data('bridge') ? '<span class="pill" style="background:#fbe7b2">bridge</span>' : ''}</div>
+     ${out.length ? `<div class="k" style="margin-top:6px">Outgoing relations</div><ul>${out.map(li).join('')}</ul>` : ''}
+     ${inc.length ? `<div class="k" style="margin-top:6px">Incoming relations</div><ul>${inc.map(liIn).join('')}</ul>` : ''}`;
+}
+
+cy.on('tap', 'node', e => selectNode(e.target));
+cy.on('tap', e => { if (e.target === cy) { clearHi(); document.getElementById('info').innerHTML = '<span class="k">Click a node.</span>'; } });
+
+document.getElementById('fit').onclick = () => cy.fit(undefined, 40);
+document.getElementById('relayout').onclick = () =>
+  cy.layout({ name: 'cose', animate: false, padding: 30, nodeRepulsion: 9000, idealEdgeLength: 70 }).run();
+document.getElementById('reset').onclick = () => { clearHi(); applyFilters(); cy.fit(undefined, 40); };
+
+const search = document.getElementById('search');
+search.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  const q = search.value.trim().toLowerCase();
+  if (!q) return;
+  const hit = cy.nodes().filter(n =>
+    n.id().toLowerCase().includes(q) || (n.data('title') || '').toLowerCase().includes(q));
+  if (hit.length) { selectNode(hit[0]); cy.animate({ center: { eles: hit[0] }, zoom: 1.4 }, { duration: 300 }); }
+});
+"""
+
+_HTML_TAIL = """</body>
+</html>
+"""
+
+
 # --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
@@ -387,6 +630,8 @@ def main() -> int:
                         help="Output directory (default: knowledge/_meta/graph)")
     parser.add_argument("--top-n", type=int, default=DEFAULT_TOP_N,
                         help="Number of god_nodes to report (default: 15)")
+    parser.add_argument("--no-html", action="store_true",
+                        help="Skip the interactive graph.html (JSON + GraphML only)")
     args = parser.parse_args()
 
     if not args.knowledge_dir.exists():
@@ -413,6 +658,14 @@ def main() -> int:
     print(f"  god_nodes: {len(god_nodes)} · bridges: {len(bridges)}")
     print(f"  wrote {json_path}")
     print(f"  wrote {graphml_path}")
+
+    if not args.no_html:
+        vendor = Path(__file__).resolve().parent / "vendor" / "cytoscape.min.js"
+        html_path = write_html(args.out_dir, nodes, edges, bridges, stats, vendor)
+        if html_path:
+            print(f"  wrote {html_path}")
+        else:
+            print(f"  (no graph.html — vendored library missing at {vendor})")
     return 0
 
 

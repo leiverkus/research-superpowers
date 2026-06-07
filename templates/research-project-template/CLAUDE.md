@@ -41,7 +41,9 @@ project-root/
 ├── CLAUDE.md              ← This document (schema & conventions)
 ├── .gitlab-ci.yml         ← CI/CD pipeline (lint wiki + render publication)
 ├── scripts/
-│   └── lint-wiki.py       ← Structural check of the wiki
+│   ├── lint-wiki.py       ← Structural check of the wiki
+│   ├── wiki-to-graph.py   ← Knowledge-graph export (JSON, GraphML, HTML)
+│   └── vendor/            ← Bundled cytoscape.min.js (offline HTML viz)
 ├── input/                 ← Raw material (immutable)
 │   ├── description/       ← Project description and research question
 │   ├── bibliography/      ← PDFs, Zotero exports (.bib, .ris)
@@ -284,10 +286,17 @@ CI lints the wiki structure (`scripts/lint-wiki.py`) and renders + deploys
 the publication on every push to `main`.
 
 For an explicit, queryable graph, run `python scripts/wiki-to-graph.py` — it
-exports `knowledge/_meta/graph/graph.json` and `knowledge/_meta/graph/graph.graphml` (open in
-Gephi/yEd) with derived **god_nodes** (most-connected pages) and **bridges**
-(entities joining otherwise-unconnected sources). Relations come from
-wikilinks plus the optional confidence-tagged `relations:` frontmatter block.
+exports to `knowledge/_meta/graph/`:
+- **`graph.html`** — a self-contained interactive viz (open in any browser; no
+  install, no network). Filter by node type / relation type / confidence,
+  search, click a node to highlight its neighbourhood. Covers everyday
+  exploration without Gephi/yEd.
+- **`graph.json`** — for scripting/queries.
+- **`graph.graphml`** — for Gephi/yEd (heavy layout, community detection).
+
+All carry derived **god_nodes** (most-connected pages) and **bridges** (entities
+joining otherwise-unconnected sources). Edges come from wikilinks plus the
+optional confidence-tagged `relations:` frontmatter block.
 
 ## Meta files
 
