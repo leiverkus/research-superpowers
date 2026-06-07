@@ -8,7 +8,6 @@
     "output/**/_site/**",
     "input/data/**/*.shp",
     "input/data/**/*.tif",
-    "knowledge/_site/**",
     "node_modules/**"
   ],
   "foam.graph.titleMaxLength": 60,
@@ -20,7 +19,7 @@
     "*.qmd": "quarto"
   },
   "yaml.schemas": {
-    "./schema/knowledge-frontmatter.schema.json": "knowledge/**/*.qmd"
+    "./schema/knowledge-frontmatter.schema.json": "knowledge/**/*.md"
   },
   "workbench.editorAssociations": {
     "*.qmd": "quarto.visualEditor"

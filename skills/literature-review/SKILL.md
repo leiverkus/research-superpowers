@@ -21,7 +21,7 @@ outputs:
     kind: appended
   - path: input/bibliography/audit-log-<YYYY-MM-DD>.json
     kind: created
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - literature-scout
@@ -29,7 +29,7 @@ agents:
 
 ## Boundary: literature-review vs ingest-source
 
-`literature-review` runs SEARCH — discovers candidate sources, grades them, builds a strategic guide, produces BibTeX entries. Outputs land in `input/bibliography/`. **No `knowledge/sources/*.qmd` is created here.**
+`literature-review` runs SEARCH — discovers candidate sources, grades them, builds a strategic guide, produces BibTeX entries. Outputs land in `input/bibliography/`. **No `knowledge/sources/*.md` is created here.**
 
 `ingest-source` runs INTAKE — takes ONE already-located source PDF and produces the wiki content (Source page, entities, BibTeX entry, log line). It is invoked AFTER `literature-review` for each prioritized source.
 
@@ -46,7 +46,7 @@ Before closing the literature phase, check:
 (1) ≥ 15 distinct, discipline-appropriate sources are catalogued
 (2) `literaturguide.md` (or equivalent) exists in `input/bibliography/`
 (3) `output/bibtex/references.bib` is updated
-(4) `knowledge/_meta/log.qmd` has a new entry
+(4) `knowledge/_meta/log.md` has a new entry
 
 The threshold of 15 is a rule of thumb for a viable research base, not magic —
 a tightly bounded niche topic justifies an undershoot, and a broad debate
@@ -73,7 +73,7 @@ reason (e.g. "narrow topic with small source corpus"), write it into
 6. **Generate `literaturguide.md`** with 9 sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview) — template in `research-skills/dao-literature-review/examples/literaturguide-example.md`
 7. **Export BibTeX** → merge into `output/bibtex/references.bib` (resolve key conflicts with user before merging)
 8. **Write audit log** → `input/bibliography/audit-log-<date>.json`
-9. **Update `knowledge/_meta/log.qmd`** with date, query, result count, guide path
+9. **Update `knowledge/_meta/log.md`** with date, query, result count, guide path
 10. **Transition:** offer to loop into `ingest-source` on the top-N priority items
 
 ## Process Flow

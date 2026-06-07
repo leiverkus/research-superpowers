@@ -6,9 +6,9 @@ inputs:
     description: Absolute path to the research project root
     required: true
 outputs:
-  - path: knowledge/**/*.qmd
+  - path: knowledge/**/*.md
     kind: modified
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - wiki-linter
@@ -48,8 +48,10 @@ than overridden — the override is an audit trail, not a substitute.
 5. **Assess warnings** — stale pages, status inconsistency, empty sections — decide with user: fix / defer / ignore
 6. **Handle orphans** — pages with no incoming wikilinks: decide link-in, delete, or mark as root
 7. **Re-run lint** until exit 0 on errors
-8. **Log** the run in `knowledge/_meta/log.qmd` with summary (N errors fixed, N warnings deferred)
+8. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred)
 9. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
+
+**See also:** `scripts/wiki-to-graph.py` is the sibling tool for *structure analysis* (not validation) — it exports the wiki as a graph (`graph.json` / `graph.graphml`) and reports god_nodes (most-connected pages) and bridges (entities joining otherwise-unconnected sources). Useful after a lint pass to spot hubs and weak links; it reads the same `relations` frontmatter the linter validates.
 
 ## Python-free fallback
 
@@ -67,7 +69,7 @@ For users on Cowork or any environment without a shell — or any project where 
 **Fallback procedure:**
 
 1. Read `schema/knowledge-frontmatter.schema.json` from the project root. If absent, read the plugin's copy (the plugin ships one).
-2. List every `knowledge/**/*.qmd` file (excluding files prefixed `_example-`).
+2. List every `knowledge/**/*.md` file (excluding files prefixed `_example-`).
 3. For each file: parse the YAML frontmatter (the block between the first two `---` lines) and validate against:
    - `required` fields exist and are non-empty
    - `type` is one of `entity | concept | source | synthesis`
@@ -138,10 +140,10 @@ digraph lint {
 | Error | Fix |
 |-------|-----|
 | `missing frontmatter field: status` | Add `status: draft` (or proper value) |
-| `broken wikilink: [[finkelstein-2003]]` | Either create `knowledge/sources/finkelstein-2003.qmd` via `ingest-source`, or correct the slug |
+| `broken wikilink: [[finkelstein-2003]]` | Either create `knowledge/sources/finkelstein-2003.md` via `ingest-source`, or correct the slug |
 | `invalid type: Person` | Change to `entity` (types are: entity, concept, source, synthesis) |
 | `created is not ISO date` | Reformat to `YYYY-MM-DD` |
-| `orphan: knowledge/entities/foo.qmd` | Add an incoming link from a relevant source/synthesis page |
+| `orphan: knowledge/entities/foo.md` | Add an incoming link from a relevant source/synthesis page |
 
 ## Red Flags
 

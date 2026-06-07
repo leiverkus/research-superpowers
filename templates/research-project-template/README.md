@@ -15,11 +15,11 @@ provides:
 
 - A clean folder structure that separates raw material, knowledge, and
   publications
-- Conventions for an LLM-generated wiki in Quarto (`.qmd`)
-- Ready-made templates for book projects, journal articles, and
+- Conventions for an LLM-generated wiki in plain Markdown (`.md`)
+- Ready-made Quarto templates for book projects, journal articles, and
   presentations with Makefiles
 - Team workflows over GitLab, Zotero, and Nextcloud
-- Automatic wiki rendering as a website (GitLab Pages)
+- Automatic publication rendering as a website (GitLab Pages)
 - A lint script for structural checks on the wiki
 
 ## Quickstart
@@ -63,11 +63,11 @@ The agent reads the project description, finds the article via the Zotero
 MCP server, creates a source page in the wiki, and updates the index and
 log.
 
-### 6. View the wiki in the browser
+### 6. Read the wiki
 
-```bash
-cd knowledge && make preview
-```
+The wiki is plain Markdown — no build step. Open the `knowledge/` folder in
+**Foam** or **Obsidian** for wikilinks, backlinks, and a graph view, or
+browse it directly in the GitLab/GitHub repository.
 
 ## Structure
 
@@ -79,7 +79,7 @@ input/                 Raw material (immutable, maintained by humans)
 ├── notes/             Field notes, memos
 └── ideas/             Hypotheses, questions
 
-knowledge/             LLM-generated wiki (.qmd)
+knowledge/             LLM-generated wiki (plain Markdown .md)
 ├── entities/          People, places, sites, artefacts
 ├── concepts/          Theories, methods, terms
 ├── sources/           Summaries of individual sources
@@ -116,14 +116,10 @@ Details: → [CLAUDE.md](CLAUDE.md)
 
 ## Makefiles
 
-Every template has a Makefile. Overview:
+The publication templates each have a Makefile (the wiki needs none — it is
+plain Markdown). Overview:
 
 ```bash
-# Wiki
-cd knowledge
-make wiki              # build the HTML website
-make preview           # live preview
-
 # Book project
 cd output/publication/book
 make pdf               # PDF (KOMA-Script scrbook)
@@ -174,7 +170,7 @@ This template is designed for collaborative research projects:
   (institutional licence for unlimited storage)
 - **Nextcloud** for large research data (geospatial, images)
 - **Merge requests** for reviewing wiki ingests
-- **GitLab Pages** for automatic wiki rendering
+- **GitLab Pages** for automatic publication rendering
 
 Branch conventions, roles, and the full team workflow are documented in
 [CLAUDE.md](CLAUDE.md#team-collaboration).

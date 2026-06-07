@@ -13,7 +13,7 @@ Source: [`assets/phase-flow.dot`](assets/phase-flow.dot) is the single source of
   - `ingest-source → writing-research-plan` — new reading revises the research question. Constitutive of the hermeneutic circle.
   - `drafting-manuscript → executing-research-plan` — writing exposes an analysis gap.
   - `requesting-peer-review → drafting-manuscript` — a reviewer finding requires revision.
-- **Pre-registration** applies only when `methodology: quantitative` (fully) or `mixed` (for marked sub-studies). For `methodology: hermeneutic`, `status: ready` is enough — no frozen hypothesis. Deviations on quantitative tasks go into `knowledge/_meta/log.qmd`; downstream results are flagged `status: exploratory`.
+- **Pre-registration** applies only when `methodology: quantitative` (fully) or `mixed` (for marked sub-studies). For `methodology: hermeneutic`, `status: ready` is enough — no frozen hypothesis. Deviations on quantitative tasks go into `knowledge/_meta/log.md`; downstream results are flagged `status: exploratory`.
 - **Sources threshold** (~15 A/B sources for a chapter) is a rule of thumb, not magic. SOFT-GATE override with a justification is fine.
 - **Reviews** in `executing-research-plan` are methodology-aware: two-stage (spec + quality) for quantitative tasks, synthesis review for hermeneutic.
 - **Dotted edges** are advisory invocations, not mandatory transitions.

@@ -68,10 +68,10 @@ The skill will ask for a **focus** — a single sentence saying what angle this 
 
 After ingest the assistant will have:
 
-1. Created `knowledge/sources/finkelstein-2003.qmd` — a focus-driven source page (claims relevant to your project, not a generic summary)
-2. Created `knowledge/entities/<entity>.qmd` for each new person, site, or concept found
+1. Created `knowledge/sources/finkelstein-2003.md` — a focus-driven source page (claims relevant to your project, not a generic summary)
+2. Created `knowledge/entities/<entity>.md` for each new person, site, or concept found
 3. Appended one BibTeX entry to `output/bibtex/references.bib`
-4. Logged the ingest in `knowledge/_meta/log.qmd`
+4. Logged the ingest in `knowledge/_meta/log.md`
 
 You review the diff, accept or revise, commit.
 

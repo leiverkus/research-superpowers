@@ -24,7 +24,7 @@ hypothesis. Follow the plan's task spec exactly.
 - Fix random seeds — irreproducibility is rejection
 - Run the script; capture stdout/stderr; save numerical outputs as JSON/CSV
   under `output/data-analysis/results/` and plots as PNG/SVG
-- Write an assumption-check note at `knowledge/synthesis/<task-slug>-assumptions.qmd`
+- Write an assumption-check note at `knowledge/synthesis/<task-slug>-assumptions.md`
   with `status: draft`, `author: llm`
 - DO NOT rewrite the hypothesis — deviations get logged, not absorbed
 - Return everything in ONE message after the script has run
@@ -37,7 +37,7 @@ hypothesis. Follow the plan's task spec exactly.
 ### Files created
 - output/data-analysis/<task-slug>.py
 - output/data-analysis/results/<outputs>
-- knowledge/synthesis/<task-slug>-assumptions.qmd
+- knowledge/synthesis/<task-slug>-assumptions.md
 
 ### Assumptions stated
 - <list>
@@ -65,7 +65,7 @@ cd output/data-analysis && python <task-slug>.py
 \`\`\`
 
 ### Deviations flagged for log
-<for knowledge/_meta/log.qmd>
+<for knowledge/_meta/log.md>
 
 ### Notes for reviewer
 <caveats: small n, missing data, computational shortcuts>

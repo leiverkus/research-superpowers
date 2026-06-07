@@ -16,11 +16,11 @@ example-project/
 │   └── data/                                  # (empty — data stays local)
 ├── knowledge/
 │   ├── sources/
-│   │   └── finkelstein-piasetzky-2003.qmd    # ingest output
+│   │   └── finkelstein-piasetzky-2003.md    # ingest output
 │   ├── synthesis/
-│   │   └── chronology-debate.qmd             # first synthesis (status: draft)
+│   │   └── chronology-debate.md             # first synthesis (status: draft)
 │   └── _meta/
-│       └── log.qmd                           # workflow log
+│       └── log.md                           # workflow log
 ├── output/
 │   ├── publication/article/
 │   │   └── main.qmd                          # draft skeleton
@@ -34,13 +34,13 @@ example-project/
 
 - **Pre-registration works:** `input/ideas/*-plan.md` contains the frozen
   hypothesis; all subsequent analyses have to be measured against it.
-- **Ingest output:** `knowledge/sources/finkelstein-piasetzky-2003.qmd` is a
+- **Ingest output:** `knowledge/sources/finkelstein-piasetzky-2003.md` is a
   complete artefact — frontmatter, core theses, quotations, entities.
 - **BibTeX consistent:** every cite-key in `knowledge/**` exists in
   `output/bibtex/references.bib`.
 - **Draft skeleton:** `output/publication/article/main.qmd` carries the
   section structure from `drafting-manuscript`, with placeholders of ~1500 words each.
-- **Log:** `knowledge/_meta/log.qmd` shows the pattern of `ingest`,
+- **Log:** `knowledge/_meta/log.md` shows the pattern of `ingest`,
   `synthesis`, and `draft` entries.
 
 ## Continuing the workflow

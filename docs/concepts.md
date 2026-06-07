@@ -11,7 +11,7 @@ brainstorming-research → writing-research-plan → literature-review ⇄ inges
    → executing-research-plan → drafting-manuscript → requesting-peer-review → finishing-a-research-project
 ```
 
-Plus three cross-cutting skills (`wiki-lint`, `semantic-wiki-review`, `grant-finder`) that fire when context demands them rather than at a fixed phase. See [`phase-flow.md`](phase-flow.md) for the full graph including back-edges.
+Plus four cross-cutting skills (`wiki-lint`, `wiki-graph`, `semantic-wiki-review`, `grant-finder`) that fire when context demands them rather than at a fixed phase. See [`phase-flow.md`](phase-flow.md) for the full graph including back-edges.
 
 ## SOFT-GATE: discipline without authoritarianism
 
@@ -55,10 +55,11 @@ There used to be a third artefact type — OpenCode slash-command shims (`/inges
 
 ## Structural vs semantic review
 
-Two skills audit the wiki, and they do *different* things:
+Three skills look at the wiki, and they do *different* things:
 
-- **`wiki-lint`** runs `scripts/lint-wiki.py` — a deterministic, CI-tauglich Python script. It checks frontmatter completeness, wikilink resolution, status distribution, and (since Phase 3) the rate of SOFT-GATE overrides. Fast, mechanical, repeatable.
-- **`semantic-wiki-review`** is an LLM-driven content audit. It reads pages, builds a claim ledger, and flags contradictions, stale syntheses, unsupported claims, missing cross-references, and (with `dao-searxng-mcp`) aggregator/suspect citations. Slow, judgement-based, not a CI gate.
+- **`wiki-lint`** runs `scripts/lint-wiki.py` — a deterministic, CI-tauglich Python script. It checks frontmatter completeness, wikilink resolution, status distribution, and (since Phase 3) the rate of SOFT-GATE overrides. Fast, mechanical, repeatable. Asks: *is the wiki well-formed?*
+- **`wiki-graph`** runs `scripts/wiki-to-graph.py` — also deterministic — and exports the wiki as a graph (`graph.json` / `graph.graphml`). It surfaces god nodes (most-connected pages), bridges (entities joining otherwise-unconnected sources), and the inference-rate of structured relations. Asks: *what shape does the knowledge have?* Validation is `wiki-lint`'s job; this is structure analysis.
+- **`semantic-wiki-review`** is an LLM-driven content audit. It reads pages, builds a claim ledger, and flags contradictions, stale syntheses, unsupported claims, missing cross-references, and (with `dao-searxng-mcp`) aggregator/suspect citations. Slow, judgement-based, not a CI gate. Asks: *are the claims sound?*
 
 Earlier versions promised semantic checks in `wiki-lint`. They were never implemented. v0.2 split the work so the lint script only claims what it actually does, and the LLM work lives in its own skill that's invoked manually.
 

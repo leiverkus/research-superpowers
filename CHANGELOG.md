@@ -4,6 +4,34 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-06-07
+
+Two related changes: the knowledge wiki moves to plain Markdown (Quarto reserved for the publication layer), and a dependency-free knowledge-graph export layer is added on top of it.
+
+### Added
+
+- **Knowledge-graph export layer over the Markdown wiki.** The wiki is already a graph (pages linked by wikilinks); this makes it explicit and queryable without a new dependency or any LLM/network calls.
+  - `scripts/wiki-to-graph.py` (template + example-project mirror) reads `knowledge/**/*.md` and writes `knowledge/_meta/graph/graph.json` and `knowledge/_meta/graph/graph.graphml` (Gephi/yEd). One node per page (`type` from frontmatter; optional `subtype` derived only from `gnd_id`/`idai_gazetteer_id`); edges from wikilinks (confidence `extracted`) and from the new structured `relations` block. Derived views: **god_nodes** (top-N by degree, `--top-n`, default 15) and **bridges** (entities joining ≥2 otherwise-unconnected source clusters, via union-find). CLI `--knowledge-dir` / `--out-dir`.
+  - **Self-contained interactive `graph.html`** — `wiki-to-graph.py` also writes an offline HTML viz (cytoscape.js vendored under `scripts/vendor/`, inlined into one file — no install, no network). Colour by node type, size by degree (capped), gold ring on bridges; short labels (sources shown as "Author Year", not the full title); filter by node type / relation type / confidence; search; click a node to highlight its neighbourhood and list its typed relations. For readability the default view shows only the typed-relation layer (wikilinks are one toggle away) and lays out the visible subgraph. Covers everyday exploration without Gephi/yEd (those remain for heavy layout / community detection). `--no-html` skips it; the script degrades gracefully if the vendored lib is absent.
+  - **Optional `relations` frontmatter field** (additive — pages without it stay valid): `target` (page slug), `type` (free vocabulary: cites, contradicts, builds-on, …), `confidence` (`extracted` | `inferred` | `ambiguous`). Documented in `docs/frontmatter-schema.md`; added identically to all three schema copies.
+  - **Linter integration:** `lint-wiki.py` validates `relations` (target resolves, confidence enum, required/known keys) and reports an **inference-rate** (share of `inferred`+`ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal.
+  - CI builds the graph from the example project and asserts node/edge/relation counts, non-empty god_nodes + bridges, and well-formed GraphML.
+  - **`wiki-graph` skill** — the intent-triggered layer over the script: builds the graph and answers structure questions grounded in `graph.json` (god nodes, bridges, relation types/confidence, dangling/orphan signals), with a Python-free fallback. Positioned as the structure-analysis sibling of `wiki-lint` (validation) and `semantic-wiki-review` (content audit). Registered in the skill catalogue (`using-research-powers`, README, `docs/concepts.md`).
+
+### Changed
+
+- **Knowledge wiki is now plain Markdown (`.md`), not Quarto (`.qmd`).** The wiki layer (`knowledge/`) is for thinking and steering — it needs no build step and is read directly in Foam/Obsidian or the repository browser. Quarto is now reserved exclusively for the publication layer (`output/publication/`), which genuinely needs formats, CSL, cross-references and figures. This aligns the template and example project with the convention already used in real projects.
+  - Renamed every `knowledge/**/*.qmd` page to `.md` in `templates/research-project-template/` and `examples/example-project/`.
+  - Removed `knowledge/_quarto.yml` and `knowledge/Makefile` from the template (the wiki has no build step).
+  - `scripts/lint-wiki.py` now globs `*.md` (and skips both `_example-` and `_beispiel-` prefixes).
+  - Figures in wiki pages use plain Markdown image syntax; the Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for publication pages.
+  - `.gitlab-ci.yml` lints the wiki (`scripts/lint-wiki.py`) instead of rendering it; only the publication is rendered and deployed to GitLab Pages.
+  - Updated `.vscode/settings.json` (schema glob → `knowledge/**/*.md`), `.gitignore` (dropped stale `knowledge/_site|.quarto`), the JSON Schema descriptions, `CLAUDE.md`, both READMEs, and all skill/agent/docs references accordingly.
+
+### Fixed
+
+- **Template `knowledge/_meta/index.md` and `log.md` now carry valid YAML frontmatter**, so a freshly scaffolded project passes `scripts/lint-wiki.py` (0 issues) out of the box.
+
 ## [0.5.1] — 2026-05-28
 
 Post-release housekeeping for the example project. Brings every file under `examples/example-project/` into alignment with v0.3 (SOFT-GATE / methodology-aware) and v0.5 (focus-driven ingest). No skill or schema changes.

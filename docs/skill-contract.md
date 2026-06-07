@@ -32,13 +32,13 @@ inputs:
     description: Pre-existing entity slugs to deduplicate against
     required: false
 outputs:
-  - path: knowledge/sources/<slug>.qmd
+  - path: knowledge/sources/<slug>.md
     kind: created
-  - path: knowledge/entities/<entity-slug>.qmd
+  - path: knowledge/entities/<entity-slug>.md
     kind: created_or_modified
   - path: output/bibtex/references.bib
     kind: modified
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - source-ingester

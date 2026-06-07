@@ -12,10 +12,10 @@ inputs:
     description: Target QMD file path (e.g. output/publication/book/text/03-methods.qmd)
     required: true
   - name: synthesis_pages
-    description: Paths to knowledge/synthesis/*.qmd to draw from (must include at least one status=stable)
+    description: Paths to knowledge/synthesis/*.md to draw from (must include at least one status=stable)
     required: true
   - name: source_pages
-    description: Paths to knowledge/sources/*.qmd whose bibkeys are allowed for citation
+    description: Paths to knowledge/sources/*.md whose bibkeys are allowed for citation
     required: true
   - name: target_language
     description: de or en
@@ -26,7 +26,7 @@ inputs:
 outputs:
   - path: output/publication/**/*.qmd
     kind: created_or_modified
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - drafter
@@ -40,8 +40,8 @@ Turn stable synthesis pages into publishable prose. Every claim gets a citation.
 
 <SOFT-GATE>
 Before drafting, check:
-(1) At least one `knowledge/synthesis/*.qmd` with `status: stable` exists AND is referenced by the draft task
-(2) Every source cited in the target section exists as `knowledge/sources/*.qmd` AND has a BibTeX entry
+(1) At least one `knowledge/synthesis/*.md` with `status: stable` exists AND is referenced by the draft task
+(2) Every source cited in the target section exists as `knowledge/sources/*.md` AND has a BibTeX entry
 (3) `wiki-lint` is green on the knowledge tree
 (4) The research plan `<slug>-plan.md` contains an explicit Draft task for this output file
 
@@ -71,7 +71,7 @@ on (3) are a maintenance signal.
 8. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
 9. **Write to target file** — `output/publication/book/text/<nn-slug>.qmd` or `output/publication/article/main.qmd`
 10. **Render check** — run `make render` (or `quarto render`) in the target `output/publication/<book|article>/` directory; fix any errors
-11. **Log** — entry in `knowledge/_meta/log.qmd`: date, draft, target file, word count, source count
+11. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
 

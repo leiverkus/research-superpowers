@@ -106,7 +106,7 @@ checklist exactly. The contract is in that skill's frontmatter.
 
 ### Checklists
 
-- **Concrete and verifiable.** "Verify that `foo.qmd` exists and has `status: stable`" is verifiable. "Understand the domain deeply" is not.
+- **Concrete and verifiable.** "Verify that `foo.md` exists and has `status: stable`" is verifiable. "Understand the domain deeply" is not.
 - **Ordered when order matters, numbered either way.** If steps commute, say so.
 - **Reference files by path.** `input/ideas/<slug>-design.md`, not "the design doc".
 - **One artifact per phase, minimum.** A skill should leave something on disk that the next phase can check.

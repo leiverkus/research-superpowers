@@ -34,7 +34,7 @@ skill behaves differently depending on the value:
   the plan requires a precise research question, a method sketch (which
   hermeneutic procedures, on which material), and a list of expected
   sources. Hypothesis revision through new reading is legitimate and gets
-  recorded in `knowledge/_meta/log.qmd` — the *hermeneutic circle* is
+  recorded in `knowledge/_meta/log.md` — the *hermeneutic circle* is
   constitutive, not a methodological failure.
 
 - **quantitative** (for geostatistics, 14C Bayesian work, quantitative DH
@@ -171,10 +171,10 @@ block frontmatter.
 ## Tasks
 
 ### Task 1: Ingest foundational sources
-**Files:** `knowledge/sources/*.qmd`, `output/bibtex/references.bib`
+**Files:** `knowledge/sources/*.md`, `output/bibtex/references.bib`
 
-- [ ] Ingest Finkelstein 2003 via `ingest-source` skill → `knowledge/sources/finkelstein-2003.qmd`
-- [ ] Ingest Mazar 2011 via `ingest-source` skill → `knowledge/sources/mazar-2011.qmd`
+- [ ] Ingest Finkelstein 2003 via `ingest-source` skill → `knowledge/sources/finkelstein-2003.md`
+- [ ] Ingest Mazar 2011 via `ingest-source` skill → `knowledge/sources/mazar-2011.md`
 - [ ] Verify BibTeX keys match citation style (chicago-author-date.csl)
 
 ### Task 2: Analyze stratigraphic sequence
@@ -183,10 +183,10 @@ block frontmatter.
 - [ ] Create `stratigraphy.py` — loads `input/data/megiddo-stratigraphy.csv`
 - [ ] Compute Bayesian phase overlaps via PyMC
 - [ ] Save posterior to `results/phases.json`
-- [ ] Write assumption-check note in `knowledge/synthesis/stratigraphy-assumptions.qmd`
+- [ ] Write assumption-check note in `knowledge/synthesis/stratigraphy-assumptions.md`
 
 ### Task 3: Synthesize into a stable knowledge page
-**Files:** `knowledge/synthesis/chronologie-debatte.qmd`
+**Files:** `knowledge/synthesis/chronologie-debatte.md`
 
 - [ ] Pull entities [[tel-megiddo]], [[tel-rehov]], [[finkelstein]], [[mazar]]
 - [ ] Argument structure: Position A, Position B, own reading, evidence weight
@@ -194,7 +194,7 @@ block frontmatter.
 - [ ] Set `status: stable` once reviewed by user
 
 ### Task 4: Draft chapter "*Forschungsstand* — Chronology"
-**Files:** `output/publication/book/text/03-forschungsstand.qmd`
+**Files:** `output/publication/book/text/03-forschungsstand.md`
 
 - [ ] Confirm `wiki-lint` is green
 - [ ] Draft 2500–3500 words via `drafting-manuscript` skill
@@ -205,14 +205,14 @@ block frontmatter.
 The project is complete when:
 - [ ] `scripts/lint-wiki.py` exits 0
 - [ ] ≥ 15 sources ingested, all with `status: stable` or `review`
-- [ ] `knowledge/synthesis/chronologie-debatte.qmd` has `status: stable`
+- [ ] `knowledge/synthesis/chronologie-debatte.md` has `status: stable`
 - [ ] `make render` in `output/publication/book/` produces PDF without errors
 - [ ] Peer review round completed via `requesting-peer-review`
 - [ ] Hypothesis explicitly confirmed, refuted, or marked "inconclusive — exploratory"
 
 ## Deviations Log
 
-Append to `knowledge/_meta/log.qmd` whenever scope, method, or data sources change after pre-registration. Reference the plan slug.
+Append to `knowledge/_meta/log.md` whenever scope, method, or data sources change after pre-registration. Reference the plan slug.
 ```
 
 ## No Placeholders (plan failures — never write these)
@@ -241,7 +241,7 @@ After self-review:
 - For **quantitative** or **mixed with pre-registered tasks**:
   > "Plan written and saved at `<path>`. Please explicitly confirm the
   > **Hypothesis** and the **Falsification Criteria** — once confirmed they
-  > are frozen (pre-registered). Deviations later go into log.qmd. OK?"
+  > are frozen (pre-registered). Deviations later go into log.md. OK?"
   >
   > Only after explicit confirmation set `status: pre-registered` and
   > invoke `executing-research-plan`.
@@ -249,7 +249,7 @@ After self-review:
 - For **hermeneutic**:
   > "Plan written and saved at `<path>`. Research question, method sketch,
   > and expected sources are recorded. Hypothesis remains open — revision
-  > through reading is logged in `_meta/log.qmd`. Does the plan look right?
+  > through reading is logged in `_meta/log.md`. Does the plan look right?
   > Then I'll set `status: ready`."
   >
   > After confirmation set `status: ready` and invoke

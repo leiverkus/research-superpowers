@@ -10,6 +10,13 @@ sources:
   - "[[regev-et-al-2020]]"
 status: review
 author: llm
+relations:
+  - target: finkelstein-piasetzky-2003
+    type: builds-on
+    confidence: extracted
+  - target: mazar-2011
+    type: contradicts
+    confidence: inferred
 ---
 
 # Chronology Debate, Iron Age IIA — Negev Fortress Lens

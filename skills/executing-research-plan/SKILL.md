@@ -13,9 +13,9 @@ outputs:
     kind: created_or_modified
   - path: output/data-analysis/**
     kind: created_or_modified
-  - path: output/publication/**/*.qmd
+  - path: output/publication/**/*.md
     kind: created_or_modified
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - source-ingester
@@ -58,7 +58,7 @@ deviations go into the deviation log.
    - **Spec reviewer** (fresh subagent): does the output match the task spec exactly?
    - **Quality reviewer** (fresh subagent): is the code/page/result methodologically sound?
    - Any "no" → route back to the executing subagent with reviewer feedback
-6. **Log deviations** — if findings force change, append to `knowledge/_meta/log.qmd` and mark subsequent analyses as exploratory
+6. **Log deviations** — if findings force change, append to `knowledge/_meta/log.md` and mark subsequent analyses as exploratory
 7. **Run wiki-lint after every ingest and synthesis task**
 8. **After all tasks done:** check plan's Verification section; only green on all boxes means complete
 9. **Transition:** if plan output target is book/article → `drafting-manuscript`; if grant → `grant-finder`; if done → `finishing-a-research-project`
@@ -121,7 +121,7 @@ digraph executing {
 | "Ingest X" | `source-ingester` | `knowledge/sources/`, `knowledge/entities/`, `output/bibtex/` |
 | "Analyze / compute / run" | `analyst` | `output/data-analysis/`, `output/data-analysis/results/` |
 | "Synthesize / integrate / write synthesis" | inline (main conversation) | `knowledge/synthesis/` |
-| "Draft chapter / section / article" | `drafting-manuscript` skill | `output/publication/**/*.qmd` |
+| "Draft chapter / section / article" | `drafting-manuscript` skill | `output/publication/**/*.md` |
 
 ## Critical Thinking — Cross-Cutting Checklist
 
@@ -187,7 +187,7 @@ run through two-stage; hermeneutic tasks run through synthesis review.
 If a task surfaces a result that contradicts the pre-registered hypothesis, or if the method must change:
 
 1. **Stop.** Do not rewrite the hypothesis.
-2. **Append to `knowledge/_meta/log.qmd`:**
+2. **Append to `knowledge/_meta/log.md`:**
    ```
    - YYYY-MM-DD · deviation · plan=<slug> · <what changed and why>
    ```

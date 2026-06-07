@@ -201,7 +201,7 @@
     {
       "label": "Clean: All",
       "type": "shell",
-      "command": "rm -rf knowledge/_site knowledge/.quarto output/publication/article/_output output/publication/article/.quarto output/publication/book/_output output/publication/book/.quarto output/presentation/_output output/presentation/.quarto",
+      "command": "rm -rf output/publication/article/_output output/publication/article/.quarto output/publication/book/_output output/publication/book/.quarto output/presentation/_output output/presentation/.quarto",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }

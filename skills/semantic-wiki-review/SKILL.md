@@ -57,7 +57,7 @@ State the scope to the user before reading.
    - **Suspect / aggregator citations** — citations whose source URL points
      to aggregator hosts (academia.edu, researchgate.net) or sources flagged
      as suspect/pseudoscientific. See MCP Optimisation below.
-5. **Write a review report** to `knowledge/_meta/semantic-review-<YYYY-MM-DD>.qmd`
+5. **Write a review report** to `knowledge/_meta/semantic-review-<YYYY-MM-DD>.md`
    (frontmatter: `type: synthesis`, `status: draft`, `author: llm`).
 6. **Do not edit** the audited pages. The report is advisory; the user (or a
    follow-up skill invocation) decides which issues to fix.

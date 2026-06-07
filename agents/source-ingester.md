@@ -48,14 +48,14 @@ frontmatter.
 fresh | append-section (existing focus blocks: N) | update-existing-focus (warned user) | legacy-wrap
 
 ### Files created
-- knowledge/sources/<slug>.qmd (or "modified" in re-ingest mode)
-- knowledge/entities/<entity-1>.qmd (new)
+- knowledge/sources/<slug>.md (or "modified" in re-ingest mode)
+- knowledge/entities/<entity-1>.md (new)
 - ...
 
 ### Files modified
-- knowledge/entities/<existing>.qmd (added back-link)
+- knowledge/entities/<existing>.md (added back-link)
 - output/bibtex/references.bib (added entry — only on first ingest)
-- knowledge/_meta/log.qmd (appended)
+- knowledge/_meta/log.md (appended)
 
 ### Entities extracted (focus-relevant)
 | Entity | Type | New or existing | Pages cited |

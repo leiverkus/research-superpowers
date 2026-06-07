@@ -28,7 +28,7 @@ Every research project goes through this process. A single-source review, a shor
 
 Create a TodoWrite task for each item. Complete in order:
 
-1. **Explore project context** — read existing `input/ideas/*`, `input/description/*`, recent `knowledge/_meta/log.qmd`, check git for parallel work
+1. **Explore project context** — read existing `input/ideas/*`, `input/description/*`, recent `knowledge/_meta/log.md`, check git for parallel work
 2. **Ask clarifying questions — one at a time** — what is the research question, what has been seen already, what would success look like
 3. **Assess scope** — is this a single focused inquiry or an umbrella of independent sub-projects? If the latter, decompose first (each sub-project gets its own design doc)
 4. **Propose 2–3 approaches** — with trade-offs and your recommendation, grounded in disciplinary norms

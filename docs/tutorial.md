@@ -69,11 +69,11 @@ The skill then:
 
 1. Reads the PDF in full **under that focus** (not just abstract; reads with the focus question actively in mind, marking anything that bears on it).
 2. Derives slug `cohen-1979`.
-3. Creates `knowledge/sources/cohen-1979.qmd` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979`) and a body containing exactly one `## Focus: <your focus> — <date>` block (claims, direct quotes, explicit boundary of what the source does *not* address), a one-paragraph `## Other content in this source` note, and union `## Mentioned entities` + `## Connections` sections.
+3. Creates `knowledge/sources/cohen-1979.md` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979`) and a body containing exactly one `## Focus: <your focus> — <date>` block (claims, direct quotes, explicit boundary of what the source does *not* address), a one-paragraph `## Other content in this source` note, and union `## Mentioned entities` + `## Connections` sections.
 4. Extracts entities **relevant to the focus**: `cohen` (person), `negev-fortresses` (concept), `tel-arad` (place), `kadesh-barnea` (place), `iron-age-iia` (concept), `high-chronology` (concept). Entities unrelated to the focus (e.g. Cohen's brief excursus on Phoenician trade) are not extracted now — they stay in the PDF until a future re-ingest needs them.
 5. Creates an entity page for each new one.
 6. Writes the BibTeX entry.
-7. Appends a line to `knowledge/_meta/log.qmd`: `- 2026-05-28 · ingest · [[cohen-1979]] · focus: «Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon»`.
+7. Appends a line to `knowledge/_meta/log.md`: `- 2026-05-28 · ingest · [[cohen-1979]] · focus: «Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon»`.
 8. Runs `python scripts/lint-wiki.py` — exits 0.
 
 You repeat for Finkelstein 1999, Finkelstein & Piasetzky 2003, Mazar 2011, plus 2–3 more from the literature guide that turn out to be cited heavily. Each gets its own focus, refined from the project research question.
@@ -82,7 +82,7 @@ You repeat for Finkelstein 1999, Finkelstein & Piasetzky 2003, Mazar 2011, plus 
 
 > "Ingest Cohen 1979 focused on the typological comparison with the Beersheva Valley."
 
-The skill detects `knowledge/sources/cohen-1979.qmd` already exists with one focus block, and switches to **append mode**:
+The skill detects `knowledge/sources/cohen-1979.md` already exists with one focus block, and switches to **append mode**:
 
 > Source `cohen-1979` is already ingested with 1 focus block:
 > - 2026-05-28: "Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon"
@@ -100,7 +100,7 @@ For each task in the plan, the skill routes:
 - **Ingest tasks** → `source-ingester` subagent (done above).
 - **Synthesis task** ("chronology debate as it touches Negev fortresses") → handled in the main conversation (high context integration; subagent isolation would lose the cross-source argument).
 
-The synthesis page lands at `knowledge/synthesis/chronology-debate-negev.qmd`. You read it, push back on one paragraph (the assistant overstated Mazar's position), revise together, and only then promote `status: review` → `status: stable`. **Only the user promotes to stable.** Agents never self-promote — this is a hard editorial rule, not a soft gate.
+The synthesis page lands at `knowledge/synthesis/chronology-debate-negev.md`. You read it, push back on one paragraph (the assistant overstated Mazar's position), revise together, and only then promote `status: review` → `status: stable`. **Only the user promotes to stable.** Agents never self-promote — this is a hard editorial rule, not a soft gate.
 
 The skill walks the [Critical Thinking checklist](../skills/executing-research-plan/SKILL.md) on the synthesis before flagging it ready: claim → evidence → framework (*Quellenkritik* for textual / stratigraphic claims) → confounders → fallacies → falsifiability.
 
@@ -110,8 +110,8 @@ Because `methodology: hermeneutic`, the review is a single-pass "synthesis revie
 
 **SOFT-GATE** check before drafting:
 
-1. At least one synthesis page is `status: stable` ✓ (`chronology-debate-negev.qmd`)
-2. All sources cited in the planned section exist as `knowledge/sources/*.qmd` and have BibTeX entries ✓
+1. At least one synthesis page is `status: stable` ✓ (`chronology-debate-negev.md`)
+2. All sources cited in the planned section exist as `knowledge/sources/*.md` and have BibTeX entries ✓
 3. `wiki-lint` is green ✓
 4. The plan has an explicit Draft task ✓
 
@@ -131,7 +131,7 @@ You approve the skeleton. The skill drafts each section in prose, citing inline 
 
 The skill writes to `output/publication/article/main.qmd` and runs `quarto render`. The first render fails (one citation key collision — you have `mazar-2011` and `mazar-2011b`); the skill resolves it and re-renders successfully.
 
-Log line appended to `_meta/log.qmd`.
+Log line appended to `_meta/log.md`.
 
 ## Phase 7 — Peer review (skill: `requesting-peer-review`)
 
@@ -140,7 +140,7 @@ You say "review the article." The skill confirms the manuscript path, identifies
 - **Constructive reviewer**: writes `output/publication/article/reviews/2026-05-28-constructive-review.md`. Major Issues: "section 4 needs a clearer statement of which Negev sites the Low Chronology directly addresses vs. which it generalises over." Minor Issues, Editorial, Methodological Assessment, etc.
 - **Adversarial reviewer**: writes `2026-05-28-adversarial-review.md`. Major Issues: "the manuscript treats Tel Rehov 14C as decisive for Negev datings, but the spatial separation is significant — argue this or weaken the claim."
 
-The skill walks you through each Major and Minor: accept (→ revise), reject (with rationale), defer (with reason in log). You accept 4, defer 1. Decisions log to `_meta/log.qmd`.
+The skill walks you through each Major and Minor: accept (→ revise), reject (with rationale), defer (with reason in log). You accept 4, defer 1. Decisions log to `_meta/log.md`.
 
 Revisions route back to `drafting-manuscript` for one more pass.
 
@@ -180,13 +180,13 @@ input/bibliography/
 
 knowledge/
 ├── _meta/
-│   ├── index.qmd
-│   └── log.qmd
-├── sources/         (7 .qmd files, status review/stable)
-├── entities/        (~15 .qmd files)
-├── concepts/        (3 .qmd files: high-chronology, low-chronology, iron-age-iia)
+│   ├── index.md
+│   └── log.md
+├── sources/         (7 .md files, status review/stable)
+├── entities/        (~15 .md files)
+├── concepts/        (3 .md files: high-chronology, low-chronology, iron-age-iia)
 └── synthesis/
-    └── chronology-debate-negev.qmd  (status: stable)
+    └── chronology-debate-negev.md  (status: stable)
 
 output/
 ├── bibtex/references.bib

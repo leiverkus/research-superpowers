@@ -95,14 +95,14 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 ### Task 5: Synthesis & Interpretation
 
-- Files: `knowledge/synthesis/chronologie-debatte.qmd`
+- Files: `knowledge/synthesis/chronologie-debatte.md`
 - [ ] Ergebnisse gegen Pre-Registration halten (H1 / H0 / indeterminate)
 - [ ] Deviation-Log falls abweichend
 - [ ] Status → `review` (nicht `stable`: das setzt nur Nutzer)
 
 ### Task 6: Draft Article
 
-- Files: `output/publication/article/main.qmd` (Sections: Introduction / Methods /
+- Files: `output/publication/article/main.md` (Sections: Introduction / Methods /
   Results / Discussion / Conclusion), Target ~9.000 Wörter
 - [ ] Skeleton + Sign-off
 - [ ] Draft section-by-section (6 Sections)
@@ -130,7 +130,7 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 - [ ] `scripts/lint-wiki.py` exits 0
 - [ ] ≥ 14 sources ingested with `status: stable` (gesetzt von Nutzer)
-- [ ] `knowledge/synthesis/chronologie-debatte.qmd` status ≥ `review`
+- [ ] `knowledge/synthesis/chronologie-debatte.md` status ≥ `review`
 - [ ] `output/data-analysis/results/sensitivity.json` reproduzierbar
   (Seed fixiert, Environment-Lockfile vorhanden)
 - [ ] `make render` erzeugt PDF ohne Warnings
@@ -139,7 +139,7 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 ## Deviations Log
 
-Jede Abweichung von diesem Plan wird hier UND in `knowledge/_meta/log.qmd` notiert.
+Jede Abweichung von diesem Plan wird hier UND in `knowledge/_meta/log.md` notiert.
 Format:
 
 ```

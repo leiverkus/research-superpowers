@@ -30,11 +30,12 @@ _freeze/
 *.qmd~
 .quarto/
 
-# Example project: generated artefacts (the inputs and source-of-truth qmd files are tracked)
+# Example project: generated artefacts (inputs and source-of-truth .md files are tracked)
 examples/example-project/output/**/_site/
 examples/example-project/output/**/_book/
-examples/example-project/knowledge/_site/
-examples/example-project/knowledge/_book/
+
+# Generated knowledge-graph export (scripts/wiki-to-graph.py)
+**/knowledge/_meta/graph/
 
 # Locally rendered PDFs and intermediate LaTeX
 *.pdf

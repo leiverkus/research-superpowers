@@ -56,6 +56,7 @@ Support skills are context-triggered, not phase-bound:
 - **critical-thinking** — when evaluating evidence, methodology, or contested sources
 - **grant-finder** — when planning funding in parallel to publication
 - **wiki-lint** — before drafting, before finishing, after bulk ingest
+- **wiki-graph** — to analyse the wiki's structure (god nodes, bridges, clusters) and export it as a graph
 - **ocr / geodata / image-processing / file-converter** — utilities invoked when data demands
 
 ## Heuristic
@@ -126,6 +127,7 @@ Trigger examples:
 - "Write the chapter" → **drafting-manuscript** (if synthesis pages stable) else back to synthesis
 - "Review the manuscript" → **requesting-peer-review**
 - "Find funding" → **grant-finder**
+- "Show me a knowledge graph / which entity bridges my sources / most-connected pages" → **wiki-graph**
 
 ## Skill Types
 
@@ -133,7 +135,7 @@ Trigger examples:
 - brainstorming-research, writing-research-plan, ingest-source, executing-research-plan, drafting-manuscript, finishing-a-research-project
 
 **Flexible** (adapt principles to context):
-- critical-thinking, literature-review, peer-review, grant-finder, wiki-lint
+- critical-thinking, literature-review, peer-review, grant-finder, wiki-lint, wiki-graph
 
 The skill itself tells you which.
 
@@ -152,7 +154,7 @@ project-root/
 ├── input/       # human-authored: bibliography, data, notes, ideas (design & plan docs live here)
 ├── knowledge/   # LLM-generated wiki: entities, concepts, sources, synthesis
 ├── output/      # publishable artifacts: publication (Quarto), data-analysis, bibtex
-└── scripts/     # lint-wiki.py and project helpers
+└── scripts/     # lint-wiki.py (structural check) + wiki-to-graph.py (knowledge-graph export)
 ```
 
 If the working directory is not yet a research project, the first skill invocation should offer to scaffold it from the template.
