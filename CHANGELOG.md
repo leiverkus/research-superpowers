@@ -4,7 +4,9 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] — 2026-06-07
+
+Two related changes: the knowledge wiki moves to plain Markdown (Quarto reserved for the publication layer), and a dependency-free knowledge-graph export layer is added on top of it.
 
 ### Added
 
