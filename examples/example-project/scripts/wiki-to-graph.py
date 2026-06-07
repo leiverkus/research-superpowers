@@ -519,7 +519,9 @@ _HTML_HEAD = """<!doctype html>
 
 _APP_JS = r"""
 const PALETTE = {entity:'#4e79a7', concept:'#59a14f', source:'#e15759', synthesis:'#b07aa1', unknown:'#9c9c9c'};
-const sz = d => Math.min(7 + 2.0 * Math.sqrt(d || 1), 34);
+const sz = d => Math.min(5 + 1.3 * Math.sqrt(d || 1), 22);
+const LABEL_ZOOM_FACTOR = 1.7;  // labels appear once zoomed to ~1.7× the overview
+let LABEL_ZOOM = Infinity;
 const LAYOUT = { name:'cose', animate:false, padding:50, randomize:true,
   nodeRepulsion:38000, nodeOverlap:40, idealEdgeLength:160, gravity:0.12,
   componentSpacing:160, numIter:2200, edgeElasticity:50 };
@@ -532,18 +534,20 @@ const cy = cytoscape({
     { selector: 'node', style: {
         'background-color': e => PALETTE[e.data('type')] || PALETTE.unknown,
         'width': e => sz(e.data('degree')), 'height': e => sz(e.data('degree')),
-        'label': 'data(label)', 'font-size': 7, 'color': '#222',
+        'label': 'data(label)', 'font-size': 8, 'color': '#222',
         'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 2,
-        'text-wrap': 'wrap', 'text-max-width': 80, 'min-zoomed-font-size': 14 } },
-    { selector: 'node[bridge = 1]', style: { 'border-width': 3, 'border-color': '#e6a000' } },
-    { selector: 'node.sel', style: { 'border-width': 4, 'border-color': '#111' } },
+        'text-wrap': 'wrap', 'text-max-width': 80, 'min-zoomed-font-size': 5,
+        'border-width': 0 } },
+    { selector: 'node[bridge = 1]', style: { 'border-width': 2, 'border-color': '#e6a000' } },
+    { selector: 'node.sel', style: { 'border-width': 3, 'border-color': '#111' } },
+    { selector: 'node.nolabel', style: { 'label': '' } },
     { selector: 'edge', style: {
         'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
-        'width': e => Math.min(0.6 + (e.data('weight')||1) * 0.25, 3),
-        'line-color': '#d8d8d8', 'target-arrow-color': '#d8d8d8', 'opacity': 0.3,
-        'arrow-scale': 0.6 } },
+        'width': e => Math.min(0.3 + (e.data('weight')||1) * 0.12, 1.2),
+        'line-color': '#dadada', 'target-arrow-color': '#dadada', 'opacity': 0.3,
+        'arrow-scale': 0.45 } },
     { selector: 'edge[relation_type != "wikilink"]', style: {
-        'line-color': '#7b5cff', 'target-arrow-color': '#7b5cff', 'width': 2, 'opacity': 0.9 } },
+        'line-color': '#7b5cff', 'target-arrow-color': '#7b5cff', 'width': 0.9, 'opacity': 0.85 } },
     { selector: 'edge[confidence = "inferred"]', style: { 'line-style': 'dashed' } },
     { selector: 'edge[confidence = "ambiguous"]', style: { 'line-style': 'dotted' } },
     { selector: 'edge.lbl', style: {
@@ -587,8 +591,16 @@ function applyFilters(relayout) {
     if (show && !isWiki && !inf && e.data('confidence') !== 'extracted') show = false;
     e.style('display', show ? 'element' : 'none');
   });
-  if (relayout) { cy.$(':visible').layout(LAYOUT).run(); cy.fit(undefined, 40); }
+  if (relayout) {
+    cy.$(':visible').layout(LAYOUT).run();
+    cy.fit(undefined, 40);
+    LABEL_ZOOM = cy.zoom() * LABEL_ZOOM_FACTOR;  // calibrate label threshold to this overview
+    refreshLabels();
+  }
 }
+
+function refreshLabels() { cy.nodes().toggleClass('nolabel', cy.zoom() < LABEL_ZOOM); }
+cy.on('zoom', refreshLabels);
 
 function clearHi() { cy.elements().removeClass('faded lbl'); cy.nodes().removeClass('sel'); }
 
@@ -632,7 +644,7 @@ search.addEventListener('keydown', ev => {
   if (!q) return;
   const hit = cy.nodes().filter(n =>
     n.id().toLowerCase().includes(q) || (n.data('title') || '').toLowerCase().includes(q));
-  if (hit.length) { selectNode(hit[0]); cy.animate({ center: { eles: hit[0] }, zoom: 1.4 }, { duration: 300 }); }
+  if (hit.length) { selectNode(hit[0]); cy.animate({ center: { eles: hit[0] }, zoom: Math.max(LABEL_ZOOM, 1.4) }, { duration: 300 }); }
 });
 
 // Default view: wikilinks hidden (typed relations only), laid out on the visible subgraph.
