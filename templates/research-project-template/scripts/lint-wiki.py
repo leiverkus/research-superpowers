@@ -29,6 +29,10 @@ OVERRIDES_LOG = Path("knowledge/_meta/gate-overrides.log")
 OVERRIDE_WINDOW = 10
 OVERRIDE_WARN_THRESHOLD = 0.30
 
+RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous")
+RELATION_KEYS = {"target", "type", "confidence"}
+INFERENCE_WARN_THRESHOLD = 0.50
+
 
 def load_schema() -> dict:
     """Load the frontmatter JSON schema. Fails loudly if missing."""
@@ -139,6 +143,83 @@ def lint_wikilinks(pages: dict[str, Path]) -> tuple[list[str], list[str]]:
     return broken, orphans
 
 
+def _relation_target(raw) -> str:
+    """Reduce a relation target to a bare page slug (tolerates [[...]] forms)."""
+    target = str(raw).strip()
+    if target.startswith("[[") and target.endswith("]]"):
+        target = target[2:-2]
+    return target.split("|", 1)[0].split("#", 1)[0].strip()
+
+
+def lint_relations(pages: dict[str, Path]) -> list[str]:
+    """Validate structured `relations` blocks against the schema's rules:
+    each target resolves to an existing page, confidence is an allowed enum,
+    required keys are present, and no unknown keys appear."""
+    issues = []
+    for name, path in sorted(pages.items()):
+        fm = parse_frontmatter(path)
+        if not fm:
+            continue
+        relations = fm.get("relations")
+        if relations is None:
+            continue
+        if not isinstance(relations, list):
+            issues.append(f"  RELATION: {path} — 'relations' must be a list")
+            continue
+        for i, rel in enumerate(relations):
+            loc = f"{path} — relations[{i}]"
+            if not isinstance(rel, dict):
+                issues.append(f"  RELATION: {loc} is not a mapping")
+                continue
+            for req in ("target", "type", "confidence"):
+                if not rel.get(req):
+                    issues.append(f"  RELATION: {loc} — missing '{req}'")
+            unknown = set(rel) - RELATION_KEYS
+            if unknown:
+                issues.append(f"  RELATION: {loc} — unknown key(s): {', '.join(sorted(unknown))}")
+            target = _relation_target(rel.get("target", ""))
+            if target and target not in pages:
+                issues.append(f"  RELATION: {loc} — target [[{target}]] does not exist")
+            conf = rel.get("confidence")
+            if conf and conf not in RELATION_CONFIDENCE:
+                issues.append(
+                    f"  RELATION: {loc} — confidence '{conf}' "
+                    f"(allowed: {', '.join(RELATION_CONFIDENCE)})"
+                )
+    return issues
+
+
+def report_inference_rate(pages: dict[str, Path]) -> list[str]:
+    """Report the inference-rate: share of structured relations tagged
+    `inferred` or `ambiguous`. An audit signal mirroring the override-rate —
+    a high share means many edges are model-asserted rather than grounded."""
+    total = 0
+    uncertain = 0
+    for path in pages.values():
+        fm = parse_frontmatter(path)
+        if not fm:
+            continue
+        for rel in fm.get("relations", []) or []:
+            if not isinstance(rel, dict):
+                continue
+            total += 1
+            if str(rel.get("confidence", "")).lower() in ("inferred", "ambiguous"):
+                uncertain += 1
+
+    if total == 0:
+        return ["  No structured relations yet — inference-rate n/a."]
+
+    rate = uncertain / total
+    report = [f"  Relations: {total} · inferred/ambiguous: {uncertain} ({rate * 100:.0f}%)"]
+    if rate > INFERENCE_WARN_THRESHOLD:
+        report.append(
+            f"  WARNING: inference-rate {rate * 100:.0f}% > "
+            f"{INFERENCE_WARN_THRESHOLD * 100:.0f}% — many relations are model-inferred; "
+            f"consider grounding them in sources."
+        )
+    return report
+
+
 def report_gate_overrides() -> list[str]:
     """Surface gate override rate from the audit log.
 
@@ -225,13 +306,20 @@ def main():
     print("\n".join(broken) if broken else "  No broken links.")
     print("\n".join(orphans) if orphans else "  No orphan pages.")
 
+    print("\n=== Relations check ===")
+    rel_issues = lint_relations(pages)
+    print("\n".join(rel_issues) if rel_issues else "  No relation issues.")
+
     print("\n=== Status distribution ===")
     print("\n".join(lint_status_distribution(pages)))
+
+    print("\n=== Inference rate ===")
+    print("\n".join(report_inference_rate(pages)))
 
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))
 
-    total_issues = len(fm_issues) + len(broken) + len(orphans)
+    total_issues = len(fm_issues) + len(broken) + len(orphans) + len(rel_issues)
     print(f"\n{'=' * 40}")
     print(f"Total: {total_issues} issue(s) found")
 
