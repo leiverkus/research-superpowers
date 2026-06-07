@@ -80,6 +80,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `.gitlab-ci.yml`
    - `schema/knowledge-frontmatter.schema.json`
    - `scripts/lint-wiki.py`
+   - `scripts/wiki-to-graph.py`
    - `input/` (with its `bibliography/`, `data/`, `description/`, `ideas/`, `notes/` subdirectories — the `description/project-description.md` template file goes too)
    - `knowledge/` (plain Markdown wiki — `_meta/`, the four `_example-*.md` files in `entities/`, `concepts/`, `sources/`, `synthesis/`, plus an empty `assets/` and `_meta/log.md`, `_meta/index.md`; no `_quarto.yml` or `Makefile` — the wiki has no build step)
    - `output/` (`bibtex/references.bib`, `bibtex/csl/`, `publication/article/article.qmd`, `publication/book/_quarto.yml` and chapters, `presentation/talk.qmd`, plus their Makefiles)
