@@ -51,6 +51,8 @@ than overridden — the override is an audit trail, not a substitute.
 8. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred)
 9. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
 
+**See also:** `scripts/wiki-to-graph.py` is the sibling tool for *structure analysis* (not validation) — it exports the wiki as a graph (`graph.json` / `graph.graphml`) and reports god_nodes (most-connected pages) and bridges (entities joining otherwise-unconnected sources). Useful after a lint pass to spot hubs and weak links; it reads the same `relations` frontmatter the linter validates.
+
 ## Python-free fallback
 
 For users on Cowork or any environment without a shell — or any project where `python3` / `pyyaml` / `scripts/lint-wiki.py` are simply not available — the skill performs frontmatter validation inline.

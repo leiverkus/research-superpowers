@@ -152,7 +152,7 @@ project-root/
 ├── input/       # human-authored: bibliography, data, notes, ideas (design & plan docs live here)
 ├── knowledge/   # LLM-generated wiki: entities, concepts, sources, synthesis
 ├── output/      # publishable artifacts: publication (Quarto), data-analysis, bibtex
-└── scripts/     # lint-wiki.py and project helpers
+└── scripts/     # lint-wiki.py (structural check) + wiki-to-graph.py (knowledge-graph export)
 ```
 
 If the working directory is not yet a research project, the first skill invocation should offer to scaffold it from the template.
