@@ -35,7 +35,7 @@ examples/example-project/output/**/_site/
 examples/example-project/output/**/_book/
 
 # Generated knowledge-graph export (scripts/wiki-to-graph.py)
-graphify-out/
+**/knowledge/_meta/graph/
 
 # Locally rendered PDFs and intermediate LaTeX
 *.pdf

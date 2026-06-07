@@ -49,7 +49,7 @@ output/app/venv/
 output/app/node_modules/
 
 # Generated knowledge-graph export (scripts/wiki-to-graph.py)
-graphify-out/
+knowledge/_meta/graph/
 
 # Keep directory structure
 !**/.gitkeep

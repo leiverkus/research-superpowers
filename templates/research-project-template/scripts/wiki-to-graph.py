@@ -6,7 +6,7 @@ The wiki is already a graph implicitly: source/entity/concept/synthesis pages
 linked by wikilinks. This script makes that graph explicit and serialisable, so
 it can be opened in Gephi/yEd (GraphML) or queried programmatically (JSON).
 
-What it produces (under --out-dir, default ``graphify-out/``):
+What it produces (under --out-dir, default ``knowledge/_meta/graph/``):
   * ``graph.json``    — nodes, edges, and two derived lists (god_nodes, bridges)
   * ``graph.graphml`` — the same graph for Gephi / yEd / Cytoscape
 
@@ -33,7 +33,7 @@ Pure standard library + PyYAML. No LLM calls, no network access.
 
 Usage:
     python scripts/wiki-to-graph.py
-    python scripts/wiki-to-graph.py --knowledge-dir knowledge --out-dir graphify-out --top-n 15
+    python scripts/wiki-to-graph.py --knowledge-dir knowledge --out-dir knowledge/_meta/graph --top-n 15
 """
 
 import argparse
@@ -46,7 +46,7 @@ from xml.etree import ElementTree as ET
 import yaml
 
 DEFAULT_WIKI_DIR = Path("knowledge")
-DEFAULT_OUT_DIR = Path("graphify-out")
+DEFAULT_OUT_DIR = Path("knowledge/_meta/graph")
 DEFAULT_TOP_N = 15
 
 EXAMPLE_PREFIXES = ("_example-", "_beispiel-")
@@ -384,7 +384,7 @@ def main() -> int:
     parser.add_argument("--knowledge-dir", type=Path, default=DEFAULT_WIKI_DIR,
                         help="Wiki directory to read (default: knowledge)")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR,
-                        help="Output directory (default: graphify-out)")
+                        help="Output directory (default: knowledge/_meta/graph)")
     parser.add_argument("--top-n", type=int, default=DEFAULT_TOP_N,
                         help="Number of god_nodes to report (default: 15)")
     args = parser.parse_args()

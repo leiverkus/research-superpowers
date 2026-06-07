@@ -284,7 +284,7 @@ CI lints the wiki structure (`scripts/lint-wiki.py`) and renders + deploys
 the publication on every push to `main`.
 
 For an explicit, queryable graph, run `python scripts/wiki-to-graph.py` — it
-exports `graphify-out/graph.json` and `graphify-out/graph.graphml` (open in
+exports `knowledge/_meta/graph/graph.json` and `knowledge/_meta/graph/graph.graphml` (open in
 Gephi/yEd) with derived **god_nodes** (most-connected pages) and **bridges**
 (entities joining otherwise-unconnected sources). Relations come from
 wikilinks plus the optional confidence-tagged `relations:` frontmatter block.

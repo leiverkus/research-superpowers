@@ -12,9 +12,9 @@ inputs:
     description: Number of god nodes to report (default 15)
     required: false
 outputs:
-  - path: graphify-out/graph.json
+  - path: knowledge/_meta/graph/graph.json
     kind: created
-  - path: graphify-out/graph.graphml
+  - path: knowledge/_meta/graph/graph.graphml
     kind: created
   - path: knowledge/synthesis/<slug>.md
     kind: created_or_modified
@@ -50,11 +50,11 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 
 1. **Locate the script** — `scripts/wiki-to-graph.py` in the project root (from the template). If it is missing, offer to copy it from the template (or scaffold the project); if Python/PyYAML are unavailable, take the **fallback** below.
 2. **Lint first (recommended)** — broken wikilinks become dangling edges and skew the picture. If `wiki-lint` has not run recently, suggest it; note any override.
-3. **Build the graph** — `python scripts/wiki-to-graph.py` (add `--top-n N` if the user wants more/fewer god nodes). It writes `graphify-out/graph.json` and `graphify-out/graph.graphml`.
+3. **Build the graph** — `python scripts/wiki-to-graph.py` (add `--top-n N` if the user wants more/fewer god nodes). It writes `knowledge/_meta/graph/graph.json` and `knowledge/_meta/graph/graph.graphml`.
 4. **Read `graph.json`** — never answer from memory of the wiki; read the actual export.
 5. **Answer the question grounded in the data** (see "Reading the output"). If no specific question was asked, give the overview: god nodes, bridges, inference-rate, and any dangling/orphan signal.
 6. **Be honest about confidence and gaps** (see "Honesty rules"). If the user asks about a connection that is not in the graph, say so — and offer to add a `relations` entry or a wikilink rather than asserting it.
-7. **Offer Gephi/yEd** — if the user wants a visual layout, point them to `graphify-out/graph.graphml`.
+7. **Offer Gephi/yEd** — if the user wants a visual layout, point them to `knowledge/_meta/graph/graph.graphml`.
 8. **Persist an insight (optional, with consent)** — if the analysis yields a standalone finding the user wants to keep, write a `knowledge/synthesis/<slug>.md` page with `status: draft`, `author: llm`. Never self-promote to `review`/`stable`.
 9. **Log** the run in `knowledge/_meta/log.md`: date, `graph`, question (or "overview"), node/edge counts, headline finding.
 
