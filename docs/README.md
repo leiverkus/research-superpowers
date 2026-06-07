@@ -71,7 +71,7 @@ finishing-a-research-project  (closing checklist)
 
 The project's `CLAUDE.md` declares `methodology` in its frontmatter:
 
-- `hermeneutic` (default) — theology, exegesis, source criticism, interpretive archaeology. No frozen hypothesis. Plan documents research question + method sketch + expected sources; hypothesis revision through new reading is legitimate and goes into `_meta/log.qmd`.
+- `hermeneutic` (default) — theology, exegesis, source criticism, interpretive archaeology. No frozen hypothesis. Plan documents research question + method sketch + expected sources; hypothesis revision through new reading is legitimate and goes into `_meta/log.md`.
 - `quantitative` — geostatistics, 14C Bayesian, quantitative DH. Full pre-registration (hypothesis, operationalisation, stop criterion). Deviations are logged and results marked exploratory.
 - `mixed` — per-sub-study. Quantitative tasks mark `pre-registered: true`; hermeneutic tasks do not.
 
@@ -104,7 +104,7 @@ See [`skill-authoring.md`](skill-authoring.md) — template, language convention
 
 ## Frontmatter
 
-Every `knowledge/**/*.qmd` page follows the central schema. See [`frontmatter-schema.md`](frontmatter-schema.md) for the narrative pointer; [`schema/knowledge-frontmatter.schema.json`](../schema/knowledge-frontmatter.schema.json) for the normative definition.
+Every `knowledge/**/*.md` page follows the central schema. See [`frontmatter-schema.md`](frontmatter-schema.md) for the narrative pointer; [`schema/knowledge-frontmatter.schema.json`](../schema/knowledge-frontmatter.schema.json) for the normative definition.
 
 ## License
 

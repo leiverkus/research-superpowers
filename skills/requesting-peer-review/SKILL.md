@@ -18,15 +18,15 @@ inputs:
     description: Pre-registered falsification criteria from the plan
     required: true
   - name: synthesis_pages
-    description: Paths to knowledge/synthesis/*.qmd referenced by the manuscript
+    description: Paths to knowledge/synthesis/*.md referenced by the manuscript
     required: true
   - name: source_pages
-    description: Paths to knowledge/sources/*.qmd referenced by the manuscript
+    description: Paths to knowledge/sources/*.md referenced by the manuscript
     required: true
 outputs:
   - path: output/publication/<target>/reviews/<YYYY-MM-DD>-<role>-review.md
     kind: created
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - peer-reviewer
@@ -67,7 +67,7 @@ oversight — the reason in the log makes that traceable.
 6. **Collate reviews** into a single `output/publication/<target>/reviews/<date>-review.md` document
 7. **Classify each issue:** Major / Minor / Editorial / Out-of-scope
 8. **Walk the user through each Major and Minor** — decision: accept → revise, reject (with rationale), defer (with log)
-9. **Log decisions** in `knowledge/_meta/log.qmd`
+9. **Log decisions** in `knowledge/_meta/log.md`
 10. **If accepted issues → revisions needed:** route back to `drafting-manuscript` with issue list
 
 ## Process Flow

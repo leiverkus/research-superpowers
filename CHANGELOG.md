@@ -4,6 +4,22 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Knowledge wiki is now plain Markdown (`.md`), not Quarto (`.qmd`).** The wiki layer (`knowledge/`) is for thinking and steering — it needs no build step and is read directly in Foam/Obsidian or the repository browser. Quarto is now reserved exclusively for the publication layer (`output/publication/`), which genuinely needs formats, CSL, cross-references and figures. This aligns the template and example project with the convention already used in real projects.
+  - Renamed every `knowledge/**/*.qmd` page to `.md` in `templates/research-project-template/` and `examples/example-project/`.
+  - Removed `knowledge/_quarto.yml` and `knowledge/Makefile` from the template (the wiki has no build step).
+  - `scripts/lint-wiki.py` now globs `*.md` (and skips both `_example-` and `_beispiel-` prefixes).
+  - Figures in wiki pages use plain Markdown image syntax; the Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for publication pages.
+  - `.gitlab-ci.yml` lints the wiki (`scripts/lint-wiki.py`) instead of rendering it; only the publication is rendered and deployed to GitLab Pages.
+  - Updated `.vscode/settings.json` (schema glob → `knowledge/**/*.md`), `.gitignore` (dropped stale `knowledge/_site|.quarto`), the JSON Schema descriptions, `CLAUDE.md`, both READMEs, and all skill/agent/docs references accordingly.
+
+### Fixed
+
+- **Template `knowledge/_meta/index.md` and `log.md` now carry valid YAML frontmatter**, so a freshly scaffolded project passes `scripts/lint-wiki.py` (0 issues) out of the box.
+
 ## [0.5.1] — 2026-05-28
 
 Post-release housekeeping for the example project. Brings every file under `examples/example-project/` into alignment with v0.3 (SOFT-GATE / methodology-aware) and v0.5 (focus-driven ingest). No skill or schema changes.

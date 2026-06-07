@@ -95,10 +95,10 @@ def find_wikilinks(path: Path) -> set[str]:
 
 def collect_pages(wiki_dir: Path) -> dict[str, Path]:
     pages = {}
-    for qmd in wiki_dir.rglob("*.qmd"):
-        if qmd.name.startswith("_beispiel-"):
+    for page in wiki_dir.rglob("*.md"):
+        if page.name.startswith(("_beispiel-", "_example-")):
             continue
-        pages[qmd.stem] = qmd
+        pages[page.stem] = page
     return pages
 
 

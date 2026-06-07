@@ -101,10 +101,10 @@ In a research project (scaffold one from `templates/research-project-template/`)
 
 The `ingest-source` skill triggers, reads the PDF fully, derives slug `finkelstein-2003`, extracts bibliographic data and entities (people, places, concepts), and writes:
 
-- `knowledge/sources/finkelstein-2003.qmd` — structured wiki page (theses, methodology, verbatim quotes with pages, mentioned entities)
-- one stub `knowledge/entities/<entity>.qmd` per new entity
+- `knowledge/sources/finkelstein-2003.md` — structured wiki page (theses, methodology, verbatim quotes with pages, mentioned entities)
+- one stub `knowledge/entities/<entity>.md` per new entity
 - one BibTeX entry in `output/bibtex/references.bib`
-- one log line in `knowledge/_meta/log.qmd`
+- one log line in `knowledge/_meta/log.md`
 - runs `python scripts/lint-wiki.py` — exits 0
 
 You review the diff, accept or revise, commit. Repeat per source. After ~5 sources, synthesise. After synthesis is `status: stable`, draft. Every claim cites a source page; every citation resolves in BibTeX; every render is checked.

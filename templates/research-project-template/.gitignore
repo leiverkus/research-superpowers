@@ -39,10 +39,6 @@ output/presentation/*.snm
 output/presentation/*.toc
 output/presentation/*.vrb
 
-# Wiki build artifacts
-knowledge/_site/
-knowledge/.quarto/
-
 # CI/CD
 public/
 

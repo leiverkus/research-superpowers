@@ -79,7 +79,7 @@ body:
     id: logs
     attributes:
       label: Relevant log lines
-      description: From `knowledge/_meta/log.qmd`, `knowledge/_meta/gate-overrides.log`, or the Claude Code session transcript. Redact anything sensitive.
+      description: From `knowledge/_meta/log.md`, `knowledge/_meta/gate-overrides.log`, or the Claude Code session transcript. Redact anything sensitive.
       render: shell
 
   - type: checkboxes

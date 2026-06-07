@@ -15,13 +15,13 @@ inputs:
     description: List of entity slugs already in the wiki, for deduplication
     required: false
 outputs:
-  - path: knowledge/sources/<slug>.qmd
+  - path: knowledge/sources/<slug>.md
     kind: created_or_modified
-  - path: knowledge/entities/<entity-slug>.qmd
+  - path: knowledge/entities/<entity-slug>.md
     kind: created_or_modified
   - path: output/bibtex/references.bib
     kind: appended
-  - path: knowledge/_meta/log.qmd
+  - path: knowledge/_meta/log.md
     kind: appended
 agents:
   - source-ingester
@@ -31,16 +31,16 @@ agents:
 
 Turn a raw scholarly source into structured wiki content **scoped to a specific focus** — what *this project* takes from *this source*. The wiki is purpose-built, not a generic archive. The raw PDF stays in `input/bibliography/` and can be re-read later under a different focus.
 
-One source × focus → one focus block inside `knowledge/sources/<slug>.qmd`. Re-ingest with a different focus → a second focus block appended to the same page. One bibkey, one wiki page, multiple lenses stacked over time.
+One source × focus → one focus block inside `knowledge/sources/<slug>.md`. Re-ingest with a different focus → a second focus block appended to the same page. One bibkey, one wiki page, multiple lenses stacked over time.
 
 **Announce at start:** "Using ingest-source to add `<source>` to the wiki under focus: `<focus>`."
 
 <SOFT-GATE>
 Before closing the ingest, check that all five artefacts exist and are linked:
-(1) `knowledge/sources/<slug>.qmd` with complete frontmatter and at least one `## Focus:` block,
+(1) `knowledge/sources/<slug>.md` with complete frontmatter and at least one `## Focus:` block,
 (2) entities referenced via wikilinks,
 (3) BibTeX entry in `output/bibtex/references.bib` with matching key,
-(4) entry in `knowledge/_meta/log.qmd`,
+(4) entry in `knowledge/_meta/log.md`,
 (5) `scripts/lint-wiki.py` exit code 0 for this source.
 
 If any condition is missing: explain to the user which, ask for a short reason for skipping, write it to `knowledge/_meta/gate-overrides.log`, and close out the ingest.
@@ -63,13 +63,13 @@ Create TodoWrite tasks for each:
 2. **Locate the source file** — PDF in `input/bibliography/`, or download if URL given
 3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
 4. **Derive slug** — `<lowercase-first-author>-<year>` (e.g. `finkelstein-2003`, `mazar-2011b` for disambiguation)
-5. **Check for existing source page** — if `knowledge/sources/<slug>.qmd` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
+5. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
 6. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
 7. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
-8. **Create or append `knowledge/sources/<slug>.qmd`** using the Source template (frontmatter + focus block — see below)
-9. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.qmd`; for existing, update with wikilink back to source
+8. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
+9. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
 10. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug (only on first ingest of this source; subsequent focus passes don't change BibTeX)
-11. **Append line to `knowledge/_meta/log.qmd`** — date, slug, action (`ingest` or `re-ingest`), focus, author
+11. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
 12. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
 13. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
 
@@ -259,7 +259,7 @@ If a key collides (e.g. two Finkelstein 2003 papers), append a letter: `finkelst
 
 ## Log Entry Convention
 
-Append a single line to `knowledge/_meta/log.qmd`:
+Append a single line to `knowledge/_meta/log.md`:
 
 ```
 - YYYY-MM-DD · ingest · [[finkelstein-2003]] · focus: «<focus string>»

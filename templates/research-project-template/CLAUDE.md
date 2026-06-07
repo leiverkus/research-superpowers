@@ -39,7 +39,7 @@ with an explicit output layer for scientific publication.
 ```
 project-root/
 ├── CLAUDE.md              ← This document (schema & conventions)
-├── .gitlab-ci.yml         ← CI/CD pipeline (build wiki + publication)
+├── .gitlab-ci.yml         ← CI/CD pipeline (lint wiki + render publication)
 ├── scripts/
 │   └── lint-wiki.py       ← Structural check of the wiki
 ├── input/                 ← Raw material (immutable)
@@ -48,9 +48,7 @@ project-root/
 │   ├── data/              ← Research data (CSV, shapefiles, GeoJSON, DBs)
 │   ├── notes/             ← Own field notes, observations, memos
 │   └── ideas/             ← Loose thoughts, hypotheses, questions
-├── knowledge/             ← LLM-generated wiki (Quarto .qmd + wikilinks)
-│   ├── _quarto.yml        ← Website config for wiki rendering
-│   ├── Makefile           ← make wiki | make preview
+├── knowledge/             ← LLM-generated wiki (plain Markdown .md + wikilinks)
 │   ├── _meta/             ← Index, log, status files
 │   ├── assets/            ← Figures, diagrams, maps from sources
 │   ├── entities/          ← People, places, institutions, artefacts
@@ -88,18 +86,22 @@ project-root/
 ### Knowledge folder
 - **LLM-generated and LLM-maintained.** The human reads and steers, the
   LLM writes and updates.
-- **File format: Quarto (`.qmd`).** All wiki pages are created as `.qmd`
-  files. This enables Quarto-specific features like cross-references
-  (`@sec-`, `@fig-`, `@tbl-`), callout blocks, embedded code (R, Python,
-  Julia), citations (`@citekey`) and a seamless transition from wiki pages
-  to publication outputs.
+- **File format: plain Markdown (`.md`).** Wiki pages are ordinary
+  Markdown with YAML frontmatter — read directly in Foam/Obsidian or the
+  GitLab/GitHub repository browser, with no build step. **Quarto is
+  reserved for `output/publication/`** (the article/book/presentation),
+  which genuinely needs formats, CSL, cross-references and figures. The
+  wiki is for thinking and steering, not formal output.
 - Every file starts with YAML frontmatter (see frontmatter schema).
 - Cross-references between wiki pages use wikilink syntax: `[[filename]]`
-  (compatible with Foam and Obsidian). For Quarto rendering within a
-  project, relative links can additionally be used:
-  `[Title](../entities/entity-name.qmd)`.
-- Citations use the Quarto format: `@citekey` or `[@citekey]`, referencing
-  `output/bibtex/references.bib`.
+  (without extension; compatible with Foam and Obsidian). Do **not**
+  escape the brackets (`\[\[…\]\]`) — some Markdown formatters do this on
+  save and it breaks the links; if your editor does, disable that rule for
+  this repo.
+- Citations use the pandoc format: `@citekey` or `[@citekey]`, referencing
+  `output/bibtex/references.bib`. In the `.md` wiki these render as plain
+  text (they only resolve when pulled into a Quarto publication); that is
+  intended.
 - The human is free to make corrections — the wiki is no shrine.
 
 #### Figures (`knowledge/assets/`)
@@ -115,12 +117,13 @@ ingest and referenced in the wiki pages.
   source or the research question.
 - **What does not get extracted:** decorative figures, generic graphics,
   publisher logos.
-- **Embedding in `.qmd` pages** with Quarto syntax and cross-reference:
+- **Embedding in wiki pages** uses plain Markdown image syntax (renders in
+  Foam/Obsidian/GitLab without a build):
   ```markdown
-  ![Stratigraphy of Megiddo](../assets/finkelstein2003-stratigraphy-megiddo.png){#fig-megiddo-strat}
-
-  As shown in @fig-megiddo-strat, ...
+  ![Stratigraphy of Megiddo](../assets/finkelstein2003-stratigraphy-megiddo.png)
   ```
+  The Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for
+  publication pages under `output/publication/`.
 - **Source attribution:** every figure must state its origin in the
   caption, e.g.:
   ```markdown
@@ -140,7 +143,7 @@ ingest and referenced in the wiki pages.
 
 ## Frontmatter schema
 
-Every wiki page in `knowledge/` is a `.qmd` file with YAML frontmatter
+Every wiki page in `knowledge/` is a `.md` file with YAML frontmatter
 following the central schema in
 [`schema/knowledge-frontmatter.schema.json`](schema/knowledge-frontmatter.schema.json).
 
@@ -170,31 +173,32 @@ Optional fields (e.g. `tags`, `sources`, `hypothesis`, `bibliography`,
 
 For each page type an example file lives in the respective folder
 (prefix `_example-`). These files serve as templates for style,
-structure, and frontmatter, and are ignored during wiki rendering.
+structure, and frontmatter, and are skipped by the lint script
+(`scripts/lint-wiki.py` ignores the `_example-` / `_beispiel-` prefix).
 
 ### Entity (`knowledge/entities/`)
 People, places, sites, institutions, artefacts, software projects.
 Structure: short description → relevance to the research question →
 relationships to other entities → sources.
-Example: `_example-tel-megiddo.qmd`
+Example: `_example-tel-megiddo.md`
 
 ### Concept (`knowledge/concepts/`)
 Theories, methods, technical terms, technical concepts.
 Structure: definition → context in research → related concepts →
 critical perspectives → sources.
-Example: `_example-low-chronology.qmd`
+Example: `_example-low-chronology.md`
 
 ### Source (`knowledge/sources/`)
 Summary of a single source from `input/bibliography/`.
 Structure: bibliographic info → core theses → methodology → relevant
 results → own assessment → connections to other pages.
-Example: `_example-finkelstein-2003.qmd`
+Example: `_example-finkelstein-2003.md`
 
 ### Synthesis (`knowledge/synthesis/`)
 Cross-cutting analyses that connect several sources and concepts.
 Structure: research question → argumentation → evidence from sources →
 open questions → implications for your own work.
-Example: `_example-chronologie-debatte.qmd`
+Example: `_example-chronologie-debatte.md`
 
 ## Workflows
 
@@ -214,11 +218,11 @@ Steps:
    photos) from the source and stores them in `knowledge/assets/` using
    the naming schema `<citekey>-<description>.<ext>`. The figures are
    embedded in the Source page and, where relevant, in Entity or Concept
-   pages via Quarto cross-references.
+   pages via plain Markdown image syntax.
 5. LLM checks whether new Entities or Concepts need to be created.
 6. LLM updates existing pages affected by the new source.
-7. LLM updates `knowledge/_meta/index.qmd`.
-8. LLM writes an entry into `knowledge/_meta/log.qmd`.
+7. LLM updates `knowledge/_meta/index.md`.
+8. LLM writes an entry into `knowledge/_meta/log.md`.
 9. LLM appends the BibTeX entry to `output/bibtex/references.bib`.
 10. Human reviews the changes (git diff) and gives feedback.
 
@@ -227,7 +231,7 @@ Steps:
 Trigger: human asks a research question.
 
 Steps:
-1. LLM reads `knowledge/_meta/index.qmd` to find relevant pages.
+1. LLM reads `knowledge/_meta/index.md` to find relevant pages.
 2. LLM reads the relevant pages.
 3. LLM answers the question with references to wiki pages.
 4. If the answer constitutes a standalone analysis → create a new
@@ -270,21 +274,18 @@ Steps:
    `output/bibtex/references.bib`.
 4. Human revises the draft.
 
-### 5. Render the wiki (optional)
+### 5. Read the wiki
 
-The wiki can be built as a searchable HTML site:
-
-```bash
-cd knowledge && make wiki     # build once
-cd knowledge && make preview  # live preview in the browser
-```
-
-With GitLab CI/CD configured, the wiki is automatically deployed to
-GitLab Pages on every push to `main`.
+The wiki is plain Markdown — no build step. Read and navigate it directly
+in **Foam** or **Obsidian** (wikilinks, backlinks, graph view) or in the
+GitLab/GitHub repository browser. Quarto is **not** used for the knowledge
+layer; it builds only the publication output (`output/publication/`). The
+CI lints the wiki structure (`scripts/lint-wiki.py`) and renders + deploys
+the publication on every push to `main`.
 
 ## Meta files
 
-### `knowledge/_meta/index.qmd`
+### `knowledge/_meta/index.md`
 
 ```markdown
 # Wiki index
@@ -302,7 +303,7 @@ GitLab Pages on every push to `main`.
 - [[synthesis-topic]] — research question
 ```
 
-### `knowledge/_meta/log.qmd`
+### `knowledge/_meta/log.md`
 
 Append-only. Every entry starts with a consistent prefix:
 
@@ -378,11 +379,13 @@ or Zotero (see section "Team collaboration").
 
 The file `.gitlab-ci.yml` configures an automatic pipeline:
 
-- **On push to `main`:** wiki, article, and book are built as HTML
-  and deployed as GitLab Pages.
+- **On push to `main` (and on merge requests):** the wiki is linted
+  (`scripts/lint-wiki.py`), and article and book are rendered to HTML.
+  On `main` the publication is deployed as GitLab Pages. The wiki itself
+  is plain Markdown and is **not** rendered — read it in the repository
+  browser, Foam, or Obsidian.
 - **Reachable at:** `https://team.gitlab.university.de/project/`
-  - Wiki: `/` (main page)
-  - Article: `/article/`
+  - Article: `/` (main page)
   - Book: `/book/`
 
 The team can read the current state in the browser without having to

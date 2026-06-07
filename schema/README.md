@@ -4,14 +4,14 @@ Single source of truth for structured artefacts in research projects.
 
 ## Files
 
-- `knowledge-frontmatter.schema.json` — JSON Schema Draft-07 for the YAML frontmatter of every `knowledge/**/*.qmd` page.
+- `knowledge-frontmatter.schema.json` — JSON Schema Draft-07 for the YAML frontmatter of every `knowledge/**/*.md` page.
 
 ## Consumers
 
 | Consumer | How it uses the schema |
 |----------|-----------------------|
 | `scripts/lint-wiki.py` (template) | Loaded at runtime to validate frontmatter; failures become CI errors. |
-| VS Code `yaml.schemas` (template `.vscode/settings.json`) | Live in-editor validation while authoring `.qmd` pages. |
+| VS Code `yaml.schemas` (template `.vscode/settings.json`) | Live in-editor validation while authoring `.md` wiki pages. |
 | Skills (`skills/*/SKILL.md`) | Reference the schema by path rather than inlining field lists. |
 | `docs/frontmatter-schema.md` | Narrative explanation; defers to this file as the normative definition. |
 

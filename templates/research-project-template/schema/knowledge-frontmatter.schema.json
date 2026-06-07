@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/leiverkus/research-superpowers/schema/knowledge-frontmatter.schema.json",
   "title": "Research Wiki Frontmatter",
-  "description": "Frontmatter schema for knowledge/**/*.qmd pages in research projects using the research-superpowers plugin. Single source of truth — consumed by scripts/lint-wiki.py and VS Code yaml.schemas, referenced by skills.",
+  "description": "Frontmatter schema for knowledge/**/*.md pages in research projects using the research-superpowers plugin. Single source of truth — consumed by scripts/lint-wiki.py and VS Code yaml.schemas, referenced by skills.",
   "type": "object",
   "required": ["title", "type", "created", "updated", "status", "author"],
   "additionalProperties": true,

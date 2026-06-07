@@ -24,7 +24,7 @@ methodology: hermeneutic
 
 **Expected source corpus:** Cohen 1979, Finkelstein 1999 / 2003, Finkelstein & Piasetzky 2003, Mazar 2011, Regev et al. 2020, plus ~15 further A/B-rated *Forschungsstand* sources from a literature-review pass.
 
-**Iteration expectation:** Multiple cycles between `ingest-source` and this plan are expected. The hermeneutic circle is constitutive: each ingest may sharpen the project's question; that's logged in `knowledge/_meta/log.qmd` as the loop runs, not held against the original framing.
+**Iteration expectation:** Multiple cycles between `ingest-source` and this plan are expected. The hermeneutic circle is constitutive: each ingest may sharpen the project's question; that's logged in `knowledge/_meta/log.md` as the loop runs, not held against the original framing.
 
 ---
 
@@ -54,7 +54,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 2: Ingest foundational sources
 
-**Files:** `knowledge/sources/*.qmd`, `knowledge/entities/*.qmd`
+**Files:** `knowledge/sources/*.md`, `knowledge/entities/*.md`
 
 - [ ] Cohen 1979 — focus: "Cohen's stratigraphic and ceramic argument for a 10th-c. Negev fortress horizon"
 - [ ] Finkelstein 1999 — focus: "Low Chronology methodology and the regional argument"
@@ -64,7 +64,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 3: Ingest *Forschungsstand* sources
 
-**Files:** `knowledge/sources/*.qmd`
+**Files:** `knowledge/sources/*.md`
 
 - [ ] Ingest ≥ 8 further A/B-rated sources from the literature-review output, each with a per-source focus statement
 - [ ] Each ingest produces source page + entity stubs + BibTeX entry + log line
@@ -72,7 +72,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 4: Synthesise the chronology debate
 
-**Files:** `knowledge/synthesis/chronology-debate.qmd`
+**Files:** `knowledge/synthesis/chronology-debate.md`
 
 - [ ] Trace argument structure: data selection, calibration, phase modelling, framework choice
 - [ ] Map which side hinges on which evidence at each level
@@ -82,7 +82,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 5: Draft article
 
-**Files:** `output/publication/article/article.qmd`
+**Files:** `output/publication/article/article.md`
 
 - [ ] Confirm `wiki-lint` exits 0
 - [ ] Skeleton: Introduction → Forschungsstand → Argument structure of the debate → The Negev case → Discussion → Conclusion
@@ -114,7 +114,7 @@ The project is complete when:
 
 - [ ] `scripts/lint-wiki.py` exits 0
 - [ ] ≥ 15 sources ingested under focus statements, all with `status: stable` (set by the user)
-- [ ] `knowledge/synthesis/chronology-debate.qmd` has `status: stable`
+- [ ] `knowledge/synthesis/chronology-debate.md` has `status: stable`
 - [ ] `quarto render` on `output/publication/article/` produces PDF without warnings
 - [ ] Peer-review round completed with all Major issues resolved or explicitly deferred with rationale
 - [ ] Manuscript explicitly commits to one of the three interpretive outcomes (regional variation / one-resolution / Forschungsstand reading)
@@ -122,7 +122,7 @@ The project is complete when:
 
 ## Hermeneutic-revision log
 
-Hermeneutic projects expect the research question to shift through engagement with sources. Revisions to this plan are logged in `knowledge/_meta/log.qmd` with date and rationale; the design doc is the stable anchor, the plan accretes.
+Hermeneutic projects expect the research question to shift through engagement with sources. Revisions to this plan are logged in `knowledge/_meta/log.md` with date and rationale; the design doc is the stable anchor, the plan accretes.
 
 **So far:** —
 

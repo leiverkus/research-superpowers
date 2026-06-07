@@ -47,9 +47,6 @@ pip install pyyaml
 ## Quick test
 
 ```bash
-# Build the wiki as a website
-cd knowledge && make wiki
-
 # Build the article as PDF
 cd output/publication/article && make pdf
 

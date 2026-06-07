@@ -28,8 +28,8 @@ justification is.
 5. **Hypothesis addressed** — pre-registered Hypothesis is explicitly confirmed, refuted, or marked "inconclusive — exploratory" in the manuscript
 6. **Data reproducibility** — `output/data-analysis/` has `requirements.txt` or `environment.yml`; a README says "run `python main.py` to reproduce"; seeds are fixed
 7. **Data archive** — raw datasets in `input/data/` are licensed; derivatives in `output/data-analysis/results/` are documented
-8. **Synthesis stable** — all `knowledge/synthesis/*.qmd` referenced by the manuscript have `status: stable`
-9. **Log closing entry** in `knowledge/_meta/log.qmd`:
+8. **Synthesis stable** — all `knowledge/synthesis/*.md` referenced by the manuscript have `status: stable`
+9. **Log closing entry** in `knowledge/_meta/log.md`:
    ```
    - YYYY-MM-DD · finish · <slug> · output=<path>
    ```

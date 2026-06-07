@@ -1,35 +1,42 @@
 # GitLab CI/CD Pipeline
-# Baut das Wiki und die Publikation bei jedem Push auf main
-# und deployt als GitLab Pages.
-
-image: ghcr.io/quarto-dev/quarto:latest
-
-variables:
-  QUARTO_PRINT_STACK: "true"
+#
+# Das Knowledge-Wiki ist reines Markdown (lesbar via Foam/Obsidian oder dem
+# GitLab-Repository-Browser) — es wird NICHT in der CI gerendert, sondern nur
+# strukturell gelintet. Quarto kommt ausschließlich für die Publikation in
+# `output/publication/` zum Einsatz. Bei jedem Push auf `main` (und bei Merge
+# Requests) wird das Wiki gelintet und die Publikation gebaut; auf `main` wird
+# als GitLab Pages deployt.
+#
+# PDF-Builds laufen bewusst NICHT in der CI (sie brauchen einen vollen
+# LaTeX-Stack); diese lokal über die Makefiles bauen.
 
 stages:
+  - lint
   - build
   - deploy
 
-# Wiki als HTML-Website bauen
-build-wiki:
-  stage: build
-  script:
-    - cd knowledge
-    - quarto render
-  artifacts:
-    paths:
-      - knowledge/_site/
-    expire_in: 1 week
+# Lint/Build auf main und bei Merge Requests; Pages nur auf main.
+.on_main_or_mr: &on_main_or_mr
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - knowledge/**/*
-        - output/bibtex/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-# Artikel als HTML bauen (optional)
+# Strukturelle Wiki-Prüfung (Frontmatter, Wikilinks, verwaiste Seiten)
+# über knowledge/**/*.md.
+lint-wiki:
+  stage: lint
+  image: python:3.12-slim
+  script:
+    - pip install --quiet pyyaml
+    - python scripts/lint-wiki.py
+  <<: *on_main_or_mr
+
+# Artikel als HTML bauen (PDF/DOCX lokal über das Makefile).
 build-article:
   stage: build
+  image: ghcr.io/quarto-dev/quarto:latest
+  variables:
+    QUARTO_PRINT_STACK: "true"
   script:
     - cd output/publication/article
     - quarto render artikel.qmd --to html --output-dir _output
@@ -37,15 +44,14 @@ build-article:
     paths:
       - output/publication/article/_output/
     expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - output/publication/article/**/*
-        - output/bibtex/**/*
+  <<: *on_main_or_mr
 
-# Buch als HTML-Website bauen (optional)
+# Buch als HTML-Website bauen (optional).
 build-book:
   stage: build
+  image: ghcr.io/quarto-dev/quarto:latest
+  variables:
+    QUARTO_PRINT_STACK: "true"
   script:
     - cd output/publication/book
     - quarto render --to html
@@ -53,26 +59,20 @@ build-book:
     paths:
       - output/publication/book/_output/
     expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - output/publication/book/**/*
-        - output/bibtex/**/*
+  <<: *on_main_or_mr
 
-# GitLab Pages deployen
+# GitLab Pages deployen: Artikel unter /, Buch unter /book/.
 pages:
   stage: deploy
+  image: alpine:latest
   dependencies:
-    - build-wiki
     - build-article
     - build-book
   script:
     - mkdir -p public
-    # Wiki als Hauptseite
-    - cp -r knowledge/_site/* public/ 2>/dev/null || true
-    # Artikel unter /article/
-    - mkdir -p public/article
-    - cp -r output/publication/article/_output/* public/article/ 2>/dev/null || true
+    # Artikel als Hauptseite
+    - cp -r output/publication/article/_output/* public/ 2>/dev/null || true
+    - mv public/artikel.html public/index.html 2>/dev/null || true
     # Buch unter /book/
     - mkdir -p public/book
     - cp -r output/publication/book/_output/* public/book/ 2>/dev/null || true

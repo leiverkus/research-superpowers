@@ -35,9 +35,9 @@ The tell covers about 6 hectares and shows over 20 occupation layers,
 spanning from the Chalcolithic to the Persian period. The site has
 been a UNESCO World Heritage Site since 2005.
 
-![Stratigraphy of Tel Megiddo (after @finkelstein2003, Fig. 3)](../assets/finkelstein2003-stratigraphy-megiddo.png){#fig-megiddo-strat}
+![Stratigraphy of Tel Megiddo (after @finkelstein2003, Fig. 3)](../assets/finkelstein2003-stratigraphy-megiddo.png)
 
-The stratigraphic sequence (see @fig-megiddo-strat) is central to the
+The stratigraphic sequence (see figure above) is central to the
 chronology debate.
 
 ## Relationships
