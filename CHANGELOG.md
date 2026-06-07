@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Knowledge-graph export layer over the Markdown wiki.** The wiki is already a graph (pages linked by wikilinks); this makes it explicit and queryable without a new dependency or any LLM/network calls.
+  - `scripts/wiki-to-graph.py` (template + example-project mirror) reads `knowledge/**/*.md` and writes `graphify-out/graph.json` and `graphify-out/graph.graphml` (Gephi/yEd). One node per page (`type` from frontmatter; optional `subtype` derived only from `gnd_id`/`idai_gazetteer_id`); edges from wikilinks (confidence `extracted`) and from the new structured `relations` block. Derived views: **god_nodes** (top-N by degree, `--top-n`, default 15) and **bridges** (entities joining ≥2 otherwise-unconnected source clusters, via union-find). CLI `--knowledge-dir` / `--out-dir`.
+  - **Optional `relations` frontmatter field** (additive — pages without it stay valid): `target` (page slug), `type` (free vocabulary: cites, contradicts, builds-on, …), `confidence` (`extracted` | `inferred` | `ambiguous`). Documented in `docs/frontmatter-schema.md`; added identically to all three schema copies.
+  - **Linter integration:** `lint-wiki.py` validates `relations` (target resolves, confidence enum, required/known keys) and reports an **inference-rate** (share of `inferred`+`ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal.
+  - CI builds the graph from the example project and asserts node/edge/relation counts, non-empty god_nodes + bridges, and well-formed GraphML.
+
 ### Changed
 
 - **Knowledge wiki is now plain Markdown (`.md`), not Quarto (`.qmd`).** The wiki layer (`knowledge/`) is for thinking and steering — it needs no build step and is read directly in Foam/Obsidian or the repository browser. Quarto is now reserved exclusively for the publication layer (`output/publication/`), which genuinely needs formats, CSL, cross-references and figures. This aligns the template and example project with the convention already used in real projects.
