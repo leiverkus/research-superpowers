@@ -134,6 +134,7 @@ Cross-cutting (context-triggered, no phase binding):
 | Skill | Purpose |
 |---|---|
 | `wiki-lint` | Structural validation (frontmatter, wikilinks, override rate) — runs `scripts/lint-wiki.py` |
+| `wiki-graph` | Structure analysis — runs `scripts/wiki-to-graph.py`; god nodes, bridges, clusters; exports graph.json / graph.graphml |
 | `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, aggregator citations) |
 | `grant-finder` | DFG / ERC / VolkswagenStiftung / Henkel / Thyssen funding-landscape mapping |
 

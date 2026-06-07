@@ -15,6 +15,7 @@ Two related changes: the knowledge wiki moves to plain Markdown (Quarto reserved
   - **Optional `relations` frontmatter field** (additive — pages without it stay valid): `target` (page slug), `type` (free vocabulary: cites, contradicts, builds-on, …), `confidence` (`extracted` | `inferred` | `ambiguous`). Documented in `docs/frontmatter-schema.md`; added identically to all three schema copies.
   - **Linter integration:** `lint-wiki.py` validates `relations` (target resolves, confidence enum, required/known keys) and reports an **inference-rate** (share of `inferred`+`ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal.
   - CI builds the graph from the example project and asserts node/edge/relation counts, non-empty god_nodes + bridges, and well-formed GraphML.
+  - **`wiki-graph` skill** — the intent-triggered layer over the script: builds the graph and answers structure questions grounded in `graph.json` (god nodes, bridges, relation types/confidence, dangling/orphan signals), with a Python-free fallback. Positioned as the structure-analysis sibling of `wiki-lint` (validation) and `semantic-wiki-review` (content audit). Registered in the skill catalogue (`using-research-powers`, README, `docs/concepts.md`).
 
 ### Changed
 
