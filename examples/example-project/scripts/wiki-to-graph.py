@@ -381,6 +381,23 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
     return path
 
 
+def _short_label(node: dict) -> str:
+    """Compact node label for the viz.
+
+    Sources → "Author Year" (the title up to the first dash separator, or a
+    slug fallback). Other types → the title, capped to keep the graph readable
+    (the full title is always in the info panel).
+    """
+    title = (node.get("title") or node["id"]).strip()
+    if node.get("type") == "source":
+        head = re.split(r"\s[—–-]\s", title, maxsplit=1)[0].strip()
+        if head:
+            return head
+        parts = node["id"].split("-")[1:]  # drop the "source" prefix
+        return " ".join(p if p.isdigit() else p.capitalize() for p in parts)
+    return title if len(title) <= 26 else title[:25].rstrip() + "…"
+
+
 def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -> Path | None:
     """Write a self-contained interactive HTML viz (cytoscape.js, inlined).
 
@@ -401,7 +418,8 @@ def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -
     cy_nodes = [
         {"data": {
             "id": n["id"], "type": n["type"], "subtype": n.get("subtype"),
-            "title": n.get("title", n["id"]), "status": n.get("status", ""),
+            "title": n.get("title", n["id"]), "label": _short_label(n),
+            "status": n.get("status", ""),
             "degree": degree.get(n["id"], 0), "bridge": 1 if n["id"] in bridge_ids else 0,
         }}
         for n in nodes
@@ -485,7 +503,7 @@ _HTML_HEAD = """<!doctype html>
 
     <fieldset>
       <legend>Edges</legend>
-      <label class="row"><input type="checkbox" id="show-wikilinks" checked> Wikilinks</label>
+      <label class="row"><input type="checkbox" id="show-wikilinks"> Wikilinks (many — off by default)</label>
       <label class="row"><input type="checkbox" id="show-typed" checked> Typed relations</label>
       <label class="row"><input type="checkbox" id="show-inferred" checked> incl. inferred</label>
       <div class="legend-note">Typed = purple · inferred = dashed · gold ring = bridge</div>
@@ -501,7 +519,10 @@ _HTML_HEAD = """<!doctype html>
 
 _APP_JS = r"""
 const PALETTE = {entity:'#4e79a7', concept:'#59a14f', source:'#e15759', synthesis:'#b07aa1', unknown:'#9c9c9c'};
-const sz = d => 14 + 4 * Math.sqrt(d || 1);
+const sz = d => Math.min(7 + 2.0 * Math.sqrt(d || 1), 34);
+const LAYOUT = { name:'cose', animate:false, padding:50, randomize:true,
+  nodeRepulsion:38000, nodeOverlap:40, idealEdgeLength:160, gravity:0.12,
+  componentSpacing:160, numIter:2200, edgeElasticity:50 };
 
 const cy = cytoscape({
   container: document.getElementById('cy'),
@@ -511,16 +532,16 @@ const cy = cytoscape({
     { selector: 'node', style: {
         'background-color': e => PALETTE[e.data('type')] || PALETTE.unknown,
         'width': e => sz(e.data('degree')), 'height': e => sz(e.data('degree')),
-        'label': 'data(title)', 'font-size': 6, 'color': '#222',
-        'text-valign': 'bottom', 'text-halign': 'center',
-        'text-wrap': 'wrap', 'text-max-width': 90, 'min-zoomed-font-size': 7 } },
+        'label': 'data(label)', 'font-size': 7, 'color': '#222',
+        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 2,
+        'text-wrap': 'wrap', 'text-max-width': 80, 'min-zoomed-font-size': 14 } },
     { selector: 'node[bridge = 1]', style: { 'border-width': 3, 'border-color': '#e6a000' } },
     { selector: 'node.sel', style: { 'border-width': 4, 'border-color': '#111' } },
     { selector: 'edge', style: {
         'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
-        'width': e => Math.min(1 + (e.data('weight')||1) * 0.3, 4),
-        'line-color': '#cfcfcf', 'target-arrow-color': '#cfcfcf', 'opacity': 0.5,
-        'arrow-scale': 0.7 } },
+        'width': e => Math.min(0.6 + (e.data('weight')||1) * 0.25, 3),
+        'line-color': '#d8d8d8', 'target-arrow-color': '#d8d8d8', 'opacity': 0.3,
+        'arrow-scale': 0.6 } },
     { selector: 'edge[relation_type != "wikilink"]', style: {
         'line-color': '#7b5cff', 'target-arrow-color': '#7b5cff', 'width': 2, 'opacity': 0.9 } },
     { selector: 'edge[confidence = "inferred"]', style: { 'line-style': 'dashed' } },
@@ -530,7 +551,7 @@ const cy = cytoscape({
         'text-background-color': '#fff', 'text-background-opacity': 0.85, 'text-background-padding': 1 } },
     { selector: '.faded', style: { 'opacity': 0.07, 'text-opacity': 0.07 } }
   ],
-  layout: { name: 'cose', animate: false, padding: 30, nodeRepulsion: 9000, idealEdgeLength: 70, nestingFactor: 0.9 }
+  layout: LAYOUT
 });
 
 // Stats line
@@ -548,12 +569,13 @@ types.forEach(t => {
   lab.innerHTML = `<input type="checkbox" id="${id}" checked>
     <span class="swatch" style="background:${PALETTE[t]||PALETTE.unknown}"></span>${t}`;
   tf.appendChild(lab);
-  lab.querySelector('input').addEventListener('change', applyFilters);
+  lab.querySelector('input').addEventListener('change', () => applyFilters(false));
 });
-['show-wikilinks','show-typed','show-inferred'].forEach(id =>
-  document.getElementById(id).addEventListener('change', applyFilters));
+document.getElementById('show-wikilinks').addEventListener('change', () => applyFilters(true));
+document.getElementById('show-typed').addEventListener('change', () => applyFilters(false));
+document.getElementById('show-inferred').addEventListener('change', () => applyFilters(false));
 
-function applyFilters() {
+function applyFilters(relayout) {
   const on = t => document.getElementById('tf-' + t).checked;
   cy.nodes().forEach(n => n.style('display', on(n.data('type')) ? 'element' : 'none'));
   const wl = document.getElementById('show-wikilinks').checked;
@@ -565,6 +587,7 @@ function applyFilters() {
     if (show && !isWiki && !inf && e.data('confidence') !== 'extracted') show = false;
     e.style('display', show ? 'element' : 'none');
   });
+  if (relayout) { cy.$(':visible').layout(LAYOUT).run(); cy.fit(undefined, 40); }
 }
 
 function clearHi() { cy.elements().removeClass('faded lbl'); cy.nodes().removeClass('sel'); }
@@ -599,9 +622,8 @@ cy.on('tap', 'node', e => selectNode(e.target));
 cy.on('tap', e => { if (e.target === cy) { clearHi(); document.getElementById('info').innerHTML = '<span class="k">Click a node.</span>'; } });
 
 document.getElementById('fit').onclick = () => cy.fit(undefined, 40);
-document.getElementById('relayout').onclick = () =>
-  cy.layout({ name: 'cose', animate: false, padding: 30, nodeRepulsion: 9000, idealEdgeLength: 70 }).run();
-document.getElementById('reset').onclick = () => { clearHi(); applyFilters(); cy.fit(undefined, 40); };
+document.getElementById('relayout').onclick = () => { cy.$(':visible').layout(LAYOUT).run(); cy.fit(undefined, 40); };
+document.getElementById('reset').onclick = () => { clearHi(); applyFilters(true); };
 
 const search = document.getElementById('search');
 search.addEventListener('keydown', ev => {
@@ -612,6 +634,9 @@ search.addEventListener('keydown', ev => {
     n.id().toLowerCase().includes(q) || (n.data('title') || '').toLowerCase().includes(q));
   if (hit.length) { selectNode(hit[0]); cy.animate({ center: { eles: hit[0] }, zoom: 1.4 }, { duration: 300 }); }
 });
+
+// Default view: wikilinks hidden (typed relations only), laid out on the visible subgraph.
+applyFilters(true);
 """
 
 _HTML_TAIL = """</body>
