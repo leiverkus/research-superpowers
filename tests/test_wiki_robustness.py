@@ -220,20 +220,28 @@ class GraphMCPErrors(unittest.TestCase):
 
 class ScaleAndDeterminism(unittest.TestCase):
     def test_larger_wiki_builds_and_is_deterministic(self):
+        import time
         with tempfile.TemporaryDirectory() as d:
-            n = 250
+            n = 1000                                       # roadmap P4 lower bound
             for i in range(n):
-                # chain + a few cross-links to create real community structure
-                links = f"[[p{(i + 1) % n}]] [[p{(i + 5) % n}]]"
+                # chain + cross-links at several strides → real community structure
+                links = f"[[p{(i + 1) % n}]] [[p{(i + 5) % n}]] [[p{(i + 37) % n}]]"
                 _write(d, f"p{i}.md", _page(f"P{i}", body=links))
+            t0 = time.time()
             _, nodes, edges, _ = _graph(d)
+            node_comm, comms = wg.compute_communities(nodes, edges)
+            gn = wg.compute_god_nodes(nodes, edges, 10)
+            elapsed = time.time() - t0
             self.assertEqual(len(nodes), n)
-            self.assertTrue(edges)
+            self.assertEqual(len(edges), 3 * n)            # all links resolve (no dangling)
+            self.assertTrue(comms)
+            self.assertTrue(gn)
+            # full build + community detection on 1k pages stays well under budget
+            # (≈0.5s locally; generous ceiling absorbs slow CI runners)
+            self.assertLess(elapsed, 30.0, f"1k-page build took {elapsed:.1f}s")
             r1 = wg.compute_communities(nodes, edges)
             r2 = wg.compute_communities(nodes, edges)
-            self.assertEqual(r1, r2)                       # deterministic partition
-            gn = wg.compute_god_nodes(nodes, edges, 10)
-            self.assertTrue(gn)
+            self.assertEqual(r1, r2)                        # deterministic partition
 
 
 class PathHandling(unittest.TestCase):

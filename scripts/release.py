@@ -106,8 +106,12 @@ def cmd_bump(args) -> int:
     MARKETPLACE.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     readme = README.read_text(encoding="utf-8")
-    README.write_text(re.sub(r"badge/version-[0-9][^-]*-", f"badge/version-{version}-", readme),
-                      encoding="utf-8")
+    new_readme, n_badge = re.subn(r"badge/version-[0-9][^-]*-",
+                                  f"badge/version-{version}-", readme)
+    if n_badge == 0:
+        print("::error::README version badge not found — nothing replaced", file=sys.stderr)
+        return 1
+    README.write_text(new_readme, encoding="utf-8")
 
     if extract_changelog_section(version) is None:
         today = args.date or datetime.date.today().isoformat()
