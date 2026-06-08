@@ -90,10 +90,10 @@ class _TempRepo(unittest.TestCase):
         self.market = d / ".claude-plugin" / "marketplace.json"
         self.readme = d / "README.md"
         self.changelog = d / "CHANGELOG.md"
-        self.plugin.write_text(json.dumps({"name": "x", "version": "0.1.0"}, indent=2) + "\n")
-        self.market.write_text(json.dumps({"plugins": [{"version": "0.1.0"}]}, indent=2) + "\n")
-        self.readme.write_text(f"# x\n\n{self.BADGE}\n")
-        self.changelog.write_text("# Changelog\n\n## [0.1.0] — 2026-01-01\n\nFirst.\n")
+        self.plugin.write_text(json.dumps({"name": "x", "version": "0.1.0"}, indent=2) + "\n", encoding="utf-8")
+        self.market.write_text(json.dumps({"plugins": [{"version": "0.1.0"}]}, indent=2) + "\n", encoding="utf-8")
+        self.readme.write_text(f"# x\n\n{self.BADGE}\n", encoding="utf-8")
+        self.changelog.write_text("# Changelog\n\n## [0.1.0] — 2026-01-01\n\nFirst.\n", encoding="utf-8")
         self._saved = (rel.PLUGIN, rel.MARKETPLACE, rel.README, rel.CHANGELOG)
         rel.PLUGIN, rel.MARKETPLACE, rel.README, rel.CHANGELOG = (
             self.plugin, self.market, self.readme, self.changelog)
@@ -107,26 +107,32 @@ class CmdBump(_TempRepo):
     def test_full_bump_updates_everything(self):
         rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 0)
-        self.assertEqual(json.loads(self.plugin.read_text())["version"], "0.2.0")
-        self.assertEqual(json.loads(self.market.read_text())["plugins"][0]["version"], "0.2.0")
-        self.assertIn("badge/version-0.2.0-", self.readme.read_text())
-        self.assertNotIn("badge/version-0.1.0-", self.readme.read_text())
+        self.assertEqual(json.loads(self.plugin.read_text(encoding="utf-8"))["version"], "0.2.0")
+        self.assertEqual(json.loads(self.market.read_text(encoding="utf-8"))["plugins"][0]["version"], "0.2.0")
+        self.assertIn("badge/version-0.2.0-", self.readme.read_text(encoding="utf-8"))
+        self.assertNotIn("badge/version-0.1.0-", self.readme.read_text(encoding="utf-8"))
         # a skeleton section was inserted for the new version
         self.assertIsNotNone(rel.extract_changelog_section("0.2.0"))
 
     def test_bump_is_idempotent_no_duplicate_section(self):
         rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
-        first = self.changelog.read_text()
+        first = self.changelog.read_text(encoding="utf-8")
         rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 0)
         # second bump must not insert a second 0.2.0 heading
-        self.assertEqual(self.changelog.read_text().count("## [0.2.0]"), 1)
+        self.assertEqual(self.changelog.read_text(encoding="utf-8").count("## [0.2.0]"), 1)
         self.assertEqual(first.count("## [0.2.0]"), 1)
 
-    def test_bump_fails_when_badge_missing(self):
-        self.readme.write_text("# x\n\nno badge here\n")
+    def test_bump_fails_when_badge_missing_leaves_repo_unchanged(self):
+        self.readme.write_text("# x\n\nno badge here\n", encoding="utf-8")
+        before = {f: f.read_text(encoding="utf-8")
+                  for f in (self.plugin, self.market, self.readme, self.changelog)}
         rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 1)                       # fail-closed, not silent no-op
+        # atomic: a failed bump must not leave a half-updated repo
+        for f, text in before.items():
+            self.assertEqual(f.read_text(encoding="utf-8"), text,
+                             f"{f.name} was modified by a failed bump")
 
     def test_bump_rejects_bad_semver(self):
         self.assertEqual(rel.cmd_bump(argparse.Namespace(version="0.2", date=None)), 1)
@@ -147,13 +153,13 @@ class CmdCheck(_TempRepo):
 
     def test_manifest_mismatch_fails(self):
         self._bump_all_to("0.2.0")
-        self.market.write_text(json.dumps({"plugins": [{"version": "0.9.9"}]}, indent=2) + "\n")
+        self.market.write_text(json.dumps({"plugins": [{"version": "0.9.9"}]}, indent=2) + "\n", encoding="utf-8")
         self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2.0")), 1)
 
     def test_missing_changelog_section_fails(self):
         # manifests at 0.2.0 but no changelog entry for it
-        self.plugin.write_text(json.dumps({"name": "x", "version": "0.2.0"}, indent=2) + "\n")
-        self.market.write_text(json.dumps({"plugins": [{"version": "0.2.0"}]}, indent=2) + "\n")
+        self.plugin.write_text(json.dumps({"name": "x", "version": "0.2.0"}, indent=2) + "\n", encoding="utf-8")
+        self.market.write_text(json.dumps({"plugins": [{"version": "0.2.0"}]}, indent=2) + "\n", encoding="utf-8")
         self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2.0")), 1)
 
     def test_non_semver_tag_fails(self):

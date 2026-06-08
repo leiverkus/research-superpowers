@@ -63,6 +63,14 @@ from xml.etree import ElementTree as ET
 
 import yaml
 
+# Force UTF-8 stdout/stderr regardless of platform locale: Windows defaults to
+# cp1252, which cannot encode the arrow (←/→) and dash glyphs we emit.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except AttributeError:  # pragma: no cover - non-reconfigurable stream
+        pass
+
 DEFAULT_WIKI_DIR = Path("knowledge")
 DEFAULT_OUT_DIR = Path("knowledge/_meta/graph")
 DEFAULT_TOP_N = 15

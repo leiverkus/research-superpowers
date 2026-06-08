@@ -1,0 +1,9 @@
+# Shell hooks must stay LF on every platform, or the bash shebang breaks when
+# a Windows checkout (core.autocrlf=true) rewrites them to CRLF. P7 runs the
+# hook-dispatch test on windows-latest, so this is load-bearing.
+hooks/session-start text eol=lf
+hooks/run-hook.cmd  text eol=lf
+*.sh                text eol=lf
+
+# Vendored library is binary-ish; never normalise line endings.
+**/vendor/cytoscape.min.js -text

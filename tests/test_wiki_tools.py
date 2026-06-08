@@ -25,7 +25,7 @@ def _load(name, path):
 
 lw = _load("lint_wiki", SCRIPTS / "lint-wiki.py")
 wg = _load("wiki_to_graph", SCRIPTS / "wiki-to-graph.py")
-SCHEMA = json.loads((ROOT / "schema" / "knowledge-frontmatter.schema.json").read_text())
+SCHEMA = json.loads((ROOT / "schema" / "knowledge-frontmatter.schema.json").read_text(encoding="utf-8"))
 
 VALID = """---
 title: "A page"
@@ -114,7 +114,7 @@ class GateOverrides(unittest.TestCase):
     def test_override_count_not_fake_rate(self):
         with tempfile.TemporaryDirectory() as d:
             log = pathlib.Path(d) / "gate-overrides.log"
-            log.write_text("- 2026-04-15 · ingest · stable · reason\n- 2026-04-16 · draft · synth · reason\n")
+            log.write_text("- 2026-04-15 · ingest · stable · reason\n- 2026-04-16 · draft · synth · reason\n", encoding="utf-8")
             original = lw.OVERRIDES_LOG
             try:
                 lw.OVERRIDES_LOG = log
@@ -128,7 +128,7 @@ class GateOverrides(unittest.TestCase):
     def test_future_dated_override_not_counted_as_recent(self):
         with tempfile.TemporaryDirectory() as d:
             log = pathlib.Path(d) / "gate-overrides.log"
-            log.write_text("- 2099-01-01 · ingest · stable · future entry\n")
+            log.write_text("- 2099-01-01 · ingest · stable · future entry\n", encoding="utf-8")
             original = lw.OVERRIDES_LOG
             try:
                 lw.OVERRIDES_LOG = log
