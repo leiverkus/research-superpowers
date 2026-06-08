@@ -76,7 +76,18 @@ message pointing at the canonical source.
 
 ---
 
-## P3 — Automated release process  ·  medium  ·  dependency-free
+## P3 — Automated release process  ·  medium  ·  dependency-free  ·  ✅ done (v0.12.0)
+
+> **Status: done.** `scripts/release.py` (stdlib) is the single source of truth
+> for the manifest versions, the tag, and the matching CHANGELOG section
+> (`check` / `notes` / `bump`). `.github/workflows/release.yml` fires on a `v*`
+> tag and is **fail-closed**: before cutting the release it runs the entire CI
+> suite on the tagged commit (`workflow_call`) and asserts the commit is on
+> `origin/main`, then extracts the CHANGELOG section and creates the GitHub
+> Release — no manual `gh release create`, no untested/off-main publish. The
+> lint job also runs `check` on every PR. Covered end-to-end by
+> `tests/test_release.py` (full bump, idempotency, missing-badge, every
+> mismatch case).
 
 **Gap.** Releases are manual today: bump `plugin.json` + `marketplace.json`,
 edit `CHANGELOG.md`, `git tag -a`, `gh release create`. Each step is a place to
@@ -99,7 +110,18 @@ manual `gh release create`.
 
 ---
 
-## P4 — More negative & integration tests  ·  medium  ·  dependency-free
+## P4 — More negative & integration tests  ·  medium  ·  dependency-free  ·  ✅ done (v0.12.0)
+
+> **Status: done.** `tests/test_wiki_robustness.py` adds 21 adversarial cases:
+> empty / single-page / all-orphan wikis, malformed wikilinks (empty brackets,
+> aliases, headings, dangling, self-links, weight on duplicates), corrupt
+> frontmatter (unterminated, non-dict root, tabs, BOM), MCP error paths
+> (unknown tool, missing arg, malformed frame, unknown method, non-existent
+> node, plus a valid call), a **1000-page** scale + determinism check (with a
+> wall-clock budget; ≈0.5s locally), and subdir/stem path handling. The release
+> helper is covered end-to-end by `tests/test_release.py`. (Windows path
+> separators are deferred to P7; a 2000-page run is possible but 1000 already
+> exercises the same code paths well under budget.)
 
 **Gap.** The stdlib `unittest` suite covers the review's robustness cases but is
 thin on adversarial inputs. The reviewer named: MCP error paths, corrupt graph
@@ -205,7 +227,7 @@ path handling are verified per-OS; Windows symlink behaviour is documented.
 A natural order (cheap guards first, biggest last), shippable incrementally:
 
 1. ✅ **v0.11.0 / v0.11.1** — P1 (pin CI) + P2 (script mirror guard). *Done.*
-2. **v0.12.0** — P3 (release automation) + P4 (negative tests).
+2. ✅ **v0.12.0** — P3 (release automation) + P4 (negative tests). *Done.*
 3. **v0.13.0** — P5 (jsonschema cross-check) + P6 tier 1 (scaffold E2E).
 4. **v0.14.0** — P7 (platform matrix) + P6 tier 2 (real install, if feasible).
 

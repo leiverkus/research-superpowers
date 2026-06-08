@@ -4,6 +4,19 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-06-08
+
+Roadmap P3 + P4: an automated, self-checking release process and a much broader negative/integration test suite. No user-visible behaviour change.
+
+### Added
+
+- **Automated, fail-closed release process** (roadmap P3): `scripts/release.py` (stdlib) is the single source of truth for the manifest versions, the git tag, and the matching CHANGELOG section — `check` (verify all three agree), `notes` (extract a section), `bump` (bump manifests + README badge + CHANGELOG skeleton; the badge replacement now fails loudly instead of silently no-op'ing). `.github/workflows/release.yml` fires on a `v*` tag and, **before** creating the release, (1) runs the **entire CI suite** on the tagged commit via `workflow_call` and (2) asserts the tagged commit is **contained in `origin/main`** — so an untested or off-main tag cannot publish a release. It then extracts the CHANGELOG section and creates the GitHub Release — no manual `gh release create`. The lint job also runs `check` on every PR, so a version bump without a CHANGELOG entry fails CI. `CONTRIBUTING.md` documents the flow.
+- **Negative & integration tests** (roadmap P4): `tests/test_wiki_robustness.py` adds 21 adversarial cases — empty / single-page / all-orphan wikis, malformed wikilinks (empty brackets, aliases, headings, dangling, self-links, duplicate-weight), corrupt frontmatter (unterminated, non-dict root, tabs, BOM), MCP error paths (unknown tool, missing argument, malformed JSON-RPC frame, unknown method, non-existent node, valid call), a **1000-page** scale + determinism check (with a wall-clock budget), and subdir/stem path handling. `tests/test_release.py` covers the release helper end-to-end in a throwaway repo: full bump, idempotency, missing-badge failure, bad-semver rejection, and every `check` mismatch case.
+
+### Changed
+
+- The version bump for this release was produced by `scripts/release.py bump`; the GitHub Release itself is created by `release.yml` when the `v0.12.0` tag is pushed (the dogfooding of P3 is completed by that tag push, not by this commit).
+
 ## [0.11.1] — 2026-06-08
 
 Completes the reproducible-CI work from v0.11.0 (roadmap P1) and marks the done items in the roadmap.

@@ -1,0 +1,62 @@
+name: Release
+
+# Push an annotated tag vX.Y.Z and this creates the GitHub Release from the
+# matching CHANGELOG section — but only after (1) the full CI suite passes on
+# the tagged commit and (2) the tagged commit is proven to be on origin/main.
+# No manual `gh release create`, and no releasing an unverified / off-main commit.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # Fail-closed gate: run the entire lint/test/render suite on the tagged commit.
+  verify:
+    name: Full CI on the tagged commit
+    uses: ./.github/workflows/lint.yml
+
+  release:
+    name: Create GitHub Release from tag + CHANGELOG
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository (full history)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+
+      - name: Tagged commit must be on origin/main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::tag commit $GITHUB_SHA is not contained in origin/main — refusing to release"
+            exit 1
+          fi
+          echo "tag commit is on origin/main"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12.13"
+          check-latest: false
+
+      - name: Verify manifests, tag and CHANGELOG agree
+        run: python scripts/release.py check --tag "${GITHUB_REF_NAME}"
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python scripts/release.py notes --version "$version" > RELEASE_NOTES.md
+          echo "----- notes -----"; cat RELEASE_NOTES.md
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag
