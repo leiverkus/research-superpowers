@@ -119,7 +119,7 @@ Post-release housekeeping for the example project. Brings every file under `exam
 
 ## [0.5.0] — 2026-05-27
 
-Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures. See [`docs/migration-v0.4-to-v0.5.md`](docs/migration-v0.4-to-v0.5.md).
+Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures.
 
 ### Changed
 
@@ -143,7 +143,7 @@ None (the removal of the generic body sections from the SKILL.md *spec* is a tem
 
 ## [0.4.0] — 2026-05-27
 
-Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes. See [`docs/migration-v0.3-to-v0.4.md`](docs/migration-v0.3-to-v0.4.md).
+Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes.
 
 ### Added
 
@@ -186,7 +186,7 @@ None.
 
 ## [0.3.0] — 2026-05-27
 
-First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md) and [`docs/migration-v0.2-to-v0.3.md`](docs/migration-v0.2-to-v0.3.md).
+First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md).
 
 ### Added
 
@@ -238,7 +238,7 @@ None.
 
 ## [0.2.0] — 2026-05-27
 
-Architecture consolidation. **Breaking** — bump major-zero version because public skill/command surface changes. See [`docs/migration-v0.1-to-v0.2.md`](docs/migration-v0.1-to-v0.2.md) for project-level migration steps.
+Architecture consolidation. **Breaking** — bump major-zero version because public skill/command surface changes.
 
 ### Breaking changes
 

@@ -223,9 +223,13 @@ jobs:
           python <<'PY'
           import re, sys, pathlib
           failed = 0
-          docs = sorted(pathlib.Path("docs").glob("*.md")) + [pathlib.Path("README.md")]
+          docs = sorted(pathlib.Path("docs").glob("*.md")) + [pathlib.Path("README.md"), pathlib.Path("CHANGELOG.md")]
           for doc in docs:
               text = doc.read_text(encoding="utf-8")
+              # Drop inline-code / fenced-code spans so documented link *syntax*
+              # (e.g. `[(domain — title)](url)`) is not mistaken for a real link.
+              text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+              text = re.sub(r"`[^`]*`", "", text)
               for match in re.finditer(r"\]\(([^)\s]+)\)", text):
                   target = match.group(1)
                   if target.startswith(("http://", "https://", "#", "mailto:")):

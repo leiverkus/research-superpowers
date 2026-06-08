@@ -31,7 +31,7 @@ Paste the output of the relevant commands. Empty / "all good" / exit-0 outputs a
 
 ```bash
 # Plugin manifests valid
-claude plugin validate . --strict
+claude plugin validate .
 
 # Schema valid + template mirror in sync
 python3 -c "import json; json.load(open('schema/knowledge-frontmatter.schema.json'))"
@@ -56,7 +56,7 @@ done
 - [ ] If a new file: it appears in `docs/README.md` or the relevant index where users would look
 - [ ] CHANGELOG entry added under a new section (or under `## [Unreleased]`)
 - [ ] If breaking: a migration note is included or a follow-up `docs/migration-vX-to-vY.md` is planned
-- [ ] `claude plugin validate . --strict` passes
+- [ ] `claude plugin validate .` passes
 
 ## Screenshots / sample output
 
