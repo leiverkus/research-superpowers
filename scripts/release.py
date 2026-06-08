@@ -27,6 +27,14 @@ import pathlib
 import re
 import sys
 
+# Force UTF-8 stdout/stderr: `notes` prints the CHANGELOG section (em dashes),
+# which a Windows cp1252 console cannot encode.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except AttributeError:  # pragma: no cover
+        pass
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / ".claude-plugin" / "plugin.json"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"

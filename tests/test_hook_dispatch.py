@@ -28,7 +28,7 @@ class HookDispatch(unittest.TestCase):
             cmd = ["cmd", "/c", str(RUN_HOOK), "session-start"]
         else:
             cmd = ["bash", str(RUN_HOOK), "session-start"]
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
+        return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=60, env=env)
 
     def test_emits_valid_session_context_json(self):
         r = self._invoke()

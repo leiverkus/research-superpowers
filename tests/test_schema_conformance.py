@@ -17,7 +17,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "templates" / "research-project-template" / "scripts"
-SCHEMA = json.loads((ROOT / "schema" / "knowledge-frontmatter.schema.json").read_text())
+SCHEMA = json.loads((ROOT / "schema" / "knowledge-frontmatter.schema.json").read_text(encoding="utf-8"))
 
 try:
     import jsonschema

@@ -24,6 +24,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Force UTF-8 stdout/stderr regardless of platform locale: Windows defaults to
+# cp1252, which cannot encode the arrow (←/→) and dash glyphs we emit.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except AttributeError:  # pragma: no cover - non-reconfigurable stream
+        pass
+
 HERE = Path(__file__).resolve().parent
 CLI = HERE / "wiki-to-graph.py"
 KNOWLEDGE = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE.parent / "knowledge"
@@ -109,7 +117,8 @@ def run_cli(spec: dict, arguments: dict) -> tuple[str, bool]:
             tokens += [flag, str(arguments[name])]
     cmd = [sys.executable, str(CLI), "--knowledge-dir", str(KNOWLEDGE), *tokens, "--json"]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                               encoding="utf-8", timeout=60)
     except Exception as exc:  # pragma: no cover
         return f"failed to run query: {exc}", True
     if proc.returncode != 0:

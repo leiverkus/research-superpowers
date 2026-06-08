@@ -14,9 +14,14 @@ Roadmap P7: the test suite now runs on Linux, macOS and Windows, with a real hoo
 - **Hook-dispatch test** (`tests/test_hook_dispatch.py`): exercises the real `hooks/run-hook.cmd session-start` entry point per OS — the polyglot wrapper on POSIX, the cmd.exe → Git-bash path on Windows — and asserts the emitted `additionalContext` is valid JSON carrying the skill index.
 - **`.gitattributes`**: forces LF on the shell hooks (`session-start`, `run-hook.cmd`, `*.sh`) so a Windows checkout (`core.autocrlf=true`) can't rewrite them to CRLF and break the bash shebang; marks the vendored cytoscape bundle as binary.
 
+### Fixed
+
+- **Windows UTF-8 output bug** (surfaced by the new matrix): `wiki-to-graph.py` printed JSON containing arrow glyphs (`←`/`→`) to stdout, which crashed with `UnicodeEncodeError` on a Windows cp1252 console. All three scripts now force UTF-8 on stdout/stderr (`sys.stdout.reconfigure`), the MCP server decodes the CLI subprocess as UTF-8, and `scripts/release.py` does the same for `notes`. A real bug for Windows users, not just CI.
+
 ### Changed
 
 - The single-OS `lint` job no longer runs the unit tests itself; they now run in the cross-OS `tests` job (which includes Linux), so the release gate (`release.yml` → `workflow_call`) is verified on all three platforms before a tag can publish.
+- The portability matrix pins Python to the minor `3.12` (exact patches aren't built for every OS/arch); the reproducible anchor (the ubuntu `lint` + `release` jobs) keeps the exact `3.12.13` pin.
 
 ## [0.13.0] — 2026-06-08
 

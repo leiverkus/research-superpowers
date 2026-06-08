@@ -163,7 +163,7 @@ class GraphMCPErrors(unittest.TestCase):
     def _mcp(self, reqs, wiki):
         inp = "".join(json.dumps(r) + "\n" for r in reqs)
         out = subprocess.run([sys.executable, str(MCP), str(wiki)],
-                             input=inp, capture_output=True, text=True, timeout=60).stdout
+                             input=inp, capture_output=True, text=True, encoding="utf-8", timeout=60).stdout
         return {m.get("id"): m for m in (json.loads(l) for l in out.splitlines() if l.strip())}
 
     def test_unknown_tool_is_error(self):
@@ -189,7 +189,7 @@ class GraphMCPErrors(unittest.TestCase):
             inp = "this is not json\n" + json.dumps(
                 {"jsonrpc": "2.0", "id": 7, "method": "tools/list"}) + "\n"
             out = subprocess.run([sys.executable, str(MCP), str(d)],
-                                 input=inp, capture_output=True, text=True, timeout=60).stdout
+                                 input=inp, capture_output=True, text=True, encoding="utf-8", timeout=60).stdout
             by_id = {m.get("id"): m for m in (json.loads(l) for l in out.splitlines() if l.strip())}
             self.assertIn(7, by_id)
             self.assertTrue(by_id[7]["result"]["tools"])

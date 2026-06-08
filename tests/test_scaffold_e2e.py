@@ -52,7 +52,7 @@ class ScaffoldEndToEnd(unittest.TestCase):
 
     def _run(self, *args, **kw):
         return subprocess.run([sys.executable, *args], cwd=self.proj,
-                              capture_output=True, text=True, timeout=120, **kw)
+                              capture_output=True, text=True, encoding="utf-8", timeout=120, **kw)
 
     def test_1_lint_is_clean(self):
         r = self._run("scripts/lint-wiki.py")
@@ -62,7 +62,7 @@ class ScaffoldEndToEnd(unittest.TestCase):
     def test_2_graph_build_produces_json(self):
         r = self._run("scripts/wiki-to-graph.py", "--no-html")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        graph = json.loads((self.proj / "knowledge" / "_meta" / "graph" / "graph.json").read_text())
+        graph = json.loads((self.proj / "knowledge" / "_meta" / "graph" / "graph.json").read_text(encoding="utf-8"))
         self.assertGreaterEqual(graph["stats"]["nodes"], 3)
         self.assertGreaterEqual(graph["stats"]["edges"], 1)
         self.assertTrue(graph["communities"])
@@ -85,7 +85,7 @@ class ScaffoldEndToEnd(unittest.TestCase):
         ]
         inp = "".join(json.dumps(r) + "\n" for r in reqs)
         r = subprocess.run([sys.executable, "scripts/graph_mcp.py", "knowledge"],
-                           cwd=self.proj, input=inp, capture_output=True, text=True, timeout=120)
+                           cwd=self.proj, input=inp, capture_output=True, text=True, encoding="utf-8", timeout=120)
         by_id = {m.get("id"): m for m in (json.loads(l) for l in r.stdout.splitlines() if l.strip())}
         self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "wiki-graph")
         self.assertIn("graph_stats", [t["name"] for t in by_id[2]["result"]["tools"]])

@@ -24,6 +24,14 @@ from pathlib import Path
 
 import yaml
 
+# Force UTF-8 stdout/stderr regardless of platform locale: Windows defaults to
+# cp1252, which cannot encode the arrow (←/→) and dash glyphs we emit.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except AttributeError:  # pragma: no cover - non-reconfigurable stream
+        pass
+
 
 class _NoDatesLoader(yaml.SafeLoader):
     """SafeLoader that does NOT auto-convert ISO dates to datetime objects.
