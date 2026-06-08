@@ -4,7 +4,9 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.0] — 2026-06-08
+
+Completes the knowledge-graph Query-Layer: query the wiki live during a session, from the terminal or as native MCP tools.
 
 ### Added
 
