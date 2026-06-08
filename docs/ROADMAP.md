@@ -199,11 +199,14 @@ stdlib + PyYAML only.
 > query → the MCP handshake + a `graph_stats` call. Proves the shipped template
 > (not just the in-repo example) is self-consistent.
 > **Tier 2** — `.github/workflows/install-smoke.yml` installs the real Claude
-> CLI and runs `claude plugin validate .` plus a local marketplace
-> add/install/list. **Honest, not fake-green:** if the CLI can't be obtained in
-> the runner the job skips with a notice; if the CLI is available, `validate`
-> must pass. It is intentionally **not** part of the release gate, since tier 2
-> is environment-dependent and must never block a release.
+> CLI and **actually installs this plugin from its own marketplace**: validate →
+> `marketplace add ./` → `install research-superpowers@leiverkus-research` →
+> `list --json`, then asserts the JSON contains `research-superpowers`.
+> **Fail-closed, not fake-green:** only *obtaining* the CLI is best-effort (if it
+> can't be installed the job skips with a notice); once the CLI is present the
+> whole sequence must succeed with no suppressed errors. It is intentionally
+> **not** part of the release gate, since CLI availability is environment-
+> dependent and must never block a release.
 
 **Gap.** No test exercises the *user's* path: install the plugin, scaffold a
 project, trigger a skill, validate the generated project.
