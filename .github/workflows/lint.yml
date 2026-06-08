@@ -228,6 +228,9 @@ jobs:
           sys.exit(failed)
           PY
 
+      - name: Unit tests (wiki tooling)
+        run: python -m unittest discover -s tests -v
+
       - name: Docs in sync (version badge, skill count, session index)
         run: |
           python <<'PY'
