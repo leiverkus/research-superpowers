@@ -4,6 +4,18 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] — 2026-06-08
+
+Roadmap P6 tier 2 — a best-effort, honest plugin-install smoke test. With this, all roadmap items P1–P7 are complete.
+
+### Added
+
+- **Plugin install smoke (roadmap P6, tier 2)**: `.github/workflows/install-smoke.yml` installs the real Claude CLI and runs `claude plugin validate .` plus a local marketplace add/install/list. Honest by design — if the CLI can't be obtained in the runner the job **skips with a notice** rather than faking success; if the CLI is available, `validate` must pass. It is intentionally **not** part of the release gate (`release.yml`), since tier 2 is environment-dependent and must never block a release.
+
+### Docs
+
+- `docs/ROADMAP.md` marks P6 tier 2 done; all P1–P7 items are now complete. `CONTRIBUTING.md` notes the best-effort install smoke.
+
 ## [0.14.0] — 2026-06-08
 
 Roadmap P7: the test suite now runs on Linux, macOS and Windows, with a real hook-dispatch test per OS. This is the last planned maturity item; only the best-effort P6 tier 2 (a real `claude plugin install` in CI) remains open.

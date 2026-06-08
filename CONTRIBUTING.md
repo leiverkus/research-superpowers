@@ -68,7 +68,7 @@ python3 -m unittest discover -s tests
 > conformance cross-check (`tests/test_schema_conformance.py`), which skips
 > cleanly if it isn't installed.
 
-`claude plugin validate .` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR.
+`claude plugin validate .` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR. CI also runs a **best-effort** install smoke (`.github/workflows/install-smoke.yml`) that installs the real Claude CLI and runs `claude plugin validate .` plus a local marketplace install; it skips honestly if the CLI can't be obtained in the runner and never gates a release.
 
 ### Mirrored files
 
