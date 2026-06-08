@@ -1,0 +1,9 @@
+# Dev / CI-only dependencies — pinned for reproducible CI.
+#
+# IMPORTANT: the runtime wiki scripts (lint-wiki.py, wiki-to-graph.py,
+# graph_mcp.py) deliberately need only the Python standard library + PyYAML, so
+# scaffolded research projects run with no `pip install`. Do NOT add a runtime
+# dependency here — this file is for the test/lint toolchain only.
+
+pyyaml==6.0.3
+jsonschema==4.25.1   # golden cross-check of the hand-rolled Draft-07 validator (roadmap P5)
