@@ -81,6 +81,25 @@ jobs:
                 f"html {len(html)//1024}KB — OK")
           PY
 
+      - name: Graph query on example project
+        run: |
+          cd examples/example-project
+          python <<'PY'
+          import json, subprocess
+          def q(*a):
+              out = subprocess.check_output(["python", "scripts/wiki-to-graph.py", *a, "--json"])
+              return json.loads(out)
+          assert q("search", "rehov"), "search returned nothing"
+          nb = q("neighbors", "tel-rehov")
+          assert nb["neighbors"], "neighbors empty"
+          p = q("path", "tel-rehov", "chronology-debate")
+          assert p["path"], "no path found"
+          rel = q("relations", "--type", "contradicts")
+          assert len(rel) >= 1, "expected a contradicts relation"
+          print(f"query OK — neighbours {len(nb['neighbors'])}, "
+                f"path {len(p['path'])} hop(s), contradicts {len(rel)}")
+          PY
+
       - name: Agent contract — every agent references an existing skill
         run: |
           failed=0

@@ -298,6 +298,20 @@ All carry derived **god_nodes** (most-connected pages) and **bridges** (entities
 joining otherwise-unconnected sources). Edges come from wikilinks plus the
 optional confidence-tagged `relations:` frontmatter block.
 
+To **query the live graph** during a session (recomputed each call — always
+current — so no stale export), the same script takes sub-commands:
+
+```bash
+python scripts/wiki-to-graph.py neighbors <slug> --depth 2   # what connects to a page
+python scripts/wiki-to-graph.py path <a> <b>                 # how two pages connect
+python scripts/wiki-to-graph.py god-nodes --top-n 10         # most-connected pages
+python scripts/wiki-to-graph.py bridges                      # load-bearing entities
+python scripts/wiki-to-graph.py relations --type contradicts # typed edges by type/confidence
+python scripts/wiki-to-graph.py search <term>                # find a node
+python scripts/wiki-to-graph.py stats                        # counts + inference-rate
+# add --json to any query for machine-readable output
+```
+
 ## Meta files
 
 ### `knowledge/_meta/index.md`
