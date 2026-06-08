@@ -1,15 +1,14 @@
 name: Plugin install smoke
 
-# Best-effort end-to-end install check (roadmap P6, tier 2): install the real
-# Claude CLI and exercise the plugin's own structural validation plus a local
-# marketplace add/install/list. Honest by design:
-#   • If the CLI can't be obtained in the runner, the job SKIPS with a clear
-#     notice instead of faking success.
-#   • If the CLI IS available, `claude plugin validate .` must pass (a real
-#     signal); the local marketplace add/install/list are tolerant (they may
-#     behave differently across CLI versions).
+# End-to-end install check (roadmap P6, tier 2): install the real Claude CLI and
+# actually install this plugin from its own marketplace. Honest by design:
+#   • Only obtaining the CLI is best-effort — if it can't be installed in the
+#     runner, the job SKIPS with a clear notice instead of faking success.
+#   • Once the CLI IS available, the whole sequence is FAIL-CLOSED: validate →
+#     marketplace add → install → `list --json` must all succeed AND the JSON
+#     must contain `research-superpowers`. No suppressed errors.
 # It is intentionally NOT part of the release gate (release.yml) — tier 2 is
-# best-effort and environment-dependent, so it must never block a release.
+# environment-dependent (CLI availability), so it must never block a release.
 on:
   pull_request:
     branches: [main]
@@ -38,17 +37,28 @@ jobs:
           npm install -g @anthropic-ai/claude-code
           claude --version
 
-      - name: Validate plugin manifest (must pass when the CLI is available)
+      - name: Validate manifest, install the plugin, verify it is installed
         if: steps.cli.outcome == 'success'
-        run: claude plugin validate .
-
-      - name: Local marketplace add + install + list (tolerant)
-        if: steps.cli.outcome == 'success'
-        continue-on-error: true
+        # Fail-closed: once the CLI is available these must all succeed. Only the
+        # CLI install above is best-effort. Isolated CLAUDE_CONFIG_DIR so the run
+        # is clean and self-contained.
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-smoke
         run: |
-          claude plugin marketplace add . || echo "::warning::marketplace add failed (CLI version diff or needs auth)"
-          claude plugin install research-superpowers@leiverkus-research || echo "::warning::install failed (CLI version diff or needs auth)"
-          claude plugin list || true
+          set -euo pipefail
+          claude plugin validate ./
+          claude plugin marketplace add ./ --scope user
+          claude plugin install research-superpowers@leiverkus-research --scope user
+          claude plugin list --json | tee plugins.json
+          python3 - <<'PY'
+          import json, sys
+          plugins = json.load(open("plugins.json"))
+          ids = [p.get("id", "") for p in plugins]
+          if not any("research-superpowers" in i for i in ids):
+              print(f"::error::research-superpowers not installed; got {ids}")
+              sys.exit(1)
+          print(f"verified installed: {ids}")
+          PY
 
       - name: CLI unavailable — skip honestly
         if: steps.cli.outcome != 'success'

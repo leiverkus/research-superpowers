@@ -4,6 +4,14 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] — 2026-06-08
+
+Fixes a fake-green in the v0.15.0 install smoke: the marketplace add / install / list steps were tolerant (`|| echo`), so in the real CI run the CLI and `validate` passed but `marketplace add .` and the install actually **failed** and `list` reported no plugins — yet the job stayed green. This made the "tier 2 done / all P1–P7 complete" claim unsubstantiated.
+
+### Fixed
+
+- **Install smoke is now fail-closed** (`.github/workflows/install-smoke.yml`): once the CLI is available the whole sequence must succeed with no suppressed errors — `claude plugin validate ./` → `claude plugin marketplace add ./ --scope user` → `claude plugin install research-superpowers@leiverkus-research --scope user` → `claude plugin list --json`, then a check that the JSON actually contains `research-superpowers`. The path is `./` (the CLI rejects a bare `.` for `marketplace add`), and an isolated `CLAUDE_CONFIG_DIR` keeps the run self-contained. Only *obtaining* the CLI stays best-effort (honest skip with a notice if it can't be installed). Verified locally end-to-end (plugin installs, `list --json` reports `research-superpowers@leiverkus-research` v0.15.0).
+
 ## [0.15.0] — 2026-06-08
 
 Roadmap P6 tier 2 — a best-effort, honest plugin-install smoke test. With this, all roadmap items P1–P7 are complete.
