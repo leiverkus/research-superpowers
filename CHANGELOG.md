@@ -10,7 +10,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **Community detection** (`scripts/wiki-to-graph.py`) — automatic thematic clustering of the wiki, dependency-free and deterministic (greedy modularity, Clauset–Newman–Moore; no `igraph`/`leidenalg`). Surfaces the sub-topics of a literature without any tagging.
   - New `communities [--min-size N]` query sub-command and `graph_communities` MCP tool (`--json` supported); each community reports its size, node-type mix, and members.
-  - Every node gets a `community` id in `graph.json` / `graph.graphml`; `graph.html` gains a **Colour: by type / by community** switch.
+  - Every node gets a `community` id in `graph.json` / `graph.graphml`; `graph.html` **groups nodes spatially by community** (compound containers laid out by cose) and gains a **Colour: by type / by community** switch.
   - Robust on dense, hub-heavy wikis where label propagation collapses to one blob; ties broken deterministically so the partition is reproducible.
   - CI smoke-tests the community query + the `community` attribute on the example project.
 

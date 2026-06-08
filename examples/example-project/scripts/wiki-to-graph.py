@@ -504,15 +504,31 @@ def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -
         degree[e["target"]] = degree.get(e["target"], 0) + 1
     bridge_ids = {b["id"] for b in bridges}
 
-    cy_nodes = [
-        {"data": {
+    # Compound parents per community (≥2 members) so the layout groups clusters
+    # spatially. Singletons stay top-level (no box).
+    comm_size: dict[int, int] = {}
+    for n in nodes:
+        c = n.get("community", -1)
+        comm_size[c] = comm_size.get(c, 0) + 1
+    parent_of = {c: f"c{c}" for c, sz in comm_size.items() if c >= 0 and sz >= 2}
+    parent_nodes = [
+        {"data": {"id": parent_of[c], "isCommunity": 1, "community": c,
+                  "label": f"community {c} ({comm_size[c]})"}}
+        for c in sorted(parent_of)
+    ]
+    cy_nodes = []
+    for n in nodes:
+        data = {
             "id": n["id"], "type": n["type"], "subtype": n.get("subtype"),
             "title": n.get("title", n["id"]), "label": _short_label(n),
             "status": n.get("status", ""), "community": n.get("community", -1),
             "degree": degree.get(n["id"], 0), "bridge": 1 if n["id"] in bridge_ids else 0,
-        }}
-        for n in nodes
-    ]
+        }
+        pid = parent_of.get(n.get("community", -1))
+        if pid:
+            data["parent"] = pid
+        cy_nodes.append({"data": data})
+    cy_nodes = parent_nodes + cy_nodes
     cy_edges = [
         {"data": {
             "id": f"e{i}", "source": e["source"], "target": e["target"],
@@ -625,13 +641,19 @@ const cy = cytoscape({
   elements: { nodes: GRAPH.nodes, edges: GRAPH.edges },
   wheelSensitivity: 0.25,
   style: [
-    { selector: 'node', style: {
+    { selector: 'node:childless', style: {
         'background-color': e => PALETTE[e.data('type')] || PALETTE.unknown,
         'width': e => sz(e.data('degree')), 'height': e => sz(e.data('degree')),
         'label': 'data(label)', 'font-size': 8, 'color': '#222',
         'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 2,
         'text-wrap': 'wrap', 'text-max-width': 80, 'min-zoomed-font-size': 5,
         'border-width': 0 } },
+    { selector: ':parent', style: {
+        'background-color': e => communityColor(e.data('community')),
+        'background-opacity': 0.08, 'border-width': 1, 'border-color': '#e0e0e0',
+        'shape': 'round-rectangle', 'padding': 16,
+        'label': 'data(label)', 'font-size': 10, 'color': '#999',
+        'text-valign': 'top', 'text-halign': 'center', 'min-zoomed-font-size': 6 } },
     { selector: 'node[bridge = 1]', style: { 'border-width': 2, 'border-color': '#e6a000' } },
     { selector: 'node.sel', style: { 'border-width': 3, 'border-color': '#111' } },
     { selector: 'node.nolabel', style: { 'label': '' } },
@@ -659,7 +681,7 @@ document.getElementById('stats').textContent =
   `${s.nodes} nodes · ${s.edges} edges · ${s.relations_total||0} typed (${infRate}% inferred)`;
 
 // Type filters (built from data)
-const types = [...new Set(GRAPH.nodes.map(n => n.data.type))].sort();
+const types = [...new Set(GRAPH.nodes.filter(n => !n.data.isCommunity).map(n => n.data.type))].sort();
 const tf = document.getElementById('type-filters');
 types.forEach(t => {
   const id = 'tf-' + t;
@@ -675,7 +697,7 @@ document.getElementById('show-inferred').addEventListener('change', () => applyF
 
 function applyFilters(relayout) {
   const on = t => document.getElementById('tf-' + t).checked;
-  cy.nodes().forEach(n => n.style('display', on(n.data('type')) ? 'element' : 'none'));
+  cy.nodes(':childless').forEach(n => n.style('display', on(n.data('type')) ? 'element' : 'none'));
   const wl = document.getElementById('show-wikilinks').checked;
   const typed = document.getElementById('show-typed').checked;
   const inf = document.getElementById('show-inferred').checked;
@@ -685,6 +707,8 @@ function applyFilters(relayout) {
     if (show && !isWiki && !inf && e.data('confidence') !== 'extracted') show = false;
     e.style('display', show ? 'element' : 'none');
   });
+  cy.nodes(':parent').forEach(p =>
+    p.style('display', p.children().some(c => c.style('display') !== 'none') ? 'element' : 'none'));
   if (relayout) {
     cy.$(':visible').layout(LAYOUT).run();
     cy.fit(undefined, 40);
@@ -693,7 +717,7 @@ function applyFilters(relayout) {
   }
 }
 
-function refreshLabels() { cy.nodes().toggleClass('nolabel', cy.zoom() < LABEL_ZOOM); }
+function refreshLabels() { cy.nodes(':childless').toggleClass('nolabel', cy.zoom() < LABEL_ZOOM); }
 cy.on('zoom', refreshLabels);
 
 function clearHi() { cy.elements().removeClass('faded lbl'); cy.nodes().removeClass('sel'); }
@@ -744,7 +768,7 @@ search.addEventListener('keydown', ev => {
 // Colour nodes by type (default) or by detected community.
 function communityColor(i) { return i < 0 ? '#9c9c9c' : `hsl(${(i * 137.508) % 360}, 62%, 58%)`; }
 function setColouring(mode) {
-  cy.nodes().forEach(n => n.style('background-color',
+  cy.nodes(':childless').forEach(n => n.style('background-color',
     mode === 'community' ? communityColor(n.data('community'))
                          : (PALETTE[n.data('type')] || PALETTE.unknown)));
 }
