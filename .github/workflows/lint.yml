@@ -203,12 +203,13 @@ jobs:
             echo "  ✓ $f"
           done
 
-      - name: Markdown links in docs/ resolve (file refs only, anchors skipped)
+      - name: Markdown links resolve (docs/ + top-level, file refs only)
         run: |
           python <<'PY'
           import re, sys, pathlib
           failed = 0
-          for doc in sorted(pathlib.Path("docs").glob("*.md")):
+          docs = sorted(pathlib.Path("docs").glob("*.md")) + [pathlib.Path("README.md")]
+          for doc in docs:
               text = doc.read_text(encoding="utf-8")
               for match in re.finditer(r"\]\(([^)\s]+)\)", text):
                   target = match.group(1)
@@ -224,5 +225,32 @@ jobs:
                       failed = 1
           if not failed:
               print("all internal doc links resolve")
+          sys.exit(failed)
+          PY
+
+      - name: Docs in sync (version badge, skill count, session index)
+        run: |
+          python <<'PY'
+          import json, re, pathlib, sys
+          failed = 0
+          version = json.load(open(".claude-plugin/plugin.json"))["version"]
+          readme = pathlib.Path("README.md").read_text(encoding="utf-8")
+
+          m = re.search(r"badge/version-([0-9][^-]*)-", readme)
+          if not m or m.group(1) != version:
+              print(f"::error::README version badge ({m and m.group(1)}) != plugin.json ({version})"); failed = 1
+
+          skills = sorted(p.name for p in pathlib.Path("skills").iterdir() if (p / "SKILL.md").exists())
+          m = re.search(r"\*\*(\d+) skills\*\*", readme)
+          if not m or int(m.group(1)) != len(skills):
+              print(f"::error::README skill count ({m and m.group(1)}) != actual ({len(skills)})"); failed = 1
+
+          session = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8")
+          for s in skills:
+              if s not in session:
+                  print(f"::error::hooks/session-context.md does not mention skill '{s}'"); failed = 1
+
+          if not failed:
+              print(f"docs in sync — v{version}, {len(skills)} skills, session index complete")
           sys.exit(failed)
           PY

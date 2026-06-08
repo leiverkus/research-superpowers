@@ -1,7 +1,7 @@
 # research-superpowers
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](CHANGELOG.md)
 [![Plugin for: Claude Code + OpenCode](https://img.shields.io/badge/plugin-Claude%20Code%20%2B%20OpenCode-purple.svg)](#installation)
 [![Lint](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml)
 
@@ -23,7 +23,7 @@ LLM-assisted research is fast but easy to get wrong:
 
 `research-superpowers` makes the discipline structural:
 
-- **12 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
+- **14 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
 - **6 subagents** for context-isolated heavy lifting (ingest, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
@@ -156,8 +156,6 @@ Phase graph with hermeneutic back-edges and SOFT-GATE semantics: [`docs/phase-fl
 | [`docs/phase-flow.md`](docs/phase-flow.md) | Graph of phases with back-edges and SOFT-GATEs |
 | [`docs/skill-contract.md`](docs/skill-contract.md) | SOT pattern + `inputs:` / `outputs:` frontmatter |
 | [`docs/skill-authoring.md`](docs/skill-authoring.md) | How to add or change a skill |
-| [`docs/migration-v0.1-to-v0.2.md`](docs/migration-v0.1-to-v0.2.md) | Upgrading from v0.1 |
-| [`docs/migration-v0.2-to-v0.3.md`](docs/migration-v0.2-to-v0.3.md) | Upgrading from v0.2 |
 | [`CHANGELOG.md`](CHANGELOG.md) | Full version history |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute (language convention, PR checklist) |
 
