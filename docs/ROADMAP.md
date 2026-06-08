@@ -189,16 +189,21 @@ stdlib + PyYAML only.
 
 ---
 
-## P6 — End-to-end install & scaffold test  ·  medium  ·  dependency-free  ·  ◑ tier 1 done (v0.13.0)
+## P6 — End-to-end install & scaffold test  ·  medium  ·  dependency-free  ·  ✅ done (tier 1 v0.13.0, tier 2 v0.15.0)
 
-> **Status: tier 1 done.** `tests/test_scaffold_e2e.py` materialises a project
-> from the shipped `templates/research-project-template/`, drops in a small
-> connected wiki, and runs the real user path against the *copied* scripts:
-> lint (clean) → graph build (`graph.json` with nodes/edges/communities) →
-> a `neighbors` query → the MCP handshake + a `graph_stats` call. This proves
-> the shipped template — not just the in-repo example — is self-consistent.
-> **Tier 2** (a real `claude plugin install` from the marketplace/tag) is still
-> open; it depends on the Claude CLI being runnable in CI and is best-effort.
+> **Status: done (both tiers).**
+> **Tier 1** — `tests/test_scaffold_e2e.py` materialises a project from the
+> shipped `templates/research-project-template/`, drops in a small connected
+> wiki, and runs the real user path against the *copied* scripts: lint (clean)
+> → graph build (`graph.json` with nodes/edges/communities) → a `neighbors`
+> query → the MCP handshake + a `graph_stats` call. Proves the shipped template
+> (not just the in-repo example) is self-consistent.
+> **Tier 2** — `.github/workflows/install-smoke.yml` installs the real Claude
+> CLI and runs `claude plugin validate .` plus a local marketplace
+> add/install/list. **Honest, not fake-green:** if the CLI can't be obtained in
+> the runner the job skips with a notice; if the CLI is available, `validate`
+> must pass. It is intentionally **not** part of the release gate, since tier 2
+> is environment-dependent and must never block a release.
 
 **Gap.** No test exercises the *user's* path: install the plugin, scaffold a
 project, trigger a skill, validate the generated project.
@@ -260,12 +265,14 @@ A natural order (cheap guards first, biggest last), shippable incrementally:
 1. ✅ **v0.11.0 / v0.11.1** — P1 (pin CI) + P2 (script mirror guard). *Done.*
 2. ✅ **v0.12.0** — P3 (release automation) + P4 (negative tests). *Done.*
 3. ✅ **v0.13.0** — P5 (jsonschema cross-check) + P6 tier 1 (scaffold E2E). *Done.*
-4. ✅ **v0.14.0** — P7 (platform matrix). *Done.* (P6 tier 2 — a real
-   `claude plugin install` in CI — remains the one open, best-effort item,
-   gated on the Claude CLI being runnable in a runner.)
+4. ✅ **v0.14.0** — P7 (platform matrix). *Done.*
+5. ✅ **v0.15.0** — P6 tier 2 (best-effort real `claude plugin install` smoke). *Done.*
 
-None of these are blocking; v0.10.0 is production-ready. This is the path from
-"robust" to "mature".
+**All roadmap items P1–P7 are now complete** (P6 across both tiers). None were
+blocking — v0.10.0 was already production-ready; this sequence took the package
+from "robust" to "mature". Further hardening (e.g. container-by-digest CI, a
+single-source generator for the script mirrors) is noted inline as optional and
+not currently warranted.
 
 ---
 
