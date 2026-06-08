@@ -79,6 +79,6 @@ body:
     attributes:
       label: Environment
       description: Plugin version, host (Claude Code / OpenCode), host version.
-      placeholder: "research-superpowers 0.3.0, Claude Code 2.x.x"
+      placeholder: "research-superpowers 0.10.0, Claude Code 2.x.x"
     validations:
       required: true

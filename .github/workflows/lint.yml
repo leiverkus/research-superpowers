@@ -8,6 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  render:
+    name: Template publications render (HTML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render article, book and presentation to HTML
+        working-directory: templates/research-project-template
+        run: |
+          set -e
+          (cd output/publication/article && quarto render article.qmd --to html)
+          (cd output/publication/book && quarto render --to html)
+          (cd output/presentation && quarto render talk.qmd --to revealjs)
+          echo "article, book and presentation all render to HTML"
+
   lint:
     name: Schema, lint, and contract checks
     runs-on: ubuntu-latest
@@ -128,6 +143,30 @@ jobs:
           print(f"MCP OK — {len(tools)} tools, stats call ok")
           PY
 
+      - name: Template build config references real files
+        run: |
+          cd templates/research-project-template
+          test -f output/publication/article/article.qmd
+          test -f output/presentation/talk.qmd
+          test -f output/publication/book/_quarto.yml
+          # No stale German placeholder filenames (artikel/vortrag) in build config
+          if grep -rnE 'artikel|vortrag' .gitlab-ci.yml .vscode/tasks.json; then
+            echo "::error::stale artikel/vortrag reference in template build config"; exit 1
+          fi
+          # The wiki is plain Markdown — config must not try to quarto-build knowledge/
+          if grep -nE 'quarto (render|preview)' .vscode/tasks.json | grep -qi knowledge; then
+            echo "::error::tasks.json still quarto-builds the Markdown wiki"; exit 1
+          fi
+          # Every quarto target referenced in tasks.json must exist
+          python3 <<'PY'
+          import re, pathlib
+          t = pathlib.Path(".vscode/tasks.json").read_text()
+          missing = [q for q in set(re.findall(r'quarto (?:render|preview) (\S+\.qmd)', t))
+                     if not list(pathlib.Path("output").rglob(q))]
+          assert not missing, f"tasks.json references missing files: {missing}"
+          print("template build config OK")
+          PY
+
       - name: Agent contract — every agent references an existing skill
         run: |
           failed=0
@@ -179,13 +218,37 @@ jobs:
             echo "  ✓ $f"
           done
 
-      - name: Markdown links in docs/ resolve (file refs only, anchors skipped)
+      - name: Self-repo links in .github resolve to real files
         run: |
           python <<'PY'
           import re, sys, pathlib
           failed = 0
-          for doc in sorted(pathlib.Path("docs").glob("*.md")):
+          base = "https://github.com/leiverkus/research-superpowers/blob/main/"
+          for f in sorted(pathlib.Path(".github").rglob("*")):
+              if f.suffix not in (".yml", ".yaml", ".md") or not f.is_file():
+                  continue
+              for m in re.finditer(re.escape(base) + r"([^ )\"'#]+)", f.read_text(encoding="utf-8")):
+                  rel = m.group(1).split("#", 1)[0]
+                  if not pathlib.Path(rel).exists():
+                      print(f"::error file={f}::dead self-repo link → {rel} (HTTP 404)")
+                      failed = 1
+          if not failed:
+              print("all .github self-repo links resolve")
+          sys.exit(failed)
+          PY
+
+      - name: Markdown links resolve (docs/ + top-level, file refs only)
+        run: |
+          python <<'PY'
+          import re, sys, pathlib
+          failed = 0
+          docs = sorted(pathlib.Path("docs").glob("*.md")) + [pathlib.Path("README.md"), pathlib.Path("CHANGELOG.md")]
+          for doc in docs:
               text = doc.read_text(encoding="utf-8")
+              # Drop inline-code / fenced-code spans so documented link *syntax*
+              # (e.g. `[(domain — title)](url)`) is not mistaken for a real link.
+              text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+              text = re.sub(r"`[^`]*`", "", text)
               for match in re.finditer(r"\]\(([^)\s]+)\)", text):
                   target = match.group(1)
                   if target.startswith(("http://", "https://", "#", "mailto:")):
@@ -201,4 +264,59 @@ jobs:
           if not failed:
               print("all internal doc links resolve")
           sys.exit(failed)
+          PY
+
+      - name: Unit tests (wiki tooling)
+        run: python -m unittest discover -s tests -v
+
+      - name: Docs in sync (version badge, skill count, session index)
+        run: |
+          python <<'PY'
+          import json, re, pathlib, sys
+          failed = 0
+          version = json.load(open(".claude-plugin/plugin.json"))["version"]
+          readme = pathlib.Path("README.md").read_text(encoding="utf-8")
+
+          m = re.search(r"badge/version-([0-9][^-]*)-", readme)
+          if not m or m.group(1) != version:
+              print(f"::error::README version badge ({m and m.group(1)}) != plugin.json ({version})"); failed = 1
+
+          skills = sorted(p.name for p in pathlib.Path("skills").iterdir() if (p / "SKILL.md").exists())
+          # Every "<N> skills" mention in README + docs/ must equal the real count.
+          for doc in [pathlib.Path("README.md")] + sorted(pathlib.Path("docs").glob("*.md")):
+              for m in re.finditer(r"(\d+) skills", doc.read_text(encoding="utf-8")):
+                  if int(m.group(1)) != len(skills):
+                      print(f"::error file={doc}::says '{m.group(0)}' but there are {len(skills)} skills"); failed = 1
+
+          session = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8")
+          for s in skills:
+              if s not in session:
+                  print(f"::error::hooks/session-context.md does not mention skill '{s}'"); failed = 1
+
+          if not failed:
+              print(f"docs in sync — v{version}, {len(skills)} skills, session index complete")
+          sys.exit(failed)
+          PY
+
+      - name: OpenCode embedded index matches session-context
+        run: |
+          python <<'PY'
+          import pathlib, sys
+          ts = pathlib.Path("opencode/plugin/research-superpowers.ts").read_text(encoding="utf-8")
+          md = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8").rstrip("\n")
+          head = "const EMBEDDED_INDEX = `"
+          tail = "`\n\n// ── Helpers"
+          try:
+              lit = ts[ts.index(head) + len(head):ts.index(tail)]
+          except ValueError:
+              print("::error file=opencode/plugin/research-superpowers.ts::"
+                    "could not locate EMBEDDED_INDEX literal (anchors changed?)")
+              sys.exit(1)
+          unescaped = lit.replace("\\${", "${").replace("\\`", "`")
+          if unescaped != md:
+              print("::error file=opencode/plugin/research-superpowers.ts::"
+                    "EMBEDDED_INDEX is out of sync with hooks/session-context.md "
+                    "(re-run the sync: see opencode/README.md)")
+              sys.exit(1)
+          print("opencode EMBEDDED_INDEX in sync with session-context.md")
           PY

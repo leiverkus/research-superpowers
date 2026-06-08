@@ -1,23 +1,7 @@
 {
   "version": "2.0.0",
   "tasks": [
-    // ─── Wiki ───────────────────────────────────────────
-    {
-      "label": "Wiki: Build HTML site",
-      "type": "shell",
-      "command": "quarto render",
-      "options": { "cwd": "${workspaceFolder}/knowledge" },
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "Wiki: Live preview",
-      "type": "shell",
-      "command": "quarto preview",
-      "options": { "cwd": "${workspaceFolder}/knowledge" },
-      "isBackground": true,
-      "problemMatcher": []
-    },
+    // ─── Wiki (plain Markdown — no build step) ──────────
     {
       "label": "Wiki: Lint",
       "type": "shell",
@@ -26,12 +10,20 @@
       "group": "test",
       "problemMatcher": []
     },
+    {
+      "label": "Wiki: Build graph (HTML/JSON/GraphML)",
+      "type": "shell",
+      "command": "python3 scripts/wiki-to-graph.py",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
 
     // ─── Article ────────────────────────────────────────
     {
       "label": "Article → PDF",
       "type": "shell",
-      "command": "quarto render artikel.qmd --to pdf --output-dir _output",
+      "command": "quarto render article.qmd --to pdf --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/publication/article" },
       "group": "build",
       "problemMatcher": []
@@ -39,7 +31,7 @@
     {
       "label": "Article → HTML",
       "type": "shell",
-      "command": "quarto render artikel.qmd --to html --output-dir _output",
+      "command": "quarto render article.qmd --to html --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/publication/article" },
       "group": "build",
       "problemMatcher": []
@@ -47,7 +39,7 @@
     {
       "label": "Article → Word",
       "type": "shell",
-      "command": "quarto render artikel.qmd --to docx --output-dir _output",
+      "command": "quarto render article.qmd --to docx --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/publication/article" },
       "group": "build",
       "problemMatcher": []
@@ -55,7 +47,7 @@
     {
       "label": "Article → LaTeX",
       "type": "shell",
-      "command": "quarto render artikel.qmd --to pdf --no-compile --output-dir _output",
+      "command": "quarto render article.qmd --to pdf --no-compile --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/publication/article" },
       "group": "build",
       "problemMatcher": []
@@ -63,7 +55,7 @@
     {
       "label": "Article: Live preview",
       "type": "shell",
-      "command": "quarto preview artikel.qmd",
+      "command": "quarto preview article.qmd",
       "options": { "cwd": "${workspaceFolder}/output/publication/article" },
       "isBackground": true,
       "problemMatcher": []
@@ -123,7 +115,7 @@
     {
       "label": "Presentation → Reveal.js slides",
       "type": "shell",
-      "command": "quarto render vortrag.qmd --to revealjs --output-dir _output",
+      "command": "quarto render talk.qmd --to revealjs --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "group": "build",
       "problemMatcher": []
@@ -131,7 +123,7 @@
     {
       "label": "Presentation → PowerPoint",
       "type": "shell",
-      "command": "quarto render vortrag.qmd --to pptx --output-dir _output",
+      "command": "quarto render talk.qmd --to pptx --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "group": "build",
       "problemMatcher": []
@@ -139,7 +131,7 @@
     {
       "label": "Presentation → Beamer PDF",
       "type": "shell",
-      "command": "quarto render vortrag.qmd --to beamer --output-dir _output",
+      "command": "quarto render talk.qmd --to beamer --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "group": "build",
       "problemMatcher": []
@@ -147,7 +139,7 @@
     {
       "label": "Presentation → Beamer LaTeX",
       "type": "shell",
-      "command": "quarto render vortrag.qmd --to beamer --no-compile --output-dir _output",
+      "command": "quarto render talk.qmd --to beamer --no-compile --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "group": "build",
       "problemMatcher": []
@@ -155,7 +147,7 @@
     {
       "label": "Presentation → Handout (A4 PDF)",
       "type": "shell",
-      "command": "quarto render vortrag.qmd --to pdf --output-dir _output",
+      "command": "quarto render talk.qmd --to pdf --output-dir _output",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "group": "build",
       "problemMatcher": []
@@ -163,7 +155,7 @@
     {
       "label": "Presentation: Live preview",
       "type": "shell",
-      "command": "quarto preview vortrag.qmd",
+      "command": "quarto preview talk.qmd",
       "options": { "cwd": "${workspaceFolder}/output/presentation" },
       "isBackground": true,
       "problemMatcher": []
@@ -171,9 +163,9 @@
 
     // ─── Clean ──────────────────────────────────────────
     {
-      "label": "Clean: Wiki",
+      "label": "Clean: Wiki graph",
       "type": "shell",
-      "command": "rm -rf _site .quarto",
+      "command": "rm -rf _meta/graph",
       "options": { "cwd": "${workspaceFolder}/knowledge" },
       "problemMatcher": []
     },

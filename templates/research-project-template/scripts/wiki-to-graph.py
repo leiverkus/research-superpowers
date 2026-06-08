@@ -73,6 +73,17 @@ WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
 
+class _NoDatesLoader(yaml.SafeLoader):
+    """SafeLoader that keeps ISO dates as strings — so an invalid date like
+    `2026-99-99` is parsed as text instead of raising ValueError mid-parse."""
+
+
+_NoDatesLoader.yaml_implicit_resolvers = {
+    ch: [(tag, rx) for (tag, rx) in res if tag != "tag:yaml.org,2002:timestamp"]
+    for ch, res in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+
+
 # --------------------------------------------------------------------------- #
 # Parsing
 # --------------------------------------------------------------------------- #
@@ -82,8 +93,8 @@ def split_frontmatter(text: str) -> tuple[dict, str]:
     if not match:
         return {}, text
     try:
-        fm = yaml.safe_load(match.group(1)) or {}
-    except yaml.YAMLError:
+        fm = yaml.load(match.group(1), Loader=_NoDatesLoader) or {}
+    except (yaml.YAMLError, ValueError, TypeError):
         fm = {}
     body = text[match.end():]
     return (fm if isinstance(fm, dict) else {}), body
@@ -1039,6 +1050,20 @@ def main() -> int:
     pages = collect_pages(args.knowledge_dir)
     if not pages:
         print(f"Error: no wiki pages found under '{args.knowledge_dir}'.")
+        return 1
+
+    # Page slugs must be unique — wikilinks resolve by slug, so duplicates would
+    # silently collapse to one node. Fail loudly instead.
+    seen: dict[str, list[str]] = {}
+    for path in args.knowledge_dir.rglob("*.md"):
+        if path.name.startswith(EXAMPLE_PREFIXES) or "_meta" in path.parts:
+            continue
+        seen.setdefault(path.stem, []).append(str(path))
+    dupes = {s: p for s, p in seen.items() if len(p) > 1}
+    if dupes:
+        print("Error: duplicate page slugs (ambiguous wikilink/relation targets):")
+        for slug, paths in sorted(dupes.items()):
+            print(f"  {slug}: {', '.join(paths)}")
         return 1
 
     nodes = build_nodes(pages)

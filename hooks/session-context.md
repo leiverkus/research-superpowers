@@ -4,10 +4,15 @@ You have the **research-superpowers** plugin. Below is an index of available
 skills with one-line triggers. For full procedural content, load the skill via
 the `Skill` tool (e.g. `Skill ingest-source`).
 
+## Setup & orientation
+
+- **using-research-powers** — orientation: how the skills fit together and when to use which
+- **scaffold-research-project** — create a new research project from the template
+
 ## Workflow phases (sequence)
 
 1. **brainstorming-research** — open question → input/ideas/<slug>-design.md
-2. **writing-research-plan** — design doc → pre-registered plan
+2. **writing-research-plan** — design doc → ready plan (status=ready for hermeneutic, status=pre-registered for quantitative/mixed)
 3. **literature-review** — strategic search, produces literaturguide.md + BibTeX
 4. **ingest-source** — one source PDF → wiki content (sources + entities + BibTeX + log)
 5. **executing-research-plan** — work plan tasks via subagents with two-stage review
@@ -18,6 +23,7 @@ the `Skill` tool (e.g. `Skill ingest-source`).
 ## Cross-cutting skills
 
 - **wiki-lint** — run scripts/lint-wiki.py (structural, deterministic)
+- **wiki-graph** — build/query the knowledge graph (god nodes, bridges, communities; CLI + MCP)
 - **semantic-wiki-review** — LLM content audit (contradictions, stale syntheses)
 - **grant-finder** — funding programmes parallel to publication
 

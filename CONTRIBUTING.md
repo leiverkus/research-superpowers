@@ -33,7 +33,7 @@ Thanks for considering a contribution. This plugin is a small, opinionated piece
 
 ```bash
 # 1. Plugin manifest + marketplace.json are valid and pass Claude Code's checks
-claude plugin validate . --strict
+claude plugin validate .
 
 # 2. JSON schema is well-formed and template mirror is in sync
 python3 -c "import json; json.load(open('schema/knowledge-frontmatter.schema.json'))"
@@ -51,7 +51,7 @@ for f in agents/*.md; do
 done
 ```
 
-`claude plugin validate . --strict` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR.
+`claude plugin validate .` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR.
 
 ## Releasing a new version
 

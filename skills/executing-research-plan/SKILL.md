@@ -1,9 +1,9 @@
 ---
 name: executing-research-plan
-description: Use AFTER writing-research-plan has produced a pre-registered plan. Reads `input/ideas/<slug>-plan.md`, creates TodoWrite items, and works tasks via subagent dispatch (source-ingester, analyst, drafter) with two-stage review. Does not execute anything outside the plan.
+description: Use AFTER writing-research-plan has produced a ready plan (status=ready for hermeneutic projects, status=pre-registered for quantitative/mixed). Reads `input/ideas/<slug>-plan.md`, creates TodoWrite items, and works tasks via subagent dispatch (source-ingester, analyst, drafter) with two-stage review. Does not execute anything outside the plan.
 inputs:
   - name: plan_path
-    description: Path to input/ideas/<slug>-plan.md, must be status=pre-registered
+    description: Path to input/ideas/<slug>-plan.md — status=ready (hermeneutic) or status=pre-registered (quantitative/mixed)
     required: true
   - name: project_root
     description: Absolute path to the research project root
@@ -47,7 +47,7 @@ deviations go into the deviation log.
 ## Checklist
 
 1. **Load the plan** — read `input/ideas/<slug>-plan.md` end-to-end
-2. **Verify pre-registration** — frontmatter `status: pre-registered` + user confirmation of hypothesis
+2. **Verify the plan is ready** (methodology-aware): `methodology: hermeneutic` → frontmatter `status: ready` is enough (no frozen hypothesis); `methodology: quantitative`/`mixed` (or a task block marked `pre-registered: true`) → `status: pre-registered` + user confirmation of the hypothesis
 3. **Create TodoWrite items** — one per task in the plan (use the plan's own wording)
 4. **Route each task to the right subagent:**
    - **Ingest task** → `source-ingester` (see `agents/source-ingester.md`)

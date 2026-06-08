@@ -4,6 +4,31 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] — 2026-06-08
+
+Engineering-robustness pass addressing an external review — the scripts and template were less robust than the concept.
+
+### Fixed
+
+- **Template build config was broken in scaffolded projects** (P1): `.gitlab-ci.yml` and the VS Code tasks referenced `artikel.qmd`/`vortrag.qmd` instead of the actual `article.qmd`/`talk.qmd`, and still tried to Quarto-build the now plain-Markdown wiki. A new CI scaffold-config smoke test guards against recurrence.
+- **Invalid dates crashed the tools** (P1): `2026-99-99` raised `ValueError` in PyYAML; `lint-wiki.py` and `wiki-to-graph.py` now parse with a no-timestamp loader (dates stay strings) and catch it.
+- **Schema lint was incomplete** (P1): `validate_frontmatter` now checks types, ISO date validity, patterns (wikidata/iDAI/GND IDs) and array item types — not just required fields and enums.
+- **Duplicate page slugs silently merged** (P1): both the linter and the graph builder now fail loudly on colliding slugs.
+- **Methodology contracts contradicted the hermeneutic default** (P1): `executing-research-plan` and `requesting-peer-review` no longer demand a pre-registered hypothesis for hermeneutic projects (`status: ready` suffices; falsification is reframed as "what would refute the thesis").
+- **The gate "override-rate" was not a rate** (P2): it read 100% once ≥10 entries existed; now reports an honest count + recent-window frequency.
+- **README / session-index drift** (P2): version badge (was 0.3.0), skill count (was 12), and dead migration links fixed; `hooks/session-context.md` now lists every skill.
+- **Article template did not render** (P1): its `bibliography`/`csl` paths were one level too shallow (`../bibtex/` → `../../bibtex/`).
+- **Book template did not render** (P1): Quarto requires the homepage at the project root, so `frontmatter/index.qmd` is now `index.qmd`.
+- **Remaining doc drift** (P2): `docs/README.md` and `docs/installation.md` said "12 skills" (now 14, and the docs-in-sync check covers `docs/` too); `--strict` removed from `CONTRIBUTING.md` (the installed Claude CLI rejects it).
+- **Date validation too lax** (P2): `date.fromisoformat()` also accepts `20260415` and week dates like `2026-W15-3`; a strict `YYYY-MM-DD` check is now applied first.
+- **Override recency counted future dates** (P3): a 2099 entry no longer counts as "last 30 days".
+
+### Added
+
+- **CI drift guards & tests**: README version badge must equal `plugin.json`, skill-count mentions across README + `docs/` must equal the actual count, README links must resolve, `session-context.md` must mention every skill — plus stdlib `unittest` tests (`tests/`) for invalid frontmatter, strict dates, duplicate slugs, the override count + future-date guard, bad-YAML robustness, and deterministic communities.
+- **Real publication render smoke test in CI**: a dedicated job runs `quarto render` of the article, book and presentation templates to HTML — catching broken bibliography paths / book layout that mere file-existence checks miss.
+- **OpenCode integration is now versioned** (`opencode/`): the native OpenCode plugin (`plugin/research-superpowers.ts`) that replicates the SessionStart skill-index injection via `experimental.chat.system.transform` — GWDG-safe, scoped to research projects — plus its setup README are checked in instead of living untracked. Its `EMBEDDED_INDEX` fallback was re-synced to the current `hooks/session-context.md`, and a new CI step (in the docs-in-sync job) fails the build if the two ever drift again.
+
 ## [0.9.0] — 2026-06-08
 
 Adds an optional per-relation rationale (`because`) — the lightweight first step toward rationale nodes.
@@ -94,7 +119,7 @@ Post-release housekeeping for the example project. Brings every file under `exam
 
 ## [0.5.0] — 2026-05-27
 
-Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures. See [`docs/migration-v0.4-to-v0.5.md`](docs/migration-v0.4-to-v0.5.md).
+Focus-driven `ingest-source`. Source pages now capture **what this project takes from a source under a specific focus**, not a generic summary. Re-ingest of the same source with a different focus appends a new `## Focus:` block rather than overwriting. Aligns the wiki with how researchers actually read: question-driven, not RAG-style full-text indexing. Existing source pages keep working — lint accepts both old and new structures.
 
 ### Changed
 
@@ -118,7 +143,7 @@ None (the removal of the generic body sections from the SKILL.md *spec* is a tem
 
 ## [0.4.0] — 2026-05-27
 
-Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes. See [`docs/migration-v0.3-to-v0.4.md`](docs/migration-v0.3-to-v0.4.md).
+Cowork-friendly install path. The plugin now works fully click-only — no terminal, no Python, no Git required for the core workflow. Existing CLI users see no change to their flow. Purely additive; no breaking changes.
 
 ### Added
 
@@ -161,7 +186,7 @@ None.
 
 ## [0.3.0] — 2026-05-27
 
-First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md) and [`docs/migration-v0.2-to-v0.3.md`](docs/migration-v0.2-to-v0.3.md).
+First public release. Combines an optional MCP integration layer, the removal of the legacy OpenCode-commands shims (OpenCode now reads skills natively from `.claude/skills/`), full English internationalisation of all skill prose and templates, and a complete user-facing manual (README, Quickstart, Tutorial, Concepts). **Additive** for MCP and i18n; the removal of `opencode-commands/` is technically breaking for anyone who relied on the slash shortcuts, but they were never published. See [`docs/recommended-mcps.md`](docs/recommended-mcps.md).
 
 ### Added
 
@@ -213,7 +238,7 @@ None.
 
 ## [0.2.0] — 2026-05-27
 
-Architecture consolidation. **Breaking** — bump major-zero version because public skill/command surface changes. See [`docs/migration-v0.1-to-v0.2.md`](docs/migration-v0.1-to-v0.2.md) for project-level migration steps.
+Architecture consolidation. **Breaking** — bump major-zero version because public skill/command surface changes.
 
 ### Breaking changes
 
