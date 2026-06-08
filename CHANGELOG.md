@@ -4,6 +4,24 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] — 2026-06-08
+
+Engineering-robustness pass addressing an external review — the scripts and template were less robust than the concept.
+
+### Fixed
+
+- **Template build config was broken in scaffolded projects** (P1): `.gitlab-ci.yml` and the VS Code tasks referenced `artikel.qmd`/`vortrag.qmd` instead of the actual `article.qmd`/`talk.qmd`, and still tried to Quarto-build the now plain-Markdown wiki. A new CI scaffold-config smoke test guards against recurrence.
+- **Invalid dates crashed the tools** (P1): `2026-99-99` raised `ValueError` in PyYAML; `lint-wiki.py` and `wiki-to-graph.py` now parse with a no-timestamp loader (dates stay strings) and catch it.
+- **Schema lint was incomplete** (P1): `validate_frontmatter` now checks types, ISO date validity, patterns (wikidata/iDAI/GND IDs) and array item types — not just required fields and enums.
+- **Duplicate page slugs silently merged** (P1): both the linter and the graph builder now fail loudly on colliding slugs.
+- **Methodology contracts contradicted the hermeneutic default** (P1): `executing-research-plan` and `requesting-peer-review` no longer demand a pre-registered hypothesis for hermeneutic projects (`status: ready` suffices; falsification is reframed as "what would refute the thesis").
+- **The gate "override-rate" was not a rate** (P2): it read 100% once ≥10 entries existed; now reports an honest count + recent-window frequency.
+- **README / session-index drift** (P2): version badge (was 0.3.0), skill count (was 12), and dead migration links fixed; `hooks/session-context.md` now lists every skill.
+
+### Added
+
+- **CI drift guards & tests**: README version badge must equal `plugin.json`, README skill count must equal the actual count, README links must resolve, `session-context.md` must mention every skill — plus stdlib `unittest` tests (`tests/`) for invalid frontmatter, duplicate slugs, the override count, bad-YAML robustness, and deterministic communities.
+
 ## [0.9.0] — 2026-06-08
 
 Adds an optional per-relation rationale (`because`) — the lightweight first step toward rationale nodes.
