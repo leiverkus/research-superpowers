@@ -13,7 +13,7 @@ body:
     attributes:
       label: Plugin version
       description: Run `/plugin list` in Claude Code, or check `.claude-plugin/plugin.json`.
-      placeholder: "0.3.0"
+      placeholder: "0.10.0"
     validations:
       required: true
 
@@ -89,5 +89,5 @@ body:
       options:
         - label: I ran `python scripts/lint-wiki.py` in the affected project and pasted any errors above.
           required: false
-        - label: I checked the [migration guide](https://github.com/leiverkus/research-superpowers/blob/main/docs/migration-v0.2-to-v0.3.md) for v0.3.0.
+        - label: I checked the [CHANGELOG](https://github.com/leiverkus/research-superpowers/blob/main/CHANGELOG.md) for relevant changes in recent versions.
           required: false

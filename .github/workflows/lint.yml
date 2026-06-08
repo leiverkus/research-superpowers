@@ -218,6 +218,25 @@ jobs:
             echo "  ✓ $f"
           done
 
+      - name: Self-repo links in .github resolve to real files
+        run: |
+          python <<'PY'
+          import re, sys, pathlib
+          failed = 0
+          base = "https://github.com/leiverkus/research-superpowers/blob/main/"
+          for f in sorted(pathlib.Path(".github").rglob("*")):
+              if f.suffix not in (".yml", ".yaml", ".md") or not f.is_file():
+                  continue
+              for m in re.finditer(re.escape(base) + r"([^ )\"'#]+)", f.read_text(encoding="utf-8")):
+                  rel = m.group(1).split("#", 1)[0]
+                  if not pathlib.Path(rel).exists():
+                      print(f"::error file={f}::dead self-repo link → {rel} (HTTP 404)")
+                      failed = 1
+          if not failed:
+              print("all .github self-repo links resolve")
+          sys.exit(failed)
+          PY
+
       - name: Markdown links resolve (docs/ + top-level, file refs only)
         run: |
           python <<'PY'
