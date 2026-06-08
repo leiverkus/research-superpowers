@@ -73,6 +73,8 @@ jobs:
           assert s["relations_total"] == 3, f"expected 3 relations, got {s['relations_total']}"
           assert d["god_nodes"], "god_nodes is empty"
           assert d["bridges"], "bridges is empty"
+          assert d["communities"], "communities is empty"
+          assert "community" in d["nodes"][0], "nodes lack a community id"
           ET.parse("/tmp/graph/graph.graphml")  # must be well-formed XML
           html = open("/tmp/graph/graph.html", encoding="utf-8").read()
           assert "cytoscape" in html and "const GRAPH" in html, "graph.html missing lib or data"
@@ -96,8 +98,11 @@ jobs:
           assert p["path"], "no path found"
           rel = q("relations", "--type", "contradicts")
           assert len(rel) >= 1, "expected a contradicts relation"
+          comm = q("communities")
+          assert comm and all("members" in c for c in comm), "communities malformed"
           print(f"query OK — neighbours {len(nb['neighbors'])}, "
-                f"path {len(p['path'])} hop(s), contradicts {len(rel)}")
+                f"path {len(p['path'])} hop(s), contradicts {len(rel)}, "
+                f"communities {len(comm)}")
           PY
 
       - name: Graph MCP smoke test on example project

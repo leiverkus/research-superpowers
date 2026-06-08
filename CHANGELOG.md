@@ -4,6 +4,16 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Community detection** (`scripts/wiki-to-graph.py`) — automatic thematic clustering of the wiki, dependency-free and deterministic (greedy modularity, Clauset–Newman–Moore; no `igraph`/`leidenalg`). Surfaces the sub-topics of a literature without any tagging.
+  - New `communities [--min-size N]` query sub-command and `graph_communities` MCP tool (`--json` supported); each community reports its size, node-type mix, and members.
+  - Every node gets a `community` id in `graph.json` / `graph.graphml`; `graph.html` **groups nodes spatially by community** (compound containers laid out by cose) and gains a **Colour: by type / by community** switch.
+  - Robust on dense, hub-heavy wikis where label propagation collapses to one blob; ties broken deterministically so the partition is reproducible.
+  - CI smoke-tests the community query + the `community` attribute on the example project.
+
 ## [0.7.0] — 2026-06-08
 
 Completes the knowledge-graph Query-Layer: query the wiki live during a session, from the terminal or as native MCP tools.

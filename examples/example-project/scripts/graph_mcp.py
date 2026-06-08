@@ -88,6 +88,11 @@ TOOLS = {
         "description": "Graph counts by type plus the inference-rate of structured relations.",
         "schema": {"type": "object", "properties": {}},
     },
+    "graph_communities": {
+        "cmd": "communities", "pos": [], "opt": [("min_size", "--min-size")],
+        "description": "Detected thematic clusters (greedy-modularity communities), each with its node types and members.",
+        "schema": {"type": "object", "properties": {"min_size": {"type": "integer", "description": "Hide communities smaller than this."}}},
+    },
 }
 
 

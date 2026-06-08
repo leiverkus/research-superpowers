@@ -40,6 +40,7 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 
 - "Build / show me a knowledge graph", "map the wiki", "graph view of my research"
 - "Which entity bridges / connects my sources?" → bridges
+- "What are the main themes / sub-topics / clusters in my literature?" → communities
 - "What are the most central / connected pages?" → god nodes
 - "Find surprising connections" / "where are the weak links or gaps?"
 - "How many relations are inferred vs grounded?" → inference-rate
@@ -55,7 +56,7 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 3. **For a targeted question — query the live graph** (recomputed from the `.md` on each call, so always current; deterministic — do not eyeball JSON):
    - `python scripts/wiki-to-graph.py neighbors <slug> [--depth N] [--relation TYPE]`
    - `… path <a> <b>` — shortest connection between two pages
-   - `… god-nodes [--top-n N]` · `… bridges` · `… stats`
+   - `… god-nodes [--top-n N]` · `… bridges` · `… communities [--min-size N]` · `… stats`
    - `… relations [--type cites|contradicts|builds-on|…] [--confidence inferred] [--node <slug>]`
    - `… search <term>` — find a node by id/title
    - Node tokens may be a unique substring (fuzzy-resolved); add `--json` to any query for machine-readable output.
@@ -66,7 +67,7 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 8. **Persist an insight (optional, with consent)** — if the analysis yields a standalone finding the user wants to keep, write a `knowledge/synthesis/<slug>.md` page with `status: draft`, `author: llm`. Never self-promote to `review`/`stable`.
 9. **Log** the run in `knowledge/_meta/log.md`: date, `graph`, question (or "overview"), node/edge counts, headline finding.
 
-**MCP shortcut:** if the project registers the `wiki-graph` MCP server (via `.mcp.json` → `scripts/graph_mcp.py`), call its `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` / `graph_relations` / `graph_search` / `graph_stats` tools directly instead of the Bash CLI. It is the *same* engine (the tools shell out to `wiki-to-graph.py --json`), so results are identical and equally live.
+**MCP shortcut:** if the project registers the `wiki-graph` MCP server (via `.mcp.json` → `scripts/graph_mcp.py`), call its `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` / `graph_communities` / `graph_relations` / `graph_search` / `graph_stats` tools directly instead of the Bash CLI. It is the *same* engine (the tools shell out to `wiki-to-graph.py --json`), so results are identical and equally live.
 
 ## Process Flow
 
