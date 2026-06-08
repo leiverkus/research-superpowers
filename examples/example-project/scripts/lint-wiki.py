@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import datetime
 import json
 import re
 import sys
@@ -23,11 +24,25 @@ from pathlib import Path
 
 import yaml
 
+
+class _NoDatesLoader(yaml.SafeLoader):
+    """SafeLoader that does NOT auto-convert ISO dates to datetime objects.
+
+    Keeps `created: 2026-04-15` a string (so format validation is possible) and
+    stops invalid dates like `2026-99-99` from raising ValueError mid-parse.
+    """
+
+
+_NoDatesLoader.yaml_implicit_resolvers = {
+    ch: [(tag, rx) for (tag, rx) in res if tag != "tag:yaml.org,2002:timestamp"]
+    for ch, res in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+
 WIKI_DIR = Path("knowledge")
 SCHEMA_PATH = Path("schema/knowledge-frontmatter.schema.json")
 OVERRIDES_LOG = Path("knowledge/_meta/gate-overrides.log")
-OVERRIDE_WINDOW = 10
-OVERRIDE_WARN_THRESHOLD = 0.30
+OVERRIDE_RECENT_DAYS = 30
+OVERRIDE_WARN_COUNT = 5
 
 RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous")
 RELATION_KEYS = {"target", "type", "confidence", "because"}
@@ -43,9 +58,13 @@ def load_schema() -> dict:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
+_PY_TYPE = {"string": str, "array": list, "integer": int, "object": dict, "number": (int, float)}
+
+
 def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
-    """Minimal Draft-07 validator covering the subset our schema uses:
-    required, type, enum, and conditional `if/then/required` from allOf."""
+    """Draft-07 validator covering the subset our schema uses: required, type,
+    enum, format=date, pattern, array item type, and conditional if/then from
+    allOf. (Dates are kept as strings by _NoDatesLoader so format can be checked.)"""
     issues: list[str] = []
     props = schema.get("properties", {})
 
@@ -57,11 +76,23 @@ def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
         if field not in props or value is None:
             continue
         spec = props[field]
+        expected = spec.get("type")
+        if expected in _PY_TYPE and not isinstance(value, _PY_TYPE[expected]):
+            issues.append(f"  TYPE: {path} — '{field}' must be {expected} (got {type(value).__name__})")
+            continue
         if "enum" in spec and value not in spec["enum"]:
-            allowed = ", ".join(spec["enum"])
-            issues.append(
-                f"  INVALID: {path} — {field}='{value}' (allowed: {allowed})"
-            )
+            issues.append(f"  INVALID: {path} — {field}='{value}' (allowed: {', '.join(spec['enum'])})")
+        if spec.get("format") == "date" and isinstance(value, str):
+            try:
+                datetime.date.fromisoformat(value)
+            except ValueError:
+                issues.append(f"  DATE: {path} — {field}='{value}' is not a valid ISO date (YYYY-MM-DD)")
+        if spec.get("pattern") and isinstance(value, str) and not re.match(spec["pattern"], value):
+            issues.append(f"  PATTERN: {path} — {field}='{value}' violates {spec['pattern']}")
+        if expected == "array":
+            item_type = spec.get("items", {}).get("type")
+            if item_type in _PY_TYPE and not all(isinstance(x, _PY_TYPE[item_type]) for x in value):
+                issues.append(f"  TYPE: {path} — every item of '{field}' must be {item_type}")
 
     for clause in schema.get("allOf", []):
         cond = clause.get("if", {}).get("properties", {})
@@ -87,9 +118,10 @@ def parse_frontmatter(path: Path) -> dict | None:
     if not match:
         return None
     try:
-        return yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
+        data = yaml.load(match.group(1), Loader=_NoDatesLoader)
+    except (yaml.YAMLError, ValueError, TypeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
 def find_wikilinks(path: Path) -> set[str]:
@@ -104,6 +136,18 @@ def collect_pages(wiki_dir: Path) -> dict[str, Path]:
             continue
         pages[page.stem] = page
     return pages
+
+
+def find_duplicate_slugs(wiki_dir: Path) -> dict[str, list[str]]:
+    """Page slugs (filenames) must be unique — wikilinks resolve by slug, so two
+    `foo.md` in different folders silently collide. Return {slug: [paths]} for any
+    slug used more than once."""
+    seen: dict[str, list[str]] = {}
+    for page in wiki_dir.rglob("*.md"):
+        if page.name.startswith(("_beispiel-", "_example-")):
+            continue
+        seen.setdefault(page.stem, []).append(str(page))
+    return {slug: paths for slug, paths in seen.items() if len(paths) > 1}
 
 
 def lint_frontmatter(
@@ -227,11 +271,11 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
 
 
 def report_gate_overrides() -> list[str]:
-    """Surface gate override rate from the audit log.
+    """Surface SOFT-GATE override activity from the audit log.
 
-    Each line in OVERRIDES_LOG is expected to start with '- YYYY-MM-DD'
-    followed by ' · <skill> · <condition> · <reason>'. Anything else is
-    ignored as comment.
+    The log records only overrides (not all gate checks), so a pass/fail *rate*
+    cannot be computed — we report a **count** and recent **frequency**. Each
+    line is expected to start with '- YYYY-MM-DD · <skill> · <condition> · <reason>'.
     """
     if not OVERRIDES_LOG.exists():
         return ["  No gate-overrides.log yet — no SOFT-GATE overrides recorded."]
@@ -245,18 +289,24 @@ def report_gate_overrides() -> list[str]:
     if total == 0:
         return ["  gate-overrides.log exists but contains no entries."]
 
-    recent = lines[-OVERRIDE_WINDOW:]
-    rate = len(recent) / OVERRIDE_WINDOW if total >= OVERRIDE_WINDOW else len(recent) / total
+    dates = []
+    for line in lines:
+        m = re.match(r"-\s*(\d{4}-\d{2}-\d{2})", line)
+        if m:
+            try:
+                dates.append(datetime.date.fromisoformat(m.group(1)))
+            except ValueError:
+                pass
 
-    report = [
-        f"  Total entries: {total}",
-        f"  Last {len(recent)} override(s) in a window of {OVERRIDE_WINDOW}",
-    ]
-    if total >= OVERRIDE_WINDOW and rate > OVERRIDE_WARN_THRESHOLD:
-        report.append(
-            f"  WARNING: override rate {rate * 100:.0f}% > "
-            f"{OVERRIDE_WARN_THRESHOLD * 100:.0f}% — routine bypass? Check skill discipline."
-        )
+    report = [f"  Total overrides logged: {total} (a count — overrides are only ever logged when a gate is bypassed)"]
+    if dates:
+        recent = sum(1 for d in dates if (datetime.date.today() - d).days <= OVERRIDE_RECENT_DAYS)
+        report.append(f"  In the last {OVERRIDE_RECENT_DAYS} days: {recent}")
+        if recent >= OVERRIDE_WARN_COUNT:
+            report.append(
+                f"  WARNING: {recent} overrides in {OVERRIDE_RECENT_DAYS} days — "
+                f"routine bypass? Check skill discipline."
+            )
     return report
 
 
@@ -312,6 +362,14 @@ def main():
     print("\n".join(broken) if broken else "  No broken links.")
     print("\n".join(orphans) if orphans else "  No orphan pages.")
 
+    print("\n=== Duplicate slugs ===")
+    dups = find_duplicate_slugs(WIKI_DIR)
+    if dups:
+        for slug, paths in sorted(dups.items()):
+            print(f"  DUPLICATE: '{slug}' used by {len(paths)} files → {', '.join(paths)}")
+    else:
+        print("  No duplicate slugs.")
+
     print("\n=== Relations check ===")
     rel_issues = lint_relations(pages)
     print("\n".join(rel_issues) if rel_issues else "  No relation issues.")
@@ -325,7 +383,7 @@ def main():
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))
 
-    total_issues = len(fm_issues) + len(broken) + len(orphans) + len(rel_issues)
+    total_issues = len(fm_issues) + len(broken) + len(orphans) + len(rel_issues) + len(dups)
     print(f"\n{'=' * 40}")
     print(f"Total: {total_issues} issue(s) found")
 
