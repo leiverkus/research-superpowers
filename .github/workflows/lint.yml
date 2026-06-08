@@ -62,6 +62,11 @@ jobs:
           fi
           echo "both at v$plugin_v"
 
+      - name: Release metadata is consistent (manifests + CHANGELOG)
+        run: |
+          v=$(python -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          python scripts/release.py check --tag "v$v"
+
       - name: Frontmatter schema is valid JSON
         run: |
           python -c "import json; json.load(open('schema/knowledge-frontmatter.schema.json'))"

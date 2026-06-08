@@ -4,6 +4,19 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-06-08
+
+Roadmap P3 + P4: an automated, self-checking release process and a much broader negative/integration test suite. No user-visible behaviour change.
+
+### Added
+
+- **Automated release process** (roadmap P3): `scripts/release.py` (stdlib) is the single source of truth for the manifest versions, the git tag, and the matching CHANGELOG section — `check` (verify all three agree), `notes` (extract a section), `bump` (bump manifests + README badge + CHANGELOG skeleton). `.github/workflows/release.yml` fires on a `v*` tag, runs `check`, extracts the section and creates the GitHub Release — no manual `gh release create`. The lint job runs `check` on every PR, so a version bump without a CHANGELOG entry now fails CI. `CONTRIBUTING.md` documents the flow. Covered by `tests/test_release.py`.
+- **Negative & integration tests** (roadmap P4): `tests/test_wiki_robustness.py` adds 21 adversarial cases — empty / single-page / all-orphan wikis, malformed wikilinks (empty brackets, aliases, headings, dangling, self-links, duplicate-weight), corrupt frontmatter (unterminated, non-dict root, tabs, BOM), MCP error paths (unknown tool, missing argument, malformed JSON-RPC frame, unknown method, non-existent node, valid call), a 250-page scale + determinism check, and subdir/stem path handling. The unit suite is now 39 tests.
+
+### Changed
+
+- This release was itself cut with the new `scripts/release.py` + `release.yml` pipeline (dogfooding P3).
+
 ## [0.11.1] — 2026-06-08
 
 Completes the reproducible-CI work from v0.11.0 (roadmap P1) and marks the done items in the roadmap.

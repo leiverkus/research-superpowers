@@ -91,10 +91,30 @@ CI fails the build if any mirror drifts (steps "Schema mirror is in sync" and
 
 ## Releasing a new version
 
-1. Bump `version` in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` (keep them in sync).
-2. Add a CHANGELOG entry under a new `[x.y.z]` heading.
-3. Tag the commit: `git tag v0.4.0 && git push --tags`.
-4. For marketplace publication: see [`docs/installation.md`](docs/installation.md) and submit at <https://claude.ai/settings/plugins/submit> for community-marketplace listing.
+The release is automated by `scripts/release.py` + `.github/workflows/release.yml`.
+
+1. **Bump** both manifests + the README badge (and get a CHANGELOG skeleton if
+   none exists):
+   ```bash
+   python scripts/release.py bump --version 0.12.0
+   ```
+2. **Write the CHANGELOG** notes under the `## [0.12.0]` heading.
+3. **Open a PR and merge it.** CI's "Release metadata is consistent" step fails
+   the build if the manifests disagree or the CHANGELOG section is missing, so a
+   half-done bump can't land.
+4. **Tag and push** from `main` after the merge:
+   ```bash
+   git tag -a v0.12.0 -m "research-superpowers v0.12.0" && git push origin v0.12.0
+   ```
+   The `Release` workflow then verifies the tag matches the manifests + a
+   CHANGELOG section exists, extracts that section as the notes, and creates the
+   GitHub Release automatically — no manual `gh release create`.
+5. For marketplace publication: see [`docs/installation.md`](docs/installation.md)
+   and submit at <https://claude.ai/settings/plugins/submit> for
+   community-marketplace listing.
+
+> You can dry-run the gate locally: `python scripts/release.py check --tag v0.12.0`
+> and preview the notes with `python scripts/release.py notes --version 0.12.0`.
 
 ## Skill authoring quick reference
 

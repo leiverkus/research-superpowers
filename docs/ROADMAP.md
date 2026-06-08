@@ -76,7 +76,15 @@ message pointing at the canonical source.
 
 ---
 
-## P3 — Automated release process  ·  medium  ·  dependency-free
+## P3 — Automated release process  ·  medium  ·  dependency-free  ·  ✅ done (v0.12.0)
+
+> **Status: done.** `scripts/release.py` (stdlib) is the single source of truth
+> for the manifest versions, the tag, and the matching CHANGELOG section
+> (`check` / `notes` / `bump`). `.github/workflows/release.yml` fires on a `v*`
+> tag, verifies all three agree, extracts the CHANGELOG section, and creates the
+> GitHub Release — no manual `gh release create`. The lint job also runs the
+> `check` on every PR, so a version bump without a CHANGELOG entry fails fast.
+> Covered by `tests/test_release.py`.
 
 **Gap.** Releases are manual today: bump `plugin.json` + `marketplace.json`,
 edit `CHANGELOG.md`, `git tag -a`, `gh release create`. Each step is a place to
@@ -99,7 +107,15 @@ manual `gh release create`.
 
 ---
 
-## P4 — More negative & integration tests  ·  medium  ·  dependency-free
+## P4 — More negative & integration tests  ·  medium  ·  dependency-free  ·  ✅ done (v0.12.0)
+
+> **Status: done.** `tests/test_wiki_robustness.py` adds 21 adversarial cases:
+> empty / single-page / all-orphan wikis, malformed wikilinks (empty brackets,
+> aliases, headings, dangling, self-links, weight on duplicates), corrupt
+> frontmatter (unterminated, non-dict root, tabs, BOM), MCP error paths
+> (unknown tool, missing arg, malformed frame, unknown method, non-existent
+> node, plus a valid call), a 250-page scale + determinism check, and
+> subdir/stem path handling. (Windows path separators are deferred to P7.)
 
 **Gap.** The stdlib `unittest` suite covers the review's robustness cases but is
 thin on adversarial inputs. The reviewer named: MCP error paths, corrupt graph
@@ -205,7 +221,7 @@ path handling are verified per-OS; Windows symlink behaviour is documented.
 A natural order (cheap guards first, biggest last), shippable incrementally:
 
 1. ✅ **v0.11.0 / v0.11.1** — P1 (pin CI) + P2 (script mirror guard). *Done.*
-2. **v0.12.0** — P3 (release automation) + P4 (negative tests).
+2. ✅ **v0.12.0** — P3 (release automation) + P4 (negative tests). *Done.*
 3. **v0.13.0** — P5 (jsonschema cross-check) + P6 tier 1 (scaffold E2E).
 4. **v0.14.0** — P7 (platform matrix) + P6 tier 2 (real install, if feasible).
 
