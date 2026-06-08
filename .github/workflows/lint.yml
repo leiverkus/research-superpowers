@@ -98,6 +98,7 @@ jobs:
           assert p["path"], "no path found"
           rel = q("relations", "--type", "contradicts")
           assert len(rel) >= 1, "expected a contradicts relation"
+          assert rel[0].get("because"), "expected a `because` rationale on the relation"
           comm = q("communities")
           assert comm and all("members" in c for c in comm), "communities malformed"
           print(f"query OK — neighbours {len(nb['neighbors'])}, "

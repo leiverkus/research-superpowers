@@ -99,6 +99,10 @@
             "type": "string",
             "enum": ["extracted", "inferred", "ambiguous"],
             "description": "extracted = explicitly supported by the source (e.g. verbatim quote with page); inferred = added by the model; ambiguous = relation unclear. The inferred+ambiguous share is reported as the inference-rate by lint-wiki.py."
+          },
+          "because": {
+            "type": "string",
+            "description": "Optional one-line rationale for the relation (why A relates to B), ideally with a quote or page reference. Recorded per edge, shown in the graph viz and queries; the natural place to ground an inferred relation when hardening it to extracted."
           }
         }
       }

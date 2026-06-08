@@ -215,6 +215,7 @@ def build_edges(
                 "target": target,
                 "relation_type": rel_type,
                 "confidence": confidence,
+                "because": str(rel.get("because", "")).strip(),
                 "weight": 1,
             }
 
@@ -419,6 +420,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         ("d_community", "node", "community", "int"),
         ("e_relation", "edge", "relation_type", "string"),
         ("e_confidence", "edge", "confidence", "string"),
+        ("e_because", "edge", "because", "string"),
         ("e_weight", "edge", "weight", "int"),
     ]
     for key_id, domain, name, attr_type in keys:
@@ -453,6 +455,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
     edge_keys = {
         "relation_type": "e_relation",
         "confidence": "e_confidence",
+        "because": "e_because",
         "weight": "e_weight",
     }
     for i, edge in enumerate(edges):
@@ -461,9 +464,12 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         el.set("source", edge["source"])
         el.set("target", edge["target"])
         for field, key_id in edge_keys.items():
+            value = edge.get(field)
+            if value in (None, ""):
+                continue
             data = ET.SubElement(el, f"{{{ns}}}data")
             data.set("key", key_id)
-            data.text = str(edge[field])
+            data.text = str(value)
 
     path = out_dir / "graph.graphml"
     ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
@@ -533,7 +539,7 @@ def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -
         {"data": {
             "id": f"e{i}", "source": e["source"], "target": e["target"],
             "relation_type": e["relation_type"], "confidence": e["confidence"],
-            "weight": e.get("weight", 1),
+            "because": e.get("because", ""), "weight": e.get("weight", 1),
         }}
         for i, e in enumerate(edges)
     ]
@@ -735,8 +741,9 @@ function showInfo(n) {
   const id = n.id();
   const out = GRAPH.edges.filter(e => e.data.source === id && e.data.relation_type !== 'wikilink');
   const inc = GRAPH.edges.filter(e => e.data.target === id && e.data.relation_type !== 'wikilink');
-  const li = e => `<li>${e.data.relation_type} <span class="k">(${e.data.confidence})</span> → ${e.data.target}</li>`;
-  const liIn = e => `<li>${e.data.source} <span class="k">(${e.data.confidence})</span> → ${e.data.relation_type}</li>`;
+  const why = e => e.data.because ? ` <span class="k">— ${e.data.because}</span>` : '';
+  const li = e => `<li>${e.data.relation_type} <span class="k">(${e.data.confidence})</span> → ${e.data.target}${why(e)}</li>`;
+  const liIn = e => `<li>${e.data.source} <span class="k">(${e.data.confidence})</span> → ${e.data.relation_type}${why(e)}</li>`;
   document.getElementById('info').innerHTML =
     `<div class="t">${n.data('title')}</div>
      <div class="k">${id}</div>
@@ -943,7 +950,8 @@ def run_query(args, nodes, edges, stats) -> int:
             print(_json.dumps(rels, ensure_ascii=False, indent=2)); return 0
         print(f"Relations: {len(rels)}")
         for e in rels:
-            print(f"  {e['source']} --{e['relation_type']} ({e['confidence']})--> {e['target']}")
+            why = f"  — {e['because']}" if e.get("because") else ""
+            print(f"  {e['source']} --{e['relation_type']} ({e['confidence']})--> {e['target']}{why}")
         return 0
 
     if args.cmd == "search":

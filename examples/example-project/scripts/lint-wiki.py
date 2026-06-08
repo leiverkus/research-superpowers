@@ -30,7 +30,7 @@ OVERRIDE_WINDOW = 10
 OVERRIDE_WARN_THRESHOLD = 0.30
 
 RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous")
-RELATION_KEYS = {"target", "type", "confidence"}
+RELATION_KEYS = {"target", "type", "confidence", "because"}
 INFERENCE_WARN_THRESHOLD = 0.50
 
 
@@ -195,6 +195,7 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
     a high share means many edges are model-asserted rather than grounded."""
     total = 0
     uncertain = 0
+    grounded = 0
     for path in pages.values():
         fm = parse_frontmatter(path)
         if not fm:
@@ -205,12 +206,17 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
             total += 1
             if str(rel.get("confidence", "")).lower() in ("inferred", "ambiguous"):
                 uncertain += 1
+            if str(rel.get("because", "")).strip():
+                grounded += 1
 
     if total == 0:
         return ["  No structured relations yet — inference-rate n/a."]
 
     rate = uncertain / total
-    report = [f"  Relations: {total} · inferred/ambiguous: {uncertain} ({rate * 100:.0f}%)"]
+    report = [
+        f"  Relations: {total} · inferred/ambiguous: {uncertain} ({rate * 100:.0f}%)",
+        f"  With a `because` rationale: {grounded} ({100 * grounded // total}%)",
+    ]
     if rate > INFERENCE_WARN_THRESHOLD:
         report.append(
             f"  WARNING: inference-rate {rate * 100:.0f}% > "
