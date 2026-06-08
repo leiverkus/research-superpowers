@@ -4,6 +4,18 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] — 2026-06-08
+
+First maturity pass from the post-v0.10.0 roadmap (`docs/ROADMAP.md`): pure hardening of the build pipeline, no user-visible behaviour change.
+
+### Changed
+
+- **Reproducible CI** (roadmap P1): GitHub Actions are now pinned to immutable commit SHAs (with a human-readable version comment) instead of moving major tags, and Quarto is pinned to an explicit version (`1.9.38`) instead of "latest". This also upgrades `actions/checkout` and `actions/setup-python` to their Node 24 majors, resolving the Node 20 deprecation that would have broken the build after 2026-06-16.
+
+### Added
+
+- **Script mirror-drift guard** (roadmap P2): CI now fails if the wiki scripts (`lint-wiki.py`, `wiki-to-graph.py`, `graph_mcp.py`, `vendor/cytoscape.min.js`) drift between the template and the example — previously only the JSON schema was guarded, and the example schema copy is now checked too. `CONTRIBUTING.md` documents the canonical source (the template) and the one-shot re-sync command.
+
 ## [0.10.0] — 2026-06-08
 
 Engineering-robustness pass addressing an external review — the scripts and template were less robust than the concept.

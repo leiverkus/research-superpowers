@@ -12,8 +12,10 @@ jobs:
     name: Template publications render (HTML)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
+        with:
+          version: 1.9.38
       - name: Render article, book and presentation to HTML
         working-directory: templates/research-project-template
         run: |
@@ -29,10 +31,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
 
@@ -66,7 +68,26 @@ jobs:
         run: |
           diff -q schema/knowledge-frontmatter.schema.json \
                   templates/research-project-template/schema/knowledge-frontmatter.schema.json
-          echo "template mirror: in sync"
+          diff -q schema/knowledge-frontmatter.schema.json \
+                  examples/example-project/schema/knowledge-frontmatter.schema.json
+          echo "schema mirrors (template + example): in sync"
+
+      - name: Script mirrors are in sync (template == example)
+        run: |
+          # The scripts ship verbatim in both the template and the example.
+          # The canonical source is templates/research-project-template/scripts/;
+          # keep the example copy byte-identical (see CONTRIBUTING.md).
+          failed=0
+          for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
+                     scripts/graph_mcp.py scripts/vendor/cytoscape.min.js; do
+            if ! diff -q "templates/research-project-template/$rel" \
+                         "examples/example-project/$rel"; then
+              echo "::error::$rel differs between template and example (re-sync from the template)"
+              failed=1
+            fi
+          done
+          [ $failed -eq 0 ] && echo "all script mirrors in sync"
+          exit $failed
 
       - name: Wiki lint on example project
         run: |

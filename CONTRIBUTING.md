@@ -35,10 +35,18 @@ Thanks for considering a contribution. This plugin is a small, opinionated piece
 # 1. Plugin manifest + marketplace.json are valid and pass Claude Code's checks
 claude plugin validate .
 
-# 2. JSON schema is well-formed and template mirror is in sync
+# 2. JSON schema is well-formed and both mirrors are in sync
 python3 -c "import json; json.load(open('schema/knowledge-frontmatter.schema.json'))"
 diff -q schema/knowledge-frontmatter.schema.json \
         templates/research-project-template/schema/knowledge-frontmatter.schema.json
+diff -q schema/knowledge-frontmatter.schema.json \
+        examples/example-project/schema/knowledge-frontmatter.schema.json
+
+# 2b. Script mirrors are byte-identical (canonical source: the template)
+for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
+           scripts/graph_mcp.py scripts/vendor/cytoscape.min.js; do
+  diff -q "templates/research-project-template/$rel" "examples/example-project/$rel"
+done
 
 # 3. Example project lints clean
 cd examples/example-project && python3 scripts/lint-wiki.py
@@ -52,6 +60,34 @@ done
 ```
 
 `claude plugin validate .` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR.
+
+### Mirrored files
+
+Two sets of files are duplicated and must stay identical:
+
+- **Frontmatter schema** — three copies: repo root `schema/`,
+  `templates/research-project-template/schema/`, and
+  `examples/example-project/schema/`.
+- **Wiki `scripts/`** (`lint-wiki.py`, `wiki-to-graph.py`, `graph_mcp.py`,
+  `vendor/cytoscape.min.js`) — two copies:
+  `templates/research-project-template/scripts/` and
+  `examples/example-project/scripts/`. (The repo-root `scripts/` holds only
+  `lint-plugin.py`, which is plugin-internal and **not** mirrored.)
+
+**The template is the canonical source.** After editing a script or the schema,
+re-sync the copies, e.g.:
+
+```bash
+src=templates/research-project-template
+cp "$src"/schema/knowledge-frontmatter.schema.json schema/
+cp "$src"/schema/knowledge-frontmatter.schema.json examples/example-project/schema/
+for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py scripts/graph_mcp.py scripts/vendor/cytoscape.min.js; do
+  cp "$src/$rel" "examples/example-project/$rel"
+done
+```
+
+CI fails the build if any mirror drifts (steps "Schema mirror is in sync" and
+"Script mirrors are in sync").
 
 ## Releasing a new version
 
