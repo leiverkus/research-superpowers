@@ -12,11 +12,11 @@ inputs:
     description: List of applicable standards (CONSORT, STROBE, MRC, PRISMA, ARRIVE, TRIPOD, or discipline-specific)
     required: true
   - name: hypothesis
-    description: Pre-registered hypothesis from input/ideas/<slug>-plan.md
-    required: true
+    description: Pre-registered hypothesis from input/ideas/<slug>-plan.md. Required for methodology=quantitative/mixed; omit for hermeneutic projects (no frozen hypothesis).
+    required: false
   - name: falsification_criteria
-    description: Pre-registered falsification criteria from the plan
-    required: true
+    description: Pre-registered falsification criteria from the plan. Required for methodology=quantitative/mixed; for hermeneutic work the manuscript instead states what would refute its thesis.
+    required: false
   - name: synthesis_pages
     description: Paths to knowledge/synthesis/*.md referenced by the manuscript
     required: true
@@ -155,7 +155,7 @@ reporting_standard: <CONSORT|STROBE|...|discipline-specific>
 <assessment against the selected reporting standard>
 
 ## Falsification Test
-Does the manuscript honestly engage with the pre-registered falsification criteria? If no, flag.
+Quantitative/mixed: does the manuscript honestly engage with the pre-registered falsification criteria? Hermeneutic: does it state what evidence or reading would refute its thesis, and engage it? If no, flag.
 ```
 
 ## Critical Thinking — Evidence Audit for Reviewers
@@ -241,6 +241,6 @@ Extended Cited Evidence Audit (5 spot-checks) with MCP:
 
 - **Two passes, fresh context each** — constructive + adversarial, kept separate
 - **Discipline-specific checklist** — no universal template
-- **Pre-registration check** — honest engagement with the original hypothesis
+- **Falsification check** — quantitative: honest engagement with the pre-registered hypothesis; hermeneutic: the manuscript says what would refute its thesis
 - **Classify before revising** — Major / Minor / Editorial / Out-of-scope before editing
 - **Log per decision** — accepted / rejected / deferred all documented
