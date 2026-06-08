@@ -4,6 +4,15 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Optional `because` rationale on relations** — a one-line "why A relates to B" attached to each `relations` entry (the lightweight first step toward rationale nodes). Additive and optional; pages without it stay valid.
+  - Recorded per edge in `graph.json` / `graph.graphml`; shown in the `graph.html` info panel and in the `relations` query output (CLI + `graph_relations` MCP tool).
+  - `lint-wiki.py` accepts `because` and reports the share of relations that carry a rationale (alongside the inference-rate) — the natural place to ground an `inferred` edge when hardening it to `extracted`.
+  - Documented in `docs/frontmatter-schema.md` and CLAUDE.md; CI exercises it on the example project.
+
 ## [0.8.0] — 2026-06-08
 
 Adds dependency-free community detection to the knowledge graph — automatic thematic clustering, in the CLI, the MCP, and a community-grouped HTML layout.

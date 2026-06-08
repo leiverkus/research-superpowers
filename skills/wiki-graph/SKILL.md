@@ -111,7 +111,7 @@ digraph wiki_graph {
 
 - **god_nodes** — pages ranked by total degree (incident edges). The most-connected pages. High degree signals a hub, **not automatically importance** — a generic entity can rack up links. Read it as "where the wiki converges", then judge.
 - **bridges** — entities that join ≥2 source clusters which share no *other* entity. These are the load-bearing connectors: remove one and parts of the literature fall apart. Often the most analytically interesting nodes.
-- **edges** — each has `relation_type` (`wikilink` for plain links; `cites` / `contradicts` / `builds-on` / … for typed `relations`), `confidence`, and `weight` (how many times a wikilink recurs). Filter by `relation_type` to answer e.g. "show me the contradictions".
+- **edges** — each has `relation_type` (`wikilink` for plain links; `cites` / `contradicts` / `builds-on` / … for typed `relations`), `confidence`, an optional `because` rationale, and `weight` (how many times a wikilink recurs). Filter by `relation_type` to answer e.g. "show me the contradictions"; the `because` text explains *why* an edge exists.
 - **stats.relations_total / relations_inferred_or_ambiguous** — the inference-rate. A high share means many edges are model-asserted rather than grounded in the sources; surface this honestly (it mirrors the SOFT-GATE override-rate as an audit signal).
 - **stats.dangling** — edges pointing to non-existent pages were dropped. A non-zero count means the wiki references things it hasn't ingested → route to `wiki-lint` / `ingest-source`.
 

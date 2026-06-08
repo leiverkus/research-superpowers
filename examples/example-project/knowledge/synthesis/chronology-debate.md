@@ -17,6 +17,7 @@ relations:
   - target: mazar-2011
     type: contradicts
     confidence: inferred
+    because: "Mazar's Modified Conventional Chronology dates the Iron IIA onset ~50 years higher than the Low-Chronology reading this synthesis builds on."
 ---
 
 # Chronology Debate, Iron Age IIA — Negev Fortress Lens

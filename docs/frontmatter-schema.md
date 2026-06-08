@@ -31,10 +31,12 @@ relations:
   - target: finkelstein-2003   # page slug (filename without extension)
     type: cites                # free vocabulary: cites, contradicts, builds-on, mentions, supports
     confidence: inferred       # extracted | inferred | ambiguous
+    because: "Builds on Finkelstein's Low-Chronology dates (p. 290)."  # optional rationale
 ```
 
 - **target** must resolve to an existing page (the linter checks this, like a wikilink).
 - **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal.
+- **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`. `lint-wiki.py` reports the share of relations that carry one.
 
 The field is additive: pages without `relations` remain valid, and plain wikilinks continue to work unchanged (the graph export treats them as `extracted` edges).
 
