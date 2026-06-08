@@ -82,6 +82,7 @@ python scripts/wiki-to-graph.py neighbors <slug> --depth 2
 python scripts/wiki-to-graph.py path <a> <b>
 python scripts/wiki-to-graph.py god-nodes      # most-connected pages
 python scripts/wiki-to-graph.py bridges        # load-bearing entities
+python scripts/wiki-to-graph.py communities    # thematic clusters (auto-detected)
 python scripts/wiki-to-graph.py relations --type contradicts
 python scripts/wiki-to-graph.py stats          # + --json on any query
 ```

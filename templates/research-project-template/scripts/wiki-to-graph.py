@@ -46,6 +46,7 @@ Usage:
     python scripts/wiki-to-graph.py path entity-itinera source-minetti-2002
     python scripts/wiki-to-graph.py god-nodes --top-n 10
     python scripts/wiki-to-graph.py bridges
+    python scripts/wiki-to-graph.py communities --min-size 2
     python scripts/wiki-to-graph.py relations --type contradicts
     python scripts/wiki-to-graph.py relations --node entity-itinera --confidence inferred
     python scripts/wiki-to-graph.py search herzog
@@ -310,20 +311,94 @@ def compute_bridges(nodes: list[dict], edges: list[dict]) -> list[dict]:
     return bridges
 
 
+def compute_communities(nodes, edges):
+    """Detect communities by greedy modularity maximisation (Clauset–Newman–
+    Moore), dependency-free and deterministic.
+
+    Agglomerative: every node starts in its own community; the pair of
+    communities whose merge most increases modularity Q is merged repeatedly
+    until no merge helps (ΔQ ≤ 0). Robust to dense graphs and hubs (where
+    label propagation collapses to one blob). Ties broken by sorted community
+    key for reproducibility. Returns ``(node_community, communities)`` with
+    ids assigned by descending size.
+    """
+    ids = [n["id"] for n in nodes]
+    # Undirected weighted adjacency between communities (start = singletons).
+    deg: dict[str, float] = {i: 0.0 for i in ids}
+    between: dict[str, dict[str, float]] = {i: {} for i in ids}
+    total = 0.0
+    for e in edges:
+        a, b, w = e["source"], e["target"], float(e.get("weight", 1))
+        if a == b or a not in deg or b not in deg:
+            continue
+        deg[a] += w; deg[b] += w; total += w
+        between[a][b] = between[a].get(b, 0.0) + w
+        between[b][a] = between[b].get(a, 0.0) + w
+    members: dict[str, list[str]] = {i: [i] for i in ids}
+
+    if total > 0:
+        twom = 2.0 * total
+        a_frac = {i: deg[i] / twom for i in ids}          # Σk_i / 2m per community
+        e_frac = {i: {j: between[i][j] / twom for j in between[i]} for i in ids}
+        live = set(ids)
+        while True:
+            best_gain, best_pair = 0.0, None
+            for i in sorted(live):
+                ai = a_frac[i]
+                for j, eij in e_frac[i].items():
+                    if j <= i:                            # each unordered pair once
+                        continue
+                    gain = 2.0 * (eij - ai * a_frac[j])
+                    if gain > best_gain + 1e-12:
+                        best_gain, best_pair = gain, (i, j)
+            if best_pair is None:
+                break
+            i, j = best_pair                              # merge j into i
+            members[i].extend(members[j]); members[j] = []
+            a_frac[i] += a_frac[j]
+            for k, val in e_frac[j].items():
+                if k == i:
+                    continue
+                e_frac[i][k] = e_frac[i].get(k, 0.0) + val
+                e_frac[k][i] = e_frac[k].get(i, 0.0) + val
+                e_frac[k].pop(j, None)
+            e_frac[i].pop(j, None)
+            e_frac.pop(j, None); a_frac.pop(j, None); live.discard(j)
+
+    groups = [m for m in members.values() if m]
+    ordered = sorted(groups, key=lambda m: (-len(m), sorted(m)[0]))
+
+    node_community: dict[str, int] = {}
+    communities = []
+    type_of = {n["id"]: n["type"] for n in nodes}
+    for cid, members in enumerate(ordered):
+        members = sorted(members)
+        for m in members:
+            node_community[m] = cid
+        by_type: dict[str, int] = {}
+        for m in members:
+            by_type[type_of[m]] = by_type.get(type_of[m], 0) + 1
+        communities.append({"community": cid, "size": len(members),
+                            "by_type": by_type, "members": members})
+    return node_community, communities
+
+
 # --------------------------------------------------------------------------- #
 # Serialisation
 # --------------------------------------------------------------------------- #
-def write_json(out_dir: Path, nodes, edges, god_nodes, bridges, stats) -> Path:
+def write_json(out_dir: Path, nodes, edges, god_nodes, bridges, communities, stats) -> Path:
     payload = {
         "stats": {
             "nodes": len(nodes),
             "edges": len(edges),
+            "communities": len(communities),
             **stats,
         },
         "nodes": nodes,
         "edges": edges,
         "god_nodes": god_nodes,
         "bridges": bridges,
+        "communities": communities,
     }
     path = out_dir / "graph.json"
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -341,6 +416,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         ("d_subtype", "node", "subtype", "string"),
         ("d_title", "node", "title", "string"),
         ("d_status", "node", "status", "string"),
+        ("d_community", "node", "community", "int"),
         ("e_relation", "edge", "relation_type", "string"),
         ("e_confidence", "edge", "confidence", "string"),
         ("e_weight", "edge", "weight", "int"),
@@ -361,6 +437,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         "subtype": "d_subtype",
         "title": "d_title",
         "status": "d_status",
+        "community": "d_community",
     }
     for node in nodes:
         el = ET.SubElement(graph, f"{{{ns}}}node")
@@ -431,7 +508,7 @@ def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path) -
         {"data": {
             "id": n["id"], "type": n["type"], "subtype": n.get("subtype"),
             "title": n.get("title", n["id"]), "label": _short_label(n),
-            "status": n.get("status", ""),
+            "status": n.get("status", ""), "community": n.get("community", -1),
             "degree": degree.get(n["id"], 0), "bridge": 1 if n["id"] in bridge_ids else 0,
         }}
         for n in nodes
@@ -510,6 +587,11 @@ _HTML_HEAD = """<!doctype html>
 
     <fieldset>
       <legend>Node types</legend>
+      <label class="row" style="margin-bottom:6px">Colour&nbsp;
+        <select id="colour-by">
+          <option value="type">by type</option>
+          <option value="community">by community</option>
+        </select></label>
       <div id="type-filters"></div>
     </fieldset>
 
@@ -658,6 +740,15 @@ search.addEventListener('keydown', ev => {
     n.id().toLowerCase().includes(q) || (n.data('title') || '').toLowerCase().includes(q));
   if (hit.length) { selectNode(hit[0]); cy.animate({ center: { eles: hit[0] }, zoom: Math.max(LABEL_ZOOM, 1.4) }, { duration: 300 }); }
 });
+
+// Colour nodes by type (default) or by detected community.
+function communityColor(i) { return i < 0 ? '#9c9c9c' : `hsl(${(i * 137.508) % 360}, 62%, 58%)`; }
+function setColouring(mode) {
+  cy.nodes().forEach(n => n.style('background-color',
+    mode === 'community' ? communityColor(n.data('community'))
+                         : (PALETTE[n.data('type')] || PALETTE.unknown)));
+}
+document.getElementById('colour-by').addEventListener('change', e => setColouring(e.target.value));
 
 // Default view: wikilinks hidden (typed relations only), laid out on the visible subgraph.
 applyFilters(true);
@@ -856,6 +947,19 @@ def run_query(args, nodes, edges, stats) -> int:
         print(f"typed relations: {rt} · inference-rate: {int(100 * ia / rt) if rt else 0}%")
         return 0
 
+    if args.cmd == "communities":
+        _, comms = compute_communities(nodes, edges)
+        min_size = getattr(args, "min_size", 1) or 1
+        comms = [c for c in comms if c["size"] >= min_size]
+        if as_json:
+            print(_json.dumps(comms, ensure_ascii=False, indent=2)); return 0
+        print(f"Communities (size ≥ {min_size}): {len(comms)}")
+        for c in comms:
+            bt = ", ".join(f"{k} {v}" for k, v in sorted(c["by_type"].items()))
+            preview = ", ".join(c["members"][:6]) + (" …" if c["size"] > 6 else "")
+            print(f"  #{c['community']}  ({c['size']}: {bt})  {preview}")
+        return 0
+
     return 1
 
 
@@ -892,6 +996,8 @@ def main() -> int:
     sp = sub.add_parser("search", parents=[common], help="Find nodes by id/title")
     sp.add_argument("term")
     sub.add_parser("stats", parents=[common], help="Counts + inference-rate")
+    sp = sub.add_parser("communities", parents=[common], help="Detected thematic clusters (label propagation)")
+    sp.add_argument("--min-size", type=int, default=1, help="Hide communities smaller than this")
     args = parser.parse_args()
 
     if not args.knowledge_dir.exists():
@@ -912,15 +1018,18 @@ def main() -> int:
 
     god_nodes = compute_god_nodes(nodes, edges, args.top_n)
     bridges = compute_bridges(nodes, edges)
+    node_community, communities = compute_communities(nodes, edges)
+    for n in nodes:
+        n["community"] = node_community.get(n["id"], -1)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    json_path = write_json(args.out_dir, nodes, edges, god_nodes, bridges, stats)
+    json_path = write_json(args.out_dir, nodes, edges, god_nodes, bridges, communities, stats)
     graphml_path = write_graphml(args.out_dir, nodes, edges)
 
     print(f"Graph built from {len(pages)} pages: {len(nodes)} nodes, {len(edges)} edges")
     if stats["dangling"]:
         print(f"  ({stats['dangling']} edge(s) to non-existent pages skipped — run lint-wiki.py)")
-    print(f"  god_nodes: {len(god_nodes)} · bridges: {len(bridges)}")
+    print(f"  god_nodes: {len(god_nodes)} · bridges: {len(bridges)} · communities: {len(communities)}")
     print(f"  wrote {json_path}")
     print(f"  wrote {graphml_path}")
 

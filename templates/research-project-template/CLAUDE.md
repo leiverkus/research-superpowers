@@ -290,9 +290,9 @@ the publication on every push to `main`.
 For an explicit, queryable graph, run `python scripts/wiki-to-graph.py` — it
 exports to `knowledge/_meta/graph/`:
 - **`graph.html`** — a self-contained interactive viz (open in any browser; no
-  install, no network). Filter by node type / relation type / confidence,
-  search, click a node to highlight its neighbourhood. Covers everyday
-  exploration without Gephi/yEd.
+  install, no network). Colour by node type or by detected community; filter by
+  node type / relation type / confidence; search; click a node to highlight its
+  neighbourhood. Covers everyday exploration without Gephi/yEd.
 - **`graph.json`** — for scripting/queries.
 - **`graph.graphml`** — for Gephi/yEd (heavy layout, community detection).
 
@@ -308,6 +308,7 @@ python scripts/wiki-to-graph.py neighbors <slug> --depth 2   # what connects to 
 python scripts/wiki-to-graph.py path <a> <b>                 # how two pages connect
 python scripts/wiki-to-graph.py god-nodes --top-n 10         # most-connected pages
 python scripts/wiki-to-graph.py bridges                      # load-bearing entities
+python scripts/wiki-to-graph.py communities                  # thematic clusters (auto-detected)
 python scripts/wiki-to-graph.py relations --type contradicts # typed edges by type/confidence
 python scripts/wiki-to-graph.py search <term>                # find a node
 python scripts/wiki-to-graph.py stats                        # counts + inference-rate
@@ -318,7 +319,8 @@ The same queries are exposed as an **MCP server** (`scripts/graph_mcp.py`,
 stdlib-only, a thin wrapper over the CLI). `.mcp.json` registers it for
 **Claude Code** automatically, so in a session the agent can call the
 `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` /
-`graph_relations` / `graph_search` / `graph_stats` tools natively. For
+`graph_communities` / `graph_relations` / `graph_search` / `graph_stats` tools
+natively. For
 **OpenCode**, add the equivalent to `opencode.json`:
 
 ```json
