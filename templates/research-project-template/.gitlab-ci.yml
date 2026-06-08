@@ -39,7 +39,7 @@ build-article:
     QUARTO_PRINT_STACK: "true"
   script:
     - cd output/publication/article
-    - quarto render artikel.qmd --to html --output-dir _output
+    - quarto render article.qmd --to html --output-dir _output
   artifacts:
     paths:
       - output/publication/article/_output/
@@ -72,7 +72,7 @@ pages:
     - mkdir -p public
     # Artikel als Hauptseite
     - cp -r output/publication/article/_output/* public/ 2>/dev/null || true
-    - mv public/artikel.html public/index.html 2>/dev/null || true
+    - mv public/article.html public/index.html 2>/dev/null || true
     # Buch unter /book/
     - mkdir -p public/book
     - cp -r output/publication/book/_output/* public/book/ 2>/dev/null || true

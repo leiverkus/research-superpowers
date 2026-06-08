@@ -128,6 +128,30 @@ jobs:
           print(f"MCP OK — {len(tools)} tools, stats call ok")
           PY
 
+      - name: Template build config references real files
+        run: |
+          cd templates/research-project-template
+          test -f output/publication/article/article.qmd
+          test -f output/presentation/talk.qmd
+          test -f output/publication/book/_quarto.yml
+          # No stale German placeholder filenames (artikel/vortrag) in build config
+          if grep -rnE 'artikel|vortrag' .gitlab-ci.yml .vscode/tasks.json; then
+            echo "::error::stale artikel/vortrag reference in template build config"; exit 1
+          fi
+          # The wiki is plain Markdown — config must not try to quarto-build knowledge/
+          if grep -nE 'quarto (render|preview)' .vscode/tasks.json | grep -qi knowledge; then
+            echo "::error::tasks.json still quarto-builds the Markdown wiki"; exit 1
+          fi
+          # Every quarto target referenced in tasks.json must exist
+          python3 <<'PY'
+          import re, pathlib
+          t = pathlib.Path(".vscode/tasks.json").read_text()
+          missing = [q for q in set(re.findall(r'quarto (?:render|preview) (\S+\.qmd)', t))
+                     if not list(pathlib.Path("output").rglob(q))]
+          assert not missing, f"tasks.json references missing files: {missing}"
+          print("template build config OK")
+          PY
+
       - name: Agent contract — every agent references an existing skill
         run: |
           failed=0
