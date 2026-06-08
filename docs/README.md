@@ -106,6 +106,12 @@ See [`skill-authoring.md`](skill-authoring.md) — template, language convention
 
 Every `knowledge/**/*.md` page follows the central schema. See [`frontmatter-schema.md`](frontmatter-schema.md) for the narrative pointer; [`schema/knowledge-frontmatter.schema.json`](../schema/knowledge-frontmatter.schema.json) for the normative definition.
 
+## Roadmap
+
+Post-v0.10.0 maturity work (CI pinning, mirror-drift guards, release
+automation, more tests, full schema validation, E2E install, platform matrix):
+see [`ROADMAP.md`](ROADMAP.md).
+
 ## License
 
 Patrick Leiverkus, MIT, 2026.
