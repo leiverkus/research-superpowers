@@ -12,7 +12,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   - `neighbors <slug> [--depth N] [--relation TYPE]`, `path <a> <b>`, `god-nodes [--top-n N]`, `bridges`, `relations [--type T] [--confidence C] [--node N]`, `search <term>`, `stats`; `--json` on any query for machine-readable output; node tokens may be a unique substring (fuzzy-resolved).
   - Backward compatible: with no sub-command the script builds the exports exactly as before (CI, scaffold and the skill are unchanged).
   - `wiki-graph` skill now queries the live graph for targeted questions (build/HTML reserved for overview and the visual); documented in CLAUDE.md; CI smoke-tests the queries on the example project.
-  - This is the CLI half of the deferred Query-Layer; an optional per-project MCP wrapper can sit on top of the same engine later.
+  - This is the CLI half of the deferred Query-Layer.
+- **`wiki-graph` MCP server** (`scripts/graph_mcp.py`) — the MCP half of the Query-Layer. A stdlib-only stdio JSON-RPC server (no `pip install mcp`, no network) that exposes the queries as native tools: `graph_neighbors`, `graph_path`, `graph_god_nodes`, `graph_bridges`, `graph_relations`, `graph_search`, `graph_stats`. It is a thin wrapper — each tool shells out to `wiki-to-graph.py --json`, so results are identical and equally live. Registered **per project** via `.mcp.json` (Claude Code reads it at the project root, rooted in that repo, so it auto-knows the right wiki in any session); OpenCode equivalent documented in CLAUDE.md. CI smoke-tests the handshake + a tool call.
 
 ## [0.6.0] — 2026-06-07
 

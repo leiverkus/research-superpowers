@@ -66,6 +66,8 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 8. **Persist an insight (optional, with consent)** — if the analysis yields a standalone finding the user wants to keep, write a `knowledge/synthesis/<slug>.md` page with `status: draft`, `author: llm`. Never self-promote to `review`/`stable`.
 9. **Log** the run in `knowledge/_meta/log.md`: date, `graph`, question (or "overview"), node/edge counts, headline finding.
 
+**MCP shortcut:** if the project registers the `wiki-graph` MCP server (via `.mcp.json` → `scripts/graph_mcp.py`), call its `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` / `graph_relations` / `graph_search` / `graph_stats` tools directly instead of the Bash CLI. It is the *same* engine (the tools shell out to `wiki-to-graph.py --json`), so results are identical and equally live.
+
 ## Process Flow
 
 ```dot

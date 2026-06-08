@@ -100,6 +100,28 @@ jobs:
                 f"path {len(p['path'])} hop(s), contradicts {len(rel)}")
           PY
 
+      - name: Graph MCP smoke test on example project
+        run: |
+          cd examples/example-project
+          python <<'PY'
+          import json, subprocess
+          reqs = [
+            {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}},
+            {"jsonrpc":"2.0","method":"notifications/initialized"},
+            {"jsonrpc":"2.0","id":2,"method":"tools/list"},
+            {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"graph_stats","arguments":{}}},
+          ]
+          inp = "".join(json.dumps(r) + "\n" for r in reqs)
+          out = subprocess.run(["python", "scripts/graph_mcp.py"], input=inp,
+                               capture_output=True, text=True, timeout=60).stdout
+          by_id = {m.get("id"): m for m in (json.loads(l) for l in out.splitlines() if l.strip())}
+          assert by_id[1]["result"]["serverInfo"]["name"] == "wiki-graph"
+          tools = [t["name"] for t in by_id[2]["result"]["tools"]]
+          assert "graph_neighbors" in tools and "graph_stats" in tools, tools
+          assert by_id[3]["result"]["isError"] is False
+          print(f"MCP OK — {len(tools)} tools, stats call ok")
+          PY
+
       - name: Agent contract — every agent references an existing skill
         run: |
           failed=0

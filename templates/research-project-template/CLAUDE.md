@@ -40,9 +40,11 @@ with an explicit output layer for scientific publication.
 project-root/
 ├── CLAUDE.md              ← This document (schema & conventions)
 ├── .gitlab-ci.yml         ← CI/CD pipeline (lint wiki + render publication)
+├── .mcp.json             ← Registers the wiki-graph MCP (Claude Code)
 ├── scripts/
 │   ├── lint-wiki.py       ← Structural check of the wiki
-│   ├── wiki-to-graph.py   ← Knowledge-graph export (JSON, GraphML, HTML)
+│   ├── wiki-to-graph.py   ← Knowledge-graph export + live queries
+│   ├── graph_mcp.py       ← MCP server exposing the graph queries
 │   └── vendor/            ← Bundled cytoscape.min.js (offline HTML viz)
 ├── input/                 ← Raw material (immutable)
 │   ├── description/       ← Project description and research question
@@ -310,6 +312,18 @@ python scripts/wiki-to-graph.py relations --type contradicts # typed edges by ty
 python scripts/wiki-to-graph.py search <term>                # find a node
 python scripts/wiki-to-graph.py stats                        # counts + inference-rate
 # add --json to any query for machine-readable output
+```
+
+The same queries are exposed as an **MCP server** (`scripts/graph_mcp.py`,
+stdlib-only, a thin wrapper over the CLI). `.mcp.json` registers it for
+**Claude Code** automatically, so in a session the agent can call the
+`graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` /
+`graph_relations` / `graph_search` / `graph_stats` tools natively. For
+**OpenCode**, add the equivalent to `opencode.json`:
+
+```json
+"mcp": { "wiki-graph": { "type": "local",
+  "command": ["python3", "scripts/graph_mcp.py"] } }
 ```
 
 ## Meta files
