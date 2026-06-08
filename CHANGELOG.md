@@ -4,6 +4,18 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] — 2026-06-08
+
+Completes the reproducible-CI work from v0.11.0 (roadmap P1) and marks the done items in the roadmap.
+
+### Changed
+
+- **Toolchain fully pinned** (roadmap P1, finish): Python is pinned to `3.12.13` (with `check-latest: false`) instead of the moving `3.12`, PyYAML to `6.0.3` via the Python-bundled pip (dropping the moving `pip install --upgrade pip pyyaml`), and both CI runners to `ubuntu-24.04` instead of `ubuntu-latest`. With the Action SHAs and Quarto `1.9.38` already pinned in v0.11.0, the build toolchain is now deterministic apart from the runner base image (container-by-digest noted as a possible future step).
+
+### Docs
+
+- **Roadmap status** (roadmap P3-doc): `docs/ROADMAP.md` now marks P1 and P2 as ✅ done with a status note, instead of still describing them as open gaps.
+
 ## [0.11.0] — 2026-06-08
 
 First maturity pass from the post-v0.10.0 roadmap (`docs/ROADMAP.md`): pure hardening of the build pipeline, no user-visible behaviour change.
