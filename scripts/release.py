@@ -105,31 +105,39 @@ def cmd_bump(args) -> int:
         print(f"::error::'{version}' is not MAJOR.MINOR.PATCH", file=sys.stderr)
         return 1
 
+    # --- Phase 1: compute & validate every change in memory (write nothing yet)
+    # so a failure (e.g. missing README badge) can't leave a half-bumped repo. ---
     p = json.loads(PLUGIN.read_text(encoding="utf-8"))
     p["version"] = version
-    PLUGIN.write_text(json.dumps(p, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    plugin_text = json.dumps(p, indent=2, ensure_ascii=False) + "\n"
 
     m = json.loads(MARKETPLACE.read_text(encoding="utf-8"))
     m["plugins"][0]["version"] = version
-    MARKETPLACE.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    market_text = json.dumps(m, indent=2, ensure_ascii=False) + "\n"
 
-    readme = README.read_text(encoding="utf-8")
-    new_readme, n_badge = re.subn(r"badge/version-[0-9][^-]*-",
-                                  f"badge/version-{version}-", readme)
+    readme_text, n_badge = re.subn(r"badge/version-[0-9][^-]*-",
+                                   f"badge/version-{version}-",
+                                   README.read_text(encoding="utf-8"))
     if n_badge == 0:
-        print("::error::README version badge not found — nothing replaced", file=sys.stderr)
-        return 1
-    README.write_text(new_readme, encoding="utf-8")
+        print("::error::README version badge not found — nothing written", file=sys.stderr)
+        return 1   # fail before any file is touched
 
-    if extract_changelog_section(version) is None:
+    cl = CHANGELOG.read_text(encoding="utf-8")
+    skeleton_inserted = extract_changelog_section(version) is None
+    if skeleton_inserted:
         today = args.date or datetime.date.today().isoformat()
-        cl = CHANGELOG.read_text(encoding="utf-8")
         skeleton = (f"## [{version}] — {today}\n\n"
                     "_Describe the release here._\n\n### Added\n\n### Changed\n\n### Fixed\n\n")
-        # insert before the first existing version heading
         m2 = re.search(r"^##\s*\[", cl, re.MULTILINE)
         cl = (cl[:m2.start()] + skeleton + cl[m2.start():]) if m2 else cl + "\n" + skeleton
-        CHANGELOG.write_text(cl, encoding="utf-8")
+
+    # --- Phase 2: everything validated — now commit all writes together. ---
+    PLUGIN.write_text(plugin_text, encoding="utf-8")
+    MARKETPLACE.write_text(market_text, encoding="utf-8")
+    README.write_text(readme_text, encoding="utf-8")
+    CHANGELOG.write_text(cl, encoding="utf-8")
+
+    if skeleton_inserted:
         print(f"bumped to {version}; inserted CHANGELOG skeleton — write the notes, then tag v{version}")
     else:
         print(f"bumped to {version}; CHANGELOG section already present")

@@ -153,8 +153,9 @@ graph builder error branches is meaningfully higher.
 > `requirements-dev.txt`) is a CI/dev golden cross-check:
 > `tests/test_schema_conformance.py` pins the hand-rolled validator and
 > `jsonschema` in agreement on every rule the subset implements (valid + each
-> single-rule violation) and validates all shipped example/template pages with
-> the real engine. The tests skip cleanly when `jsonschema` is absent. If the
+> single-rule violation, **including the nested `relations[]` object rules** —
+> type, enum, required and `additionalProperties`) and validates all shipped
+> example/template pages with the real engine. The tests skip cleanly when `jsonschema` is absent. If the
 > schema ever grows a feature the subset can't express, the cross-check fails —
 > the signal to extend the subset or revisit a runtime dependency.
 

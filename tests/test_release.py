@@ -123,10 +123,16 @@ class CmdBump(_TempRepo):
         self.assertEqual(self.changelog.read_text(encoding="utf-8").count("## [0.2.0]"), 1)
         self.assertEqual(first.count("## [0.2.0]"), 1)
 
-    def test_bump_fails_when_badge_missing(self):
+    def test_bump_fails_when_badge_missing_leaves_repo_unchanged(self):
         self.readme.write_text("# x\n\nno badge here\n", encoding="utf-8")
+        before = {f: f.read_text(encoding="utf-8")
+                  for f in (self.plugin, self.market, self.readme, self.changelog)}
         rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 1)                       # fail-closed, not silent no-op
+        # atomic: a failed bump must not leave a half-updated repo
+        for f, text in before.items():
+            self.assertEqual(f.read_text(encoding="utf-8"), text,
+                             f"{f.name} was modified by a failed bump")
 
     def test_bump_rejects_bad_semver(self):
         self.assertEqual(rel.cmd_bump(argparse.Namespace(version="0.2", date=None)), 1)

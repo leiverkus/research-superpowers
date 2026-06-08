@@ -17,6 +17,12 @@ Roadmap P7: the test suite now runs on Linux, macOS and Windows, with a real hoo
 ### Fixed
 
 - **Windows UTF-8 output bug** (surfaced by the new matrix): `wiki-to-graph.py` printed JSON containing arrow glyphs (`←`/`→`) to stdout, which crashed with `UnicodeEncodeError` on a Windows cp1252 console. All three scripts now force UTF-8 on stdout/stderr (`sys.stdout.reconfigure`), the MCP server decodes the CLI subprocess as UTF-8, and `scripts/release.py` does the same for `notes`. A real bug for Windows users, not just CI.
+- **`release.py bump` is now atomic**: it computes and validates every change (manifests, README badge, CHANGELOG) in memory first and only writes once all succeed — a missing README badge can no longer leave a half-bumped repo. Tested by asserting the worktree is unchanged after a failed bump.
+- **Runtime validator now enforces nested `relations[]` rules**: `lint-wiki.py` previously checked only that each `relations` item was an object, so `type: 42`, `because: 42`, a bad `confidence` enum, a missing required key, or an unknown key slipped through while JSON Schema rejected them. The validator is now recursive (object `required` / `properties` / `additionalProperties`, array items), and `tests/test_schema_conformance.py` pins six new nested cases in agreement with `jsonschema`.
+
+### Security
+
+- **Least-privilege release workflow**: `release.yml` now defaults to `contents: read`; only the `release` job that publishes gets `contents: write` (the render/test verify jobs run read-only).
 
 ### Changed
 

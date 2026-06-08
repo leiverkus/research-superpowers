@@ -67,6 +67,19 @@ CASES = [
     ("wrong-type", _variant(title=42), False),
     ("source-missing-bibkey", _variant(bibkey=_DELETE), False),
     ("array-item-type", _variant(tags=[1, 2]), False),
+    # nested relations[] object rules — the blind spot before v0.14.0
+    ("relations-valid",
+     _variant(relations=[{"target": "x", "type": "cites", "confidence": "extracted", "because": "q"}]), True),
+    ("relations-type-not-string",
+     _variant(relations=[{"target": "x", "type": 42, "confidence": "extracted"}]), False),
+    ("relations-because-not-string",
+     _variant(relations=[{"target": "x", "type": "cites", "confidence": "extracted", "because": 42}]), False),
+    ("relations-bad-confidence-enum",
+     _variant(relations=[{"target": "x", "type": "cites", "confidence": "maybe"}]), False),
+    ("relations-missing-required",
+     _variant(relations=[{"target": "x", "type": "cites"}]), False),
+    ("relations-unknown-key",
+     _variant(relations=[{"target": "x", "type": "cites", "confidence": "extracted", "bogus": 1}]), False),
 ]
 
 

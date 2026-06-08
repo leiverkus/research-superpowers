@@ -69,10 +69,54 @@ def load_schema() -> dict:
 _PY_TYPE = {"string": str, "array": list, "integer": int, "object": dict, "number": (int, float)}
 
 
+def _validate_value(value, spec: dict, path: Path, label: str, issues: list[str]) -> None:
+    """Recursively validate one value against a (sub)schema. Covers type, enum,
+    format=date, pattern, array items, and nested objects (required, properties,
+    additionalProperties=false) — so the relations[] item rules are enforced too,
+    not just 'is a dict'. Keeps the TYPE/INVALID/DATE/PATTERN/MISSING/UNKNOWN tags."""
+    expected = spec.get("type")
+    if expected in _PY_TYPE and not isinstance(value, _PY_TYPE[expected]):
+        issues.append(f"  TYPE: {path} — '{label}' must be {expected} (got {type(value).__name__})")
+        return  # type is wrong; deeper checks would be noise
+    if "enum" in spec and value not in spec["enum"]:
+        allowed = ", ".join(map(str, spec["enum"]))
+        issues.append(f"  INVALID: {path} — {label}='{value}' (allowed: {allowed})")
+    if spec.get("format") == "date" and isinstance(value, str):
+        # Require strict YYYY-MM-DD; date.fromisoformat() alone also accepts
+        # basic (20260415) and week dates (2026-W15-3), which the schema forbids.
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            issues.append(f"  DATE: {path} — {label}='{value}' must be YYYY-MM-DD")
+        else:
+            try:
+                datetime.date.fromisoformat(value)
+            except ValueError:
+                issues.append(f"  DATE: {path} — {label}='{value}' is not a real calendar date")
+    if spec.get("pattern") and isinstance(value, str) and not re.match(spec["pattern"], value):
+        issues.append(f"  PATTERN: {path} — {label}='{value}' violates {spec['pattern']}")
+    if expected == "array" and isinstance(value, list):
+        item_spec = spec.get("items")
+        if isinstance(item_spec, dict):
+            for i, item in enumerate(value):
+                _validate_value(item, item_spec, path, f"{label}[{i}]", issues)
+    if isinstance(value, dict) and (expected == "object" or "properties" in spec):
+        sub_props = spec.get("properties", {})
+        for req in spec.get("required", []):
+            if req not in value or value[req] in (None, ""):
+                issues.append(f"  MISSING: {path} — '{label}.{req}' is required")
+        if spec.get("additionalProperties") is False:
+            for key in value:
+                if key not in sub_props:
+                    issues.append(f"  UNKNOWN: {path} — '{label}.{key}' is not an allowed property")
+        for key, sub_value in value.items():
+            if key in sub_props and sub_value is not None:
+                _validate_value(sub_value, sub_props[key], path, f"{label}.{key}", issues)
+
+
 def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
     """Draft-07 validator covering the subset our schema uses: required, type,
-    enum, format=date, pattern, array item type, and conditional if/then from
-    allOf. (Dates are kept as strings by _NoDatesLoader so format can be checked.)"""
+    enum, format=date, pattern, array items, nested objects (required /
+    properties / additionalProperties), and conditional if/then from allOf.
+    (Dates are kept as strings by _NoDatesLoader so format can be checked.)"""
     issues: list[str] = []
     props = schema.get("properties", {})
 
@@ -83,29 +127,7 @@ def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
     for field, value in fm.items():
         if field not in props or value is None:
             continue
-        spec = props[field]
-        expected = spec.get("type")
-        if expected in _PY_TYPE and not isinstance(value, _PY_TYPE[expected]):
-            issues.append(f"  TYPE: {path} — '{field}' must be {expected} (got {type(value).__name__})")
-            continue
-        if "enum" in spec and value not in spec["enum"]:
-            issues.append(f"  INVALID: {path} — {field}='{value}' (allowed: {', '.join(spec['enum'])})")
-        if spec.get("format") == "date" and isinstance(value, str):
-            # Require strict YYYY-MM-DD; date.fromisoformat() alone also accepts
-            # basic (20260415) and week dates (2026-W15-3), which the schema forbids.
-            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-                issues.append(f"  DATE: {path} — {field}='{value}' must be YYYY-MM-DD")
-            else:
-                try:
-                    datetime.date.fromisoformat(value)
-                except ValueError:
-                    issues.append(f"  DATE: {path} — {field}='{value}' is not a real calendar date")
-        if spec.get("pattern") and isinstance(value, str) and not re.match(spec["pattern"], value):
-            issues.append(f"  PATTERN: {path} — {field}='{value}' violates {spec['pattern']}")
-        if expected == "array":
-            item_type = spec.get("items", {}).get("type")
-            if item_type in _PY_TYPE and not all(isinstance(x, _PY_TYPE[item_type]) for x in value):
-                issues.append(f"  TYPE: {path} — every item of '{field}' must be {item_type}")
+        _validate_value(value, props[field], path, field, issues)
 
     for clause in schema.get("allOf", []):
         cond = clause.get("if", {}).get("properties", {})
