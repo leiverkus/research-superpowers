@@ -9,9 +9,6 @@ Thumbs.db
 input/data-shared
 input/data-nextcloud
 
-# Team-Kollaboration: Zotero-Export wird lokal generiert, nicht in Git
-output/bibtex/references.bib
-
 # Large data files (track with Git LFS or exclude)
 input/data/**/*.tif
 input/data/**/*.shp
