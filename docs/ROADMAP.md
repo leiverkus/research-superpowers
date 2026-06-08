@@ -16,7 +16,13 @@ come first; the platform matrix (largest) comes last.
 
 ---
 
-## P1 — Reproducible CI (pin versions)  ·  small  ·  dependency-free
+## P1 — Reproducible CI (pin versions)  ·  small  ·  dependency-free  ·  ✅ done (v0.11.0 + v0.11.1)
+
+> **Status: done.** v0.11.0 pinned all Actions to commit SHAs and Quarto to
+> `1.9.38`. v0.11.1 closed the rest: Python pinned to `3.12.13`, PyYAML to
+> `6.0.3` (no moving `pip` upgrade), runners pinned to `ubuntu-24.04` instead
+> of `ubuntu-latest`. (Container-by-digest remains a possible future step but
+> is not currently warranted.)
 
 **Gap.** `.github/workflows/lint.yml` pins GitHub Actions and Quarto to moving
 major tags (`actions/checkout@v4`, `actions/setup-python@v5`,
@@ -39,7 +45,13 @@ versions. No `uses:` line references a bare major tag.
 
 ---
 
-## P2 — Script mirror-drift guard  ·  small  ·  dependency-free
+## P2 — Script mirror-drift guard  ·  small  ·  dependency-free  ·  ✅ done (v0.11.0)
+
+> **Status: done.** v0.11.0 added CI `diff -q` of the wiki scripts and the
+> vendored cytoscape bundle across template ↔ example (and the example schema
+> copy); `CONTRIBUTING.md` documents the canonical source + re-sync command.
+> The "stretch" single-source generator was deliberately not done — verbatim
+> mirrors guarded by CI are sufficient.
 
 **Gap.** `lint-wiki.py`, `wiki-to-graph.py` and `graph_mcp.py` exist in **two**
 copies (`templates/research-project-template/scripts/` and
@@ -192,8 +204,7 @@ path handling are verified per-OS; Windows symlink behaviour is documented.
 
 A natural order (cheap guards first, biggest last), shippable incrementally:
 
-1. **v0.11.0** — P1 (pin CI) + P2 (script mirror guard). Pure hardening, no
-   user-visible change.
+1. ✅ **v0.11.0 / v0.11.1** — P1 (pin CI) + P2 (script mirror guard). *Done.*
 2. **v0.12.0** — P3 (release automation) + P4 (negative tests).
 3. **v0.13.0** — P5 (jsonschema cross-check) + P6 tier 1 (scaffold E2E).
 4. **v0.14.0** — P7 (platform matrix) + P6 tier 2 (real install, if feasible).
