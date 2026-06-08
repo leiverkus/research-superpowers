@@ -27,6 +27,7 @@ Engineering-robustness pass addressing an external review — the scripts and te
 
 - **CI drift guards & tests**: README version badge must equal `plugin.json`, skill-count mentions across README + `docs/` must equal the actual count, README links must resolve, `session-context.md` must mention every skill — plus stdlib `unittest` tests (`tests/`) for invalid frontmatter, strict dates, duplicate slugs, the override count + future-date guard, bad-YAML robustness, and deterministic communities.
 - **Real publication render smoke test in CI**: a dedicated job runs `quarto render` of the article, book and presentation templates to HTML — catching broken bibliography paths / book layout that mere file-existence checks miss.
+- **OpenCode integration is now versioned** (`opencode/`): the native OpenCode plugin (`plugin/research-superpowers.ts`) that replicates the SessionStart skill-index injection via `experimental.chat.system.transform` — GWDG-safe, scoped to research projects — plus its setup README are checked in instead of living untracked. Its `EMBEDDED_INDEX` fallback was re-synced to the current `hooks/session-context.md`, and a new CI step (in the docs-in-sync job) fails the build if the two ever drift again.
 
 ## [0.9.0] — 2026-06-08
 

@@ -274,3 +274,26 @@ jobs:
               print(f"docs in sync — v{version}, {len(skills)} skills, session index complete")
           sys.exit(failed)
           PY
+
+      - name: OpenCode embedded index matches session-context
+        run: |
+          python <<'PY'
+          import pathlib, sys
+          ts = pathlib.Path("opencode/plugin/research-superpowers.ts").read_text(encoding="utf-8")
+          md = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8").rstrip("\n")
+          head = "const EMBEDDED_INDEX = `"
+          tail = "`\n\n// ── Helpers"
+          try:
+              lit = ts[ts.index(head) + len(head):ts.index(tail)]
+          except ValueError:
+              print("::error file=opencode/plugin/research-superpowers.ts::"
+                    "could not locate EMBEDDED_INDEX literal (anchors changed?)")
+              sys.exit(1)
+          unescaped = lit.replace("\\${", "${").replace("\\`", "`")
+          if unescaped != md:
+              print("::error file=opencode/plugin/research-superpowers.ts::"
+                    "EMBEDDED_INDEX is out of sync with hooks/session-context.md "
+                    "(re-run the sync: see opencode/README.md)")
+              sys.exit(1)
+          print("opencode EMBEDDED_INDEX in sync with session-context.md")
+          PY
