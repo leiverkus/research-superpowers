@@ -37,8 +37,20 @@ Derived views
 Pure standard library + PyYAML. No LLM calls, no network access.
 
 Usage:
+    # Build the exports (default — no sub-command):
     python scripts/wiki-to-graph.py
-    python scripts/wiki-to-graph.py --knowledge-dir knowledge --out-dir knowledge/_meta/graph --top-n 15
+    python scripts/wiki-to-graph.py --out-dir knowledge/_meta/graph --no-html
+
+    # Query the live wiki (recomputed each call — always current):
+    python scripts/wiki-to-graph.py neighbors source-herzog-2014 --depth 2
+    python scripts/wiki-to-graph.py path entity-itinera source-minetti-2002
+    python scripts/wiki-to-graph.py god-nodes --top-n 10
+    python scripts/wiki-to-graph.py bridges
+    python scripts/wiki-to-graph.py relations --type contradicts
+    python scripts/wiki-to-graph.py relations --node entity-itinera --confidence inferred
+    python scripts/wiki-to-graph.py search herzog
+    python scripts/wiki-to-graph.py stats
+    # add --json to any query for machine-readable output
 """
 
 import argparse
@@ -657,18 +669,229 @@ _HTML_TAIL = """</body>
 
 
 # --------------------------------------------------------------------------- #
+# Queries (deterministic, run against the live wiki — no cached file)
+# --------------------------------------------------------------------------- #
+def _resolve(nodes, token: str):
+    """Resolve a token to a node id. Returns (id, None) on a unique match, or
+    (None, candidates) when ambiguous/absent."""
+    ids = {n["id"] for n in nodes}
+    if token in ids:
+        return token, None
+    t = token.lower()
+    hits = sorted(n["id"] for n in nodes
+                  if t in n["id"].lower() or t in (n.get("title", "").lower()))
+    return (hits[0], None) if len(hits) == 1 else (None, hits)
+
+
+def _adjacency(edges):
+    adj: dict[str, list] = {}
+    for e in edges:
+        adj.setdefault(e["source"], []).append((e["target"], "→", e["relation_type"], e["confidence"]))
+        adj.setdefault(e["target"], []).append((e["source"], "←", e["relation_type"], e["confidence"]))
+    return adj
+
+
+def q_neighbors(nodes, edges, node, depth=1, relation=None):
+    adj = _adjacency(edges)
+    seen = {node}
+    frontier = [node]
+    out = []
+    for d in range(1, depth + 1):
+        nxt = []
+        for n in frontier:
+            for tgt, arrow, rtype, conf in adj.get(n, []):
+                if relation and rtype != relation:
+                    continue
+                if tgt not in seen:
+                    seen.add(tgt); nxt.append(tgt)
+                    out.append({"node": tgt, "depth": d, "from": n,
+                                "dir": arrow, "relation_type": rtype, "confidence": conf})
+        frontier = nxt
+    return out
+
+
+def q_path(edges, a, b):
+    adj = _adjacency(edges)
+    prev = {a: None}
+    queue = [a]
+    while queue:
+        cur = queue.pop(0)
+        if cur == b:
+            break
+        for tgt, arrow, rtype, conf in adj.get(cur, []):
+            if tgt not in prev:
+                prev[tgt] = (cur, arrow, rtype, conf)
+                queue.append(tgt)
+    if b not in prev:
+        return None
+    chain = []
+    cur = b
+    while prev[cur] is not None:
+        src, arrow, rtype, conf = prev[cur]
+        chain.append({"from": src, "to": cur, "dir": arrow, "relation_type": rtype, "confidence": conf})
+        cur = src
+    return list(reversed(chain))
+
+
+def q_relations(edges, rtype=None, confidence=None, node=None):
+    out = []
+    for e in edges:
+        if e["relation_type"] == "wikilink" and rtype != "wikilink":
+            continue
+        if rtype and e["relation_type"] != rtype:
+            continue
+        if confidence and e["confidence"] != confidence:
+            continue
+        if node and node not in (e["source"], e["target"]):
+            continue
+        out.append(e)
+    return out
+
+
+def q_search(nodes, term):
+    t = term.lower()
+    return [n for n in nodes
+            if t in n["id"].lower() or t in (n.get("title", "").lower())]
+
+
+def run_query(args, nodes, edges, stats) -> int:
+    import json as _json
+    as_json = getattr(args, "json", False)
+    deg = {n["id"]: 0 for n in nodes}
+    for e in edges:
+        deg[e["source"]] += 1; deg[e["target"]] += 1
+    type_of = {n["id"]: n["type"] for n in nodes}
+
+    def need(token):
+        nid, cands = _resolve(nodes, token)
+        if nid is None:
+            if cands:
+                print(f"Ambiguous '{token}'. Candidates:\n  " + "\n  ".join(cands))
+            else:
+                print(f"No node matches '{token}'.")
+        return nid
+
+    if args.cmd == "neighbors":
+        nid = need(args.node)
+        if not nid:
+            return 1
+        res = q_neighbors(nodes, edges, nid, args.depth, args.relation)
+        if as_json:
+            print(_json.dumps({"node": nid, "neighbors": res}, ensure_ascii=False, indent=2)); return 0
+        print(f"Neighbours of {nid} (depth {args.depth}{', ' + args.relation if args.relation else ''}): {len(res)}")
+        for r in res:
+            print(f"  [{r['depth']}] {r['dir']} {r['node']}  ({r['relation_type']}, {r['confidence']})")
+        return 0
+
+    if args.cmd == "path":
+        a, b = need(args.a), need(args.b)
+        if not (a and b):
+            return 1
+        chain = q_path(edges, a, b)
+        if as_json:
+            print(_json.dumps({"from": a, "to": b, "path": chain}, ensure_ascii=False, indent=2)); return 0
+        if not chain:
+            print(f"No path between {a} and {b}."); return 0
+        print(f"Path {a} → {b} ({len(chain)} hop(s)):")
+        print(f"  {a}")
+        for h in chain:
+            if h["dir"] == "→":
+                print(f"    —{h['relation_type']} ({h['confidence']})→ {h['to']}")
+            else:
+                print(f"    ←{h['relation_type']} ({h['confidence']})— {h['to']}")
+        return 0
+
+    if args.cmd == "god-nodes":
+        gn = compute_god_nodes(nodes, edges, args.top_n)
+        if as_json:
+            print(_json.dumps(gn, ensure_ascii=False, indent=2)); return 0
+        print(f"God nodes (top {args.top_n} by degree):")
+        for g in gn:
+            print(f"  {g['degree']:3d}  {g['type']:9s} {g['id']}")
+        return 0
+
+    if args.cmd == "bridges":
+        br = compute_bridges(nodes, edges)
+        if as_json:
+            print(_json.dumps(br, ensure_ascii=False, indent=2)); return 0
+        print(f"Bridges: {len(br)}")
+        for b in br:
+            print(f"  {b['id']} — joins {b['connects']} source clusters ({len(b['sources'])} sources)")
+        return 0
+
+    if args.cmd == "relations":
+        node = need(args.node) if args.node else None
+        if args.node and not node:
+            return 1
+        rels = q_relations(edges, args.type, args.confidence, node)
+        if as_json:
+            print(_json.dumps(rels, ensure_ascii=False, indent=2)); return 0
+        print(f"Relations: {len(rels)}")
+        for e in rels:
+            print(f"  {e['source']} --{e['relation_type']} ({e['confidence']})--> {e['target']}")
+        return 0
+
+    if args.cmd == "search":
+        res = q_search(nodes, args.term)
+        if as_json:
+            print(_json.dumps([n["id"] for n in res], ensure_ascii=False, indent=2)); return 0
+        print(f"Matches for '{args.term}': {len(res)}")
+        for n in res:
+            print(f"  {n['type']:9s} {n['id']}  ·  {n.get('title','')}")
+        return 0
+
+    if args.cmd == "stats":
+        by_type = {}
+        for n in nodes:
+            by_type[n["type"]] = by_type.get(n["type"], 0) + 1
+        rt = stats.get("relations_total", 0)
+        ia = stats.get("relations_inferred_or_ambiguous", 0)
+        payload = {"nodes": len(nodes), "edges": len(edges), "by_type": by_type,
+                   "relations_total": rt, "inference_rate": round(ia / rt, 3) if rt else None,
+                   "dangling": stats.get("dangling", 0)}
+        if as_json:
+            print(_json.dumps(payload, ensure_ascii=False, indent=2)); return 0
+        print(f"nodes: {len(nodes)} · edges: {len(edges)} · dangling: {payload['dangling']}")
+        print("by type: " + ", ".join(f"{k} {v}" for k, v in sorted(by_type.items())))
+        print(f"typed relations: {rt} · inference-rate: {int(100 * ia / rt) if rt else 0}%")
+        return 0
+
+    return 1
+
+
+# --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build a knowledge graph from the Markdown wiki")
+    parser = argparse.ArgumentParser(
+        description="Build and query a knowledge graph from the Markdown wiki")
     parser.add_argument("--knowledge-dir", type=Path, default=DEFAULT_WIKI_DIR,
                         help="Wiki directory to read (default: knowledge)")
+    # Build flags live on the main parser so the default (no sub-command) call
+    # — used by CI, the scaffold and the wiki-graph skill — stays unchanged.
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR,
                         help="Output directory (default: knowledge/_meta/graph)")
     parser.add_argument("--top-n", type=int, default=DEFAULT_TOP_N,
                         help="Number of god_nodes to report (default: 15)")
     parser.add_argument("--no-html", action="store_true",
                         help="Skip the interactive graph.html (JSON + GraphML only)")
+
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--json", action="store_true", help="Emit JSON instead of text")
+    sub = parser.add_subparsers(dest="cmd", metavar="QUERY")
+    sp = sub.add_parser("neighbors", parents=[common], help="Neighbours of a node")
+    sp.add_argument("node"); sp.add_argument("--depth", type=int, default=1)
+    sp.add_argument("--relation", help="Only follow this relation type")
+    sp = sub.add_parser("path", parents=[common], help="Shortest path between two nodes")
+    sp.add_argument("a"); sp.add_argument("b")
+    sp = sub.add_parser("god-nodes", parents=[common], help="Most-connected pages")
+    sp.add_argument("--top-n", type=int, default=DEFAULT_TOP_N)
+    sub.add_parser("bridges", parents=[common], help="Entities joining unconnected source clusters")
+    sp = sub.add_parser("relations", parents=[common], help="List typed relations")
+    sp.add_argument("--type"); sp.add_argument("--confidence"); sp.add_argument("--node")
+    sp = sub.add_parser("search", parents=[common], help="Find nodes by id/title")
+    sp.add_argument("term")
+    sub.add_parser("stats", parents=[common], help="Counts + inference-rate")
     args = parser.parse_args()
 
     if not args.knowledge_dir.exists():
@@ -682,6 +905,11 @@ def main() -> int:
 
     nodes = build_nodes(pages)
     edges, stats = build_edges(pages)
+
+    # Query sub-commands run against this freshly-built (live) graph.
+    if args.cmd is not None:
+        return run_query(args, nodes, edges, stats)
+
     god_nodes = compute_god_nodes(nodes, edges, args.top_n)
     bridges = compute_bridges(nodes, edges)
 

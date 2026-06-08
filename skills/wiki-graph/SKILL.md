@@ -1,6 +1,6 @@
 ---
 name: wiki-graph
-description: Use to build and analyse the knowledge wiki as a graph. Runs `scripts/wiki-to-graph.py` (from the research project template) to export an interactive self-contained graph.html (open in any browser, no install) plus graph.json / graph.graphml, then answers structure questions grounded in the result — most-connected pages (god nodes), entities that bridge otherwise-unconnected sources, relation types and confidence (inferred vs grounded), clusters and weak spots. Triggers include "build/show me a knowledge graph", "map the wiki", "graph view of my research", "which entity connects or bridges my sources", "what are the most connected or central pages", "find surprising connections", "where are the gaps or weak links in the wiki", "export the wiki to Gephi/yEd". For frontmatter and wikilink validation use `wiki-lint`; for content and claim audit use `semantic-wiki-review`.
+description: Use to build and analyse the knowledge wiki as a graph. Runs `scripts/wiki-to-graph.py` (from the research project template) to export an interactive self-contained graph.html (open in any browser, no install) plus graph.json / graph.graphml — and answers questions against the *live* wiki via deterministic query sub-commands (`neighbors`, `path`, `god-nodes`, `bridges`, `relations`, `search`, `stats`), grounded in the result — most-connected pages (god nodes), entities that bridge otherwise-unconnected sources, relation types and confidence (inferred vs grounded), clusters and weak spots. Triggers include "build/show me a knowledge graph", "map the wiki", "graph view of my research", "which entity connects or bridges my sources", "what are the most connected or central pages", "find surprising connections", "where are the gaps or weak links in the wiki", "export the wiki to Gephi/yEd". For frontmatter and wikilink validation use `wiki-lint`; for content and claim audit use `semantic-wiki-review`.
 inputs:
   - name: project_root
     description: Absolute path to the research project root
@@ -52,13 +52,21 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 
 1. **Locate the script** — `scripts/wiki-to-graph.py` in the project root (from the template). If it is missing, offer to copy it from the template (or scaffold the project); if Python/PyYAML are unavailable, take the **fallback** below.
 2. **Lint first (recommended)** — broken wikilinks become dangling edges and skew the picture. If `wiki-lint` has not run recently, suggest it; note any override.
-3. **Build the graph** — `python scripts/wiki-to-graph.py` (add `--top-n N` if the user wants more/fewer god nodes). It writes `graph.html` (interactive, self-contained), `graph.json`, and `graph.graphml` into `knowledge/_meta/graph/`.
-4. **Read `graph.json`** — never answer from memory of the wiki; read the actual export.
-5. **Answer the question grounded in the data** (see "Reading the output"). If no specific question was asked, give the overview: god nodes, bridges, inference-rate, and any dangling/orphan signal.
+3. **For a targeted question — query the live graph** (recomputed from the `.md` on each call, so always current; deterministic — do not eyeball JSON):
+   - `python scripts/wiki-to-graph.py neighbors <slug> [--depth N] [--relation TYPE]`
+   - `… path <a> <b>` — shortest connection between two pages
+   - `… god-nodes [--top-n N]` · `… bridges` · `… stats`
+   - `… relations [--type cites|contradicts|builds-on|…] [--confidence inferred] [--node <slug>]`
+   - `… search <term>` — find a node by id/title
+   - Node tokens may be a unique substring (fuzzy-resolved); add `--json` to any query for machine-readable output.
+4. **For an overview or the visual — build the exports** — `python scripts/wiki-to-graph.py` writes `graph.html` (interactive, self-contained), `graph.json`, and `graph.graphml` into `knowledge/_meta/graph/`.
+5. **Answer grounded in the output** (query result or `graph.json` — see "Reading the output"); never from memory. With no specific question, give the overview: god nodes, bridges, inference-rate, dangling/orphan signal.
 6. **Be honest about confidence and gaps** (see "Honesty rules"). If the user asks about a connection that is not in the graph, say so — and offer to add a `relations` entry or a wikilink rather than asserting it.
 7. **Offer the viz** — for an interactive look, point the user to `knowledge/_meta/graph/graph.html` (opens in any browser, no install; filter/search/click). For heavy layout or community detection, `graph.graphml` opens in Gephi/yEd.
 8. **Persist an insight (optional, with consent)** — if the analysis yields a standalone finding the user wants to keep, write a `knowledge/synthesis/<slug>.md` page with `status: draft`, `author: llm`. Never self-promote to `review`/`stable`.
 9. **Log** the run in `knowledge/_meta/log.md`: date, `graph`, question (or "overview"), node/edge counts, headline finding.
+
+**MCP shortcut:** if the project registers the `wiki-graph` MCP server (via `.mcp.json` → `scripts/graph_mcp.py`), call its `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` / `graph_relations` / `graph_search` / `graph_stats` tools directly instead of the Bash CLI. It is the *same* engine (the tools shell out to `wiki-to-graph.py --json`), so results are identical and equally live.
 
 ## Process Flow
 

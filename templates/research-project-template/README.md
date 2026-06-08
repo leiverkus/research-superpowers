@@ -21,6 +21,8 @@ provides:
 - Team workflows over GitLab, Zotero, and Nextcloud
 - Automatic publication rendering as a website (GitLab Pages)
 - A lint script for structural checks on the wiki
+- A knowledge-graph layer: export the wiki to an interactive offline `graph.html`
+  (+ JSON/GraphML) and query it live via CLI sub-commands or a bundled MCP server
 
 ## Quickstart
 
@@ -69,6 +71,27 @@ The wiki is plain Markdown — no build step. Open the `knowledge/` folder in
 **Foam** or **Obsidian** for wikilinks, backlinks, and a graph view, or
 browse it directly in the GitLab/GitHub repository.
 
+### 7. Explore the knowledge graph
+
+```bash
+# Interactive offline visualisation (+ JSON/GraphML for scripting / Gephi):
+python scripts/wiki-to-graph.py        # → open knowledge/_meta/graph/graph.html
+
+# Query the live wiki from the terminal (recomputed each call — always current):
+python scripts/wiki-to-graph.py neighbors <slug> --depth 2
+python scripts/wiki-to-graph.py path <a> <b>
+python scripts/wiki-to-graph.py god-nodes      # most-connected pages
+python scripts/wiki-to-graph.py bridges        # load-bearing entities
+python scripts/wiki-to-graph.py relations --type contradicts
+python scripts/wiki-to-graph.py stats          # + --json on any query
+```
+
+The same queries are also available to your LLM agent as **MCP tools** —
+`.mcp.json` registers the bundled `scripts/graph_mcp.py` server for Claude Code
+automatically (no install, no network); OpenCode setup is in `CLAUDE.md`. So in
+a session you can just ask "which entity bridges my sources?" or "show the
+graph".
+
 ## Structure
 
 ```
@@ -95,6 +118,11 @@ output/                Publication-ready artefacts
 ├── data-analysis/     Scripts and notebooks
 ├── app/               Software repository
 └── bibtex/            Bibliography and CSL styles
+
+scripts/                Wiki tooling
+├── lint-wiki.py        Structural check (frontmatter, links, orphans)
+└── wiki-to-graph.py    Graph export (HTML/JSON/GraphML) + live queries
+                        (graph_mcp.py registers the same as MCP tools)
 ```
 
 | Area | Who writes | Who reads |
