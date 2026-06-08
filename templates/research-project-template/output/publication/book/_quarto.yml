@@ -15,7 +15,7 @@ book:
   date-format: "D MMMM YYYY"
   language: en
   chapters:
-    - frontmatter/index.qmd
+    - index.qmd
     - text/01-introduction.qmd
     - text/02-state-of-the-field.qmd
     - text/03-methodology.qmd

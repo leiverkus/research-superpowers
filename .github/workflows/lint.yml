@@ -8,6 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  render:
+    name: Template publications render (HTML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render article, book and presentation to HTML
+        working-directory: templates/research-project-template
+        run: |
+          set -e
+          (cd output/publication/article && quarto render article.qmd --to html)
+          (cd output/publication/book && quarto render --to html)
+          (cd output/presentation && quarto render talk.qmd --to revealjs)
+          echo "article, book and presentation all render to HTML"
+
   lint:
     name: Schema, lint, and contract checks
     runs-on: ubuntu-latest
@@ -244,9 +259,11 @@ jobs:
               print(f"::error::README version badge ({m and m.group(1)}) != plugin.json ({version})"); failed = 1
 
           skills = sorted(p.name for p in pathlib.Path("skills").iterdir() if (p / "SKILL.md").exists())
-          m = re.search(r"\*\*(\d+) skills\*\*", readme)
-          if not m or int(m.group(1)) != len(skills):
-              print(f"::error::README skill count ({m and m.group(1)}) != actual ({len(skills)})"); failed = 1
+          # Every "<N> skills" mention in README + docs/ must equal the real count.
+          for doc in [pathlib.Path("README.md")] + sorted(pathlib.Path("docs").glob("*.md")):
+              for m in re.finditer(r"(\d+) skills", doc.read_text(encoding="utf-8")):
+                  if int(m.group(1)) != len(skills):
+                      print(f"::error file={doc}::says '{m.group(0)}' but there are {len(skills)} skills"); failed = 1
 
           session = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8")
           for s in skills:

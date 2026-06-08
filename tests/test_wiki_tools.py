@@ -77,6 +77,15 @@ class FrontmatterValidation(unittest.TestCase):
             issues = lw.validate_frontmatter(lw.parse_frontmatter(p), SCHEMA, p)
             self.assertTrue(any("PATTERN" in i for i in issues), issues)
 
+    def test_strict_date_format(self):
+        # ISO week dates / basic format are valid for date.fromisoformat but the
+        # schema requires YYYY-MM-DD — they must still be flagged.
+        for bad_date in ('"2026-W15-3"', '"20260415"'):
+            with tempfile.TemporaryDirectory() as d:
+                p = _write(d, "a.md", VALID.replace("2026-04-15", bad_date, 1))
+                issues = lw.validate_frontmatter(lw.parse_frontmatter(p), SCHEMA, p)
+                self.assertTrue(any("DATE" in i for i in issues), f"{bad_date}: {issues}")
+
     def test_missing_required_flagged(self):
         bad = VALID.replace("status: review\n", "")
         with tempfile.TemporaryDirectory() as d:
@@ -115,6 +124,18 @@ class GateOverrides(unittest.TestCase):
             joined = " ".join(report)
             self.assertIn("Total overrides logged: 2", joined)
             self.assertNotIn("100%", joined)
+
+    def test_future_dated_override_not_counted_as_recent(self):
+        with tempfile.TemporaryDirectory() as d:
+            log = pathlib.Path(d) / "gate-overrides.log"
+            log.write_text("- 2099-01-01 · ingest · stable · future entry\n")
+            original = lw.OVERRIDES_LOG
+            try:
+                lw.OVERRIDES_LOG = log
+                report = lw.report_gate_overrides()
+            finally:
+                lw.OVERRIDES_LOG = original
+            self.assertIn("In the last 30 days: 0", " ".join(report))
 
 
 class GraphRobustness(unittest.TestCase):

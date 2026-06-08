@@ -17,10 +17,16 @@ Engineering-robustness pass addressing an external review — the scripts and te
 - **Methodology contracts contradicted the hermeneutic default** (P1): `executing-research-plan` and `requesting-peer-review` no longer demand a pre-registered hypothesis for hermeneutic projects (`status: ready` suffices; falsification is reframed as "what would refute the thesis").
 - **The gate "override-rate" was not a rate** (P2): it read 100% once ≥10 entries existed; now reports an honest count + recent-window frequency.
 - **README / session-index drift** (P2): version badge (was 0.3.0), skill count (was 12), and dead migration links fixed; `hooks/session-context.md` now lists every skill.
+- **Article template did not render** (P1): its `bibliography`/`csl` paths were one level too shallow (`../bibtex/` → `../../bibtex/`).
+- **Book template did not render** (P1): Quarto requires the homepage at the project root, so `frontmatter/index.qmd` is now `index.qmd`.
+- **Remaining doc drift** (P2): `docs/README.md` and `docs/installation.md` said "12 skills" (now 14, and the docs-in-sync check covers `docs/` too); `--strict` removed from `CONTRIBUTING.md` (the installed Claude CLI rejects it).
+- **Date validation too lax** (P2): `date.fromisoformat()` also accepts `20260415` and week dates like `2026-W15-3`; a strict `YYYY-MM-DD` check is now applied first.
+- **Override recency counted future dates** (P3): a 2099 entry no longer counts as "last 30 days".
 
 ### Added
 
-- **CI drift guards & tests**: README version badge must equal `plugin.json`, README skill count must equal the actual count, README links must resolve, `session-context.md` must mention every skill — plus stdlib `unittest` tests (`tests/`) for invalid frontmatter, duplicate slugs, the override count, bad-YAML robustness, and deterministic communities.
+- **CI drift guards & tests**: README version badge must equal `plugin.json`, skill-count mentions across README + `docs/` must equal the actual count, README links must resolve, `session-context.md` must mention every skill — plus stdlib `unittest` tests (`tests/`) for invalid frontmatter, strict dates, duplicate slugs, the override count + future-date guard, bad-YAML robustness, and deterministic communities.
+- **Real publication render smoke test in CI**: a dedicated job runs `quarto render` of the article, book and presentation templates to HTML — catching broken bibliography paths / book layout that mere file-existence checks miss.
 
 ## [0.9.0] — 2026-06-08
 

@@ -83,10 +83,15 @@ def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
         if "enum" in spec and value not in spec["enum"]:
             issues.append(f"  INVALID: {path} — {field}='{value}' (allowed: {', '.join(spec['enum'])})")
         if spec.get("format") == "date" and isinstance(value, str):
-            try:
-                datetime.date.fromisoformat(value)
-            except ValueError:
-                issues.append(f"  DATE: {path} — {field}='{value}' is not a valid ISO date (YYYY-MM-DD)")
+            # Require strict YYYY-MM-DD; date.fromisoformat() alone also accepts
+            # basic (20260415) and week dates (2026-W15-3), which the schema forbids.
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+                issues.append(f"  DATE: {path} — {field}='{value}' must be YYYY-MM-DD")
+            else:
+                try:
+                    datetime.date.fromisoformat(value)
+                except ValueError:
+                    issues.append(f"  DATE: {path} — {field}='{value}' is not a real calendar date")
         if spec.get("pattern") and isinstance(value, str) and not re.match(spec["pattern"], value):
             issues.append(f"  PATTERN: {path} — {field}='{value}' violates {spec['pattern']}")
         if expected == "array":
@@ -300,7 +305,7 @@ def report_gate_overrides() -> list[str]:
 
     report = [f"  Total overrides logged: {total} (a count — overrides are only ever logged when a gate is bypassed)"]
     if dates:
-        recent = sum(1 for d in dates if (datetime.date.today() - d).days <= OVERRIDE_RECENT_DAYS)
+        recent = sum(1 for d in dates if 0 <= (datetime.date.today() - d).days <= OVERRIDE_RECENT_DAYS)
         report.append(f"  In the last {OVERRIDE_RECENT_DAYS} days: {recent}")
         if recent >= OVERRIDE_WARN_COUNT:
             report.append(
