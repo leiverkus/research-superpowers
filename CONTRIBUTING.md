@@ -57,7 +57,16 @@ for f in agents/*.md; do
   impl=$(grep '^implements:' "$f" | awk '{print $2}')
   [ -d "skills/$impl" ] || echo "MISSING SKILL: $f → $impl"
 done
+
+# 5. Unit + integration tests (install the pinned dev deps first)
+python3 -m pip install -r requirements-dev.txt
+python3 -m unittest discover -s tests
 ```
+
+> `requirements-dev.txt` is **dev/CI-only** (PyYAML + `jsonschema`). The runtime
+> wiki scripts need only the stdlib + PyYAML; `jsonschema` powers the schema
+> conformance cross-check (`tests/test_schema_conformance.py`), which skips
+> cleanly if it isn't installed.
 
 `claude plugin validate .` is the same check Anthropic's marketplace submission pipeline runs. Pass it locally before opening the PR.
 

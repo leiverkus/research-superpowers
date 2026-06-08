@@ -4,6 +4,16 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] — 2026-06-08
+
+Roadmap P5 + P6 (tier 1): a `jsonschema` golden cross-check of the hand-rolled validator, and an end-to-end test of the shipped template. No runtime dependency added — scaffolded projects still run on stdlib + PyYAML only.
+
+### Added
+
+- **Schema conformance cross-check** (roadmap P5, hybrid): the stdlib validator in `lint-wiki.py` stays the runtime, and `jsonschema` (pinned in the new `requirements-dev.txt`, CI/dev-only) becomes the authoritative golden check. `tests/test_schema_conformance.py` pins the hand-rolled validator and `jsonschema` in agreement on every rule the subset implements (a valid page + one fixture per single-rule violation: required, enum, date, pattern, type, conditional `bibkey`, array-item type) and validates **all shipped example/template wiki pages** with the real engine. The tests skip cleanly when `jsonschema` is absent. If the schema outgrows the stdlib subset, the cross-check fails — the signal to extend the subset or revisit a runtime dependency.
+- **Scaffold end-to-end test** (roadmap P6, tier 1): `tests/test_scaffold_e2e.py` materialises a project from the shipped `templates/research-project-template/`, drops in a small connected wiki, and runs the real user path against the *copied* scripts — lint (clean) → graph build (`graph.json`) → a `neighbors` query → the MCP handshake + `graph_stats`. Proves the shipped template (not just the in-repo example) is self-consistent. (Tier 2, a real `claude plugin install` in CI, remains open.)
+- **`requirements-dev.txt`** — pinned dev/CI toolchain (PyYAML 6.0.3 + jsonschema 4.25.1); CI installs from it. Documented in `CONTRIBUTING.md`.
+
 ## [0.12.0] — 2026-06-08
 
 Roadmap P3 + P4: an automated, self-checking release process and a much broader negative/integration test suite. No user-visible behaviour change.
