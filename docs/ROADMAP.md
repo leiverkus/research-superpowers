@@ -218,7 +218,18 @@ build a graph. Tier 2 runs when the CLI is present.
 
 ---
 
-## P7 — Platform matrix (Linux / macOS / Windows)  ·  large  ·  dependency-free
+## P7 — Platform matrix (Linux / macOS / Windows)  ·  large  ·  dependency-free  ·  ✅ done (v0.14.0)
+
+> **Status: done.** The unit + integration suite runs as a `tests` matrix job
+> on `ubuntu-24.04`, `macos-latest` and `windows-latest` (the heavy Quarto
+> render stays Linux-only). `tests/test_hook_dispatch.py` exercises the real
+> `run-hook.cmd session-start` entry point per OS — the polyglot wrapper on
+> POSIX, the cmd.exe → Git-bash path on Windows — and asserts valid
+> session-context JSON. `.gitattributes` forces LF on the shell hooks so a
+> Windows checkout can't break the bash shebang. The scaffold E2E + MCP +
+> graph tests now also prove the Python tooling and path handling work on all
+> three OSes. (Windows symlink behaviour for `.claude/skills` is documented in
+> the OpenCode/install docs; the tooling itself uses no symlinks.)
 
 **Gap.** CI runs Linux only. The hooks ship a Windows entry point
 (`hooks/run-hook.cmd`) and the project relies on symlinks (`.claude/skills`,
@@ -248,7 +259,9 @@ A natural order (cheap guards first, biggest last), shippable incrementally:
 1. ✅ **v0.11.0 / v0.11.1** — P1 (pin CI) + P2 (script mirror guard). *Done.*
 2. ✅ **v0.12.0** — P3 (release automation) + P4 (negative tests). *Done.*
 3. ✅ **v0.13.0** — P5 (jsonschema cross-check) + P6 tier 1 (scaffold E2E). *Done.*
-4. **v0.14.0** — P7 (platform matrix) + P6 tier 2 (real install, if feasible).
+4. ✅ **v0.14.0** — P7 (platform matrix). *Done.* (P6 tier 2 — a real
+   `claude plugin install` in CI — remains the one open, best-effort item,
+   gated on the Claude CLI being runnable in a runner.)
 
 None of these are blocking; v0.10.0 is production-ready. This is the path from
 "robust" to "mature".

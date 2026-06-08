@@ -4,6 +4,20 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] — 2026-06-08
+
+Roadmap P7: the test suite now runs on Linux, macOS and Windows, with a real hook-dispatch test per OS. This is the last planned maturity item; only the best-effort P6 tier 2 (a real `claude plugin install` in CI) remains open.
+
+### Added
+
+- **Cross-platform CI matrix** (roadmap P7): the unit + integration suite runs as a `tests` job on `ubuntu-24.04`, `macos-latest` and `windows-latest` (the heavy Quarto render stays Linux-only). This proves the Python tooling, the scaffold E2E, the MCP server and path handling work on all three OSes, not just Linux.
+- **Hook-dispatch test** (`tests/test_hook_dispatch.py`): exercises the real `hooks/run-hook.cmd session-start` entry point per OS — the polyglot wrapper on POSIX, the cmd.exe → Git-bash path on Windows — and asserts the emitted `additionalContext` is valid JSON carrying the skill index.
+- **`.gitattributes`**: forces LF on the shell hooks (`session-start`, `run-hook.cmd`, `*.sh`) so a Windows checkout (`core.autocrlf=true`) can't rewrite them to CRLF and break the bash shebang; marks the vendored cytoscape bundle as binary.
+
+### Changed
+
+- The single-OS `lint` job no longer runs the unit tests itself; they now run in the cross-OS `tests` job (which includes Linux), so the release gate (`release.yml` → `workflow_call`) is verified on all three platforms before a tag can publish.
+
 ## [0.13.0] — 2026-06-08
 
 Roadmap P5 + P6 (tier 1): a `jsonschema` golden cross-check of the hand-rolled validator, and an end-to-end test of the shipped template. No runtime dependency added — scaffolded projects still run on stdlib + PyYAML only.
