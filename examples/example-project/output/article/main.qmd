@@ -2,7 +2,7 @@
 title: "Iron Age IIA Chronology in the Southern Levant — Argument Structure and the Negev Fortress Case"
 author: "Patrick Leiverkus"
 date: 2026-05-28
-bibliography: ../../bibtex/references.bib
+bibliography: ../bibtex/references.bib
 format:
   pdf:
     documentclass: scrartcl

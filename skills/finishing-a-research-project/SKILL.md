@@ -21,10 +21,10 @@ justification is.
 
 ## Closing Checklist
 
-1. **Manuscript renders cleanly** — `make render` in `output/publication/<book|article>/` exits 0; PDF/HTML opens without warnings
+1. **Manuscript renders cleanly** — `make render` in `output/<book|article>/` exits 0; PDF/HTML opens without warnings
 2. **Wiki lint green** — `python scripts/lint-wiki.py` exits 0
 3. **BibTeX consistent** — every citation key in the manuscript exists in `references.bib`; no unused keys (or unused are intentional)
-4. **Peer review done** — both constructive and adversarial reviewer reports archived under `output/publication/<target>/reviews/`; all Major issues resolved or explicitly deferred with rationale
+4. **Peer review done** — both constructive and adversarial reviewer reports archived under `output/<target>/reviews/`; all Major issues resolved or explicitly deferred with rationale
 5. **Hypothesis addressed** — pre-registered Hypothesis is explicitly confirmed, refuted, or marked "inconclusive — exploratory" in the manuscript
 6. **Data reproducibility** — `output/data-analysis/` has `requirements.txt` or `environment.yml`; a README says "run `python main.py` to reproduce"; seeds are fixed
 7. **Data archive** — raw datasets in `input/data/` are licensed; derivatives in `output/data-analysis/results/` are documented

@@ -48,10 +48,10 @@ pip install pyyaml
 
 ```bash
 # Build the article as PDF
-cd output/publication/article && make pdf
+cd output/article && make pdf
 
 # Build the book as HTML
-cd output/publication/book && make html
+cd output/book && make html
 
 # Build the presentation as Reveal.js
 cd output/presentation && make slides

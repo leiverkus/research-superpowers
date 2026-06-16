@@ -3,7 +3,7 @@
 # Das Knowledge-Wiki ist reines Markdown (lesbar via Foam/Obsidian oder dem
 # GitLab-Repository-Browser) — es wird NICHT in der CI gerendert, sondern nur
 # strukturell gelintet. Quarto kommt ausschließlich für die Publikation in
-# `output/publication/` zum Einsatz. Bei jedem Push auf `main` (und bei Merge
+# `output/` zum Einsatz. Bei jedem Push auf `main` (und bei Merge
 # Requests) wird das Wiki gelintet und die Publikation gebaut; auf `main` wird
 # als GitLab Pages deployt.
 #
@@ -38,11 +38,11 @@ build-article:
   variables:
     QUARTO_PRINT_STACK: "true"
   script:
-    - cd output/publication/article
+    - cd output/article
     - quarto render article.qmd --to html --output-dir _output
   artifacts:
     paths:
-      - output/publication/article/_output/
+      - output/article/_output/
     expire_in: 1 week
   <<: *on_main_or_mr
 
@@ -53,11 +53,11 @@ build-book:
   variables:
     QUARTO_PRINT_STACK: "true"
   script:
-    - cd output/publication/book
+    - cd output/book
     - quarto render --to html
   artifacts:
     paths:
-      - output/publication/book/_output/
+      - output/book/_output/
     expire_in: 1 week
   <<: *on_main_or_mr
 
@@ -71,11 +71,11 @@ pages:
   script:
     - mkdir -p public
     # Artikel als Hauptseite
-    - cp -r output/publication/article/_output/* public/ 2>/dev/null || true
+    - cp -r output/article/_output/* public/ 2>/dev/null || true
     - mv public/article.html public/index.html 2>/dev/null || true
     # Buch unter /book/
     - mkdir -p public/book
-    - cp -r output/publication/book/_output/* public/book/ 2>/dev/null || true
+    - cp -r output/book/_output/* public/book/ 2>/dev/null || true
   artifacts:
     paths:
       - public

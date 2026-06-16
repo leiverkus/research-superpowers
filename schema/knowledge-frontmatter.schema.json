@@ -57,7 +57,7 @@
     },
     "bibliography": {
       "type": "string",
-      "description": "Relative path to the project's BibTeX file (typically ../../output/bibtex/references.bib). Optional; only needed if a page is rendered standalone via Quarto. In the plain-Markdown wiki, citations resolve when the page is pulled into output/publication/."
+      "description": "Relative path to the project's BibTeX file (typically ../../output/bibtex/references.bib). Optional; only needed if a page is rendered standalone via Quarto. In the plain-Markdown wiki, citations resolve when the page is pulled into output/."
     },
     "methodology": {
       "type": "string",

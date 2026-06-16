@@ -21,8 +21,8 @@ jobs:
         working-directory: templates/research-project-template
         run: |
           set -e
-          (cd output/publication/article && quarto render article.qmd --to html)
-          (cd output/publication/book && quarto render --to html)
+          (cd output/article && quarto render article.qmd --to html)
+          (cd output/book && quarto render --to html)
           (cd output/presentation && quarto render talk.qmd --to revealjs)
           echo "article, book and presentation all render to HTML"
 
@@ -142,8 +142,8 @@ jobs:
           s = d["stats"]
           # Counts track the example-project fixture; update if the example wiki changes.
           assert s["nodes"] == 5, f"expected 5 nodes, got {s['nodes']}"
-          assert s["edges"] == 16, f"expected 16 edges, got {s['edges']}"
-          assert s["relations_total"] == 3, f"expected 3 relations, got {s['relations_total']}"
+          assert s["edges"] == 19, f"expected 19 edges, got {s['edges']}"
+          assert s["relations_total"] == 6, f"expected 6 relations, got {s['relations_total']}"
           assert d["god_nodes"], "god_nodes is empty"
           assert d["bridges"], "bridges is empty"
           assert d["communities"], "communities is empty"
@@ -204,9 +204,9 @@ jobs:
       - name: Template build config references real files
         run: |
           cd templates/research-project-template
-          test -f output/publication/article/article.qmd
+          test -f output/article/article.qmd
           test -f output/presentation/talk.qmd
-          test -f output/publication/book/_quarto.yml
+          test -f output/book/_quarto.yml
           # No stale German placeholder filenames (artikel/vortrag) in build config
           if grep -rnE 'artikel|vortrag' .gitlab-ci.yml .vscode/tasks.json; then
             echo "::error::stale artikel/vortrag reference in template build config"; exit 1

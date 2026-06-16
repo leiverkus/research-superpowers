@@ -3,7 +3,7 @@ name: requesting-peer-review
 description: Use when a manuscript (book chapter, article, grant) is drafted and ready for structured review. Runs a two-stage peer-review workflow — constructive then adversarial — with discipline-specific checklists (CONSORT/STROBE + theology/archaeology/DH-specific).
 inputs:
   - name: manuscript_path
-    description: Path to the QMD or PDF manuscript under output/publication/
+    description: Path to the QMD or PDF manuscript under output/
     required: true
   - name: discipline
     description: Theologie | Biblische Archäologie | Alte Geschichte | Digital Humanities | Mixed
@@ -24,7 +24,7 @@ inputs:
     description: Paths to knowledge/sources/*.md referenced by the manuscript
     required: true
 outputs:
-  - path: output/publication/<target>/reviews/<YYYY-MM-DD>-<role>-review.md
+  - path: output/<target>/reviews/<YYYY-MM-DD>-<role>-review.md
     kind: created
   - path: knowledge/_meta/log.md
     kind: appended
@@ -51,7 +51,7 @@ oversight — the reason in the log makes that traceable.
 
 ## When to use
 
-- A manuscript QMD file exists under `output/publication/` and has rendered successfully
+- A manuscript QMD file exists under `output/` and has rendered successfully
 - Before sending to an external reviewer, before submission, before grant deadline
 - After major revision, to re-check whether open issues were addressed
 
@@ -64,7 +64,7 @@ oversight — the reason in the log makes that traceable.
 3. **Select reporting standard** — CONSORT (RCT), STROBE (observational), MRC Framework (complex interventions), PRISMA (systematic review), ARRIVE (animal), TRIPOD (prediction models); **discipline-specific:** stratigraphic documentation (archaeology), Formkritik/Quellenkritik (theology), source criticism (DH)
 4. **Dispatch constructive reviewer subagent** (see `agents/peer-reviewer.md`) with role `constructive`
 5. **Dispatch adversarial reviewer subagent** (fresh context) with role `adversarial`
-6. **Collate reviews** into a single `output/publication/<target>/reviews/<date>-review.md` document
+6. **Collate reviews** into a single `output/<target>/reviews/<date>-review.md` document
 7. **Classify each issue:** Major / Minor / Editorial / Out-of-scope
 8. **Walk the user through each Major and Minor** — decision: accept → revise, reject (with rationale), defer (with log)
 9. **Log decisions** in `knowledge/_meta/log.md`
@@ -126,7 +126,7 @@ Both subagents receive:
 
 ## Review Report Template
 
-Saved to `output/publication/<target>/reviews/<YYYY-MM-DD>-<role>-review.md`:
+Saved to `output/<target>/reviews/<YYYY-MM-DD>-<role>-review.md`:
 
 ```markdown
 ---

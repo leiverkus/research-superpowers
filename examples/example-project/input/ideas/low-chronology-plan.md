@@ -82,7 +82,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 5: Draft article
 
-**Files:** `output/publication/article/article.md`
+**Files:** `output/article/article.md`
 
 - [ ] Confirm `wiki-lint` exits 0
 - [ ] Skeleton: Introduction → Forschungsstand → Argument structure of the debate → The Negev case → Discussion → Conclusion
@@ -93,7 +93,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 
 ### Task 6: Peer review
 
-**Files:** `output/publication/article/reviews/`
+**Files:** `output/article/reviews/`
 
 - [ ] Dispatch constructive reviewer (archaeology focus)
 - [ ] Dispatch adversarial reviewer (Bayesian-methodology focus, even though we don't run a model — the methodological framing must still hold up)
@@ -115,7 +115,7 @@ The project is complete when:
 - [ ] `scripts/lint-wiki.py` exits 0
 - [ ] ≥ 15 sources ingested under focus statements, all with `status: stable` (set by the user)
 - [ ] `knowledge/synthesis/chronology-debate.md` has `status: stable`
-- [ ] `quarto render` on `output/publication/article/` produces PDF without warnings
+- [ ] `quarto render` on `output/article/` produces PDF without warnings
 - [ ] Peer-review round completed with all Major issues resolved or explicitly deferred with rationale
 - [ ] Manuscript explicitly commits to one of the three interpretive outcomes (regional variation / one-resolution / Forschungsstand reading)
 - [ ] Zenodo deposit logged

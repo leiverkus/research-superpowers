@@ -22,7 +22,7 @@ example-project/
 │   └── _meta/
 │       └── log.md                           # workflow log
 ├── output/
-│   ├── publication/article/
+│   ├── article/
 │   │   └── main.qmd                          # draft skeleton
 │   ├── bibtex/
 │   │   └── references.bib                    # 1 BibTeX entry
@@ -38,7 +38,7 @@ example-project/
   complete artefact — frontmatter, core theses, quotations, entities.
 - **BibTeX consistent:** every cite-key in `knowledge/**` exists in
   `output/bibtex/references.bib`.
-- **Draft skeleton:** `output/publication/article/main.qmd` carries the
+- **Draft skeleton:** `output/article/main.qmd` carries the
   section structure from `drafting-manuscript`, with placeholders of ~1500 words each.
 - **Log:** `knowledge/_meta/log.md` shows the pattern of `ingest`,
   `synthesis`, and `draft` entries.

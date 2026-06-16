@@ -26,8 +26,8 @@ book:
   appendices:
     - backmatter/appendix-a.qmd
 
-bibliography: ../../bibtex/references.bib
-csl: ../../bibtex/csl/chicago-author-date.csl
+bibliography: ../bibtex/references.bib
+csl: ../bibtex/csl/chicago-author-date.csl
 
 format:
   html:

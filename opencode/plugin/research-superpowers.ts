@@ -50,7 +50,7 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 3. **literature-review** — strategic search, produces literaturguide.md + BibTeX
 4. **ingest-source** — one source PDF → wiki content (sources + entities + BibTeX + log)
 5. **executing-research-plan** — work plan tasks via subagents with two-stage review
-6. **drafting-manuscript** — stable synthesis pages → output/publication/**/*.qmd
+6. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd
 7. **requesting-peer-review** — manuscript → constructive + adversarial review
 8. **finishing-a-research-project** — closing checklist, archival
 

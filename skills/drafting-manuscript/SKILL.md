@@ -1,6 +1,6 @@
 ---
 name: drafting-manuscript
-description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Pulls from stable synthesis pages and source pages, writes to `output/publication/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
+description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
 inputs:
   - name: plan_task_id
     description: Reference to the explicit Draft task in input/ideas/<slug>-plan.md
@@ -9,7 +9,7 @@ inputs:
     description: Section title and chapter position (e.g. "3.2 The Low Chronology — Core Arguments")
     required: true
   - name: output_path
-    description: Target QMD file path (e.g. output/publication/book/text/03-methods.qmd)
+    description: Target QMD file path (e.g. output/book/text/03-methods.qmd)
     required: true
   - name: synthesis_pages
     description: Paths to knowledge/synthesis/*.md to draw from (must include at least one status=stable)
@@ -24,7 +24,7 @@ inputs:
     description: Target prose length (±15%)
     required: false
 outputs:
-  - path: output/publication/**/*.qmd
+  - path: output/**/*.qmd
     kind: created_or_modified
   - path: knowledge/_meta/log.md
     kind: appended
@@ -69,8 +69,8 @@ on (3) are a maintenance signal.
 6. **Produce a section skeleton** — introduction, main parts, conclusion; confirm with user before prose
 7. **Draft prose** — one section at a time, citations inline as `[@bibkey]` or `[@bibkey, p. 152]`
 8. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
-9. **Write to target file** — `output/publication/book/text/<nn-slug>.qmd` or `output/publication/article/main.qmd`
-10. **Render check** — run `make render` (or `quarto render`) in the target `output/publication/<book|article>/` directory; fix any errors
+9. **Write to target file** — `output/book/text/<nn-slug>.qmd` or `output/article/main.qmd`
+10. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
 11. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
@@ -147,14 +147,14 @@ Main conversation composes the final draft from section outputs.
 
 ## Quarto Template Hooks
 
-The template's `output/publication/book/` uses a Quarto book structure (see `templates/research-project-template/output/publication/book/`):
+The template's `output/book/` uses a Quarto book structure (see `templates/research-project-template/output/book/`):
 
 - `_quarto.yml` defines the chapter list — update when adding a new chapter file
 - `text/<nn-slug>.qmd` is the chapter-file naming convention (`01-introduction.qmd`, `02-state-of-the-field.qmd`, …)
 - `template/_preamble.tex` holds LaTeX preamble for PDF output
 - `Makefile` targets: `make render`, `make preview`, `make clean`
 
-For articles, use `output/publication/article/main.qmd` with single-file layout.
+For articles, use `output/article/main.qmd` with single-file layout.
 
 ## Red Flags
 

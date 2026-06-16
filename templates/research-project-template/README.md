@@ -112,9 +112,8 @@ knowledge/             LLM-generated wiki (plain Markdown .md)
 └── _meta/             Index and log
 
 output/                Publication-ready artefacts
-├── publication/
-│   ├── book/          Quarto book project with chapters
-│   └── article/       Scholarly article with abstract
+├── book/              Quarto book project with chapters
+├── article/           Scholarly article with abstract
 ├── presentation/      Talks (Reveal.js, Beamer, PowerPoint)
 ├── data-analysis/     Scripts and notebooks
 ├── app/               Software repository
@@ -150,14 +149,14 @@ plain Markdown). Overview:
 
 ```bash
 # Book project
-cd output/publication/book
+cd output/book
 make pdf               # PDF (KOMA-Script scrbook)
 make html              # HTML website
 make docx              # Word
 make epub              # e-book
 
 # Scholarly article
-cd output/publication/article
+cd output/article
 make pdf               # PDF (KOMA-Script scrartcl)
 make html              # HTML
 make docx              # Word
@@ -212,7 +211,7 @@ After forking, edit these files:
    and project description
 2. **`CLAUDE.md` → Project-specific conventions** — language, terminology,
    special page types
-3. **`output/publication/`** — adapt the templates to your publisher /
+3. **`output/`** — adapt the templates to your publisher /
    journal (CSL style, document class, fonts)
 4. **`.gitlab-ci.yml`** — URL and paths for your GitLab instance
 
