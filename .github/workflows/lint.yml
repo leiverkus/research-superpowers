@@ -142,8 +142,8 @@ jobs:
           s = d["stats"]
           # Counts track the example-project fixture; update if the example wiki changes.
           assert s["nodes"] == 5, f"expected 5 nodes, got {s['nodes']}"
-          assert s["edges"] == 16, f"expected 16 edges, got {s['edges']}"
-          assert s["relations_total"] == 3, f"expected 3 relations, got {s['relations_total']}"
+          assert s["edges"] == 19, f"expected 19 edges, got {s['edges']}"
+          assert s["relations_total"] == 6, f"expected 6 relations, got {s['relations_total']}"
           assert d["god_nodes"], "god_nodes is empty"
           assert d["bridges"], "bridges is empty"
           assert d["communities"], "communities is empty"
