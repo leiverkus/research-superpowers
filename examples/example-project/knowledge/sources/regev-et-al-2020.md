@@ -11,6 +11,11 @@ relations:
   - target: finkelstein-piasetzky-2003
     type: builds-on
     confidence: extracted
+    because: "Expands the 2003 dataset to n = 73 short-lived samples under IntCal20, tightening the same Iron I/IIA transition estimate without shifting its centre (pp. 428–432)."
+  - target: mazar-2011
+    type: supports
+    confidence: extracted
+    because: "Bayesian modelling with stratigraphic priors (the MCC approach) falls within the HPD of the uniform-prior model — partially reconciling the positions, narrowing the dispute to phase assignment rather than absolute dates (pp. 433–438)."
 ---
 
 ## Bibliographic Reference

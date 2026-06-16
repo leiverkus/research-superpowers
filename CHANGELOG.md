@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Ingest now writes typed, confidence-tagged graph relations.** `ingest-source` (and the `source-ingester` subagent) build the *typed* graph layer at ingest time: every stance-bearing connection (confirms / contradicts / builds-on / cites) is mirrored from the prose `## Connections` list into a structured `relations:` frontmatter entry — `type` from a controlled vocabulary, `confidence` (`extracted` only with a quote + page, else `inferred` / `ambiguous`), and a one-line `because` rationale. Previously the graph saw only untyped `wikilink` edges and the typed layer had to be added by hand. The block stays schema-optional; a new SOFT-GATE item checks that stance connections have a matching relation. Re-ingest unions the `relations:` block (dedupe by `(target, type)`, keep higher confidence). The example project's three source pages now demonstrate it (lint-green, 6 typed edges).
+
 ### Changed
 
 - **Publication layout flattened.** `output/publication/article` and `output/publication/book` moved up one level to `output/article` and `output/book`, and the now-empty `output/publication/` wrapper was removed. `article`, `book` and `presentation` are now siblings directly under `output/`. Every path reference was updated to match — template `CLAUDE.md` / `README.md`, `.gitlab-ci.yml`, `.vscode/tasks.json`, `.gitignore`, the skills (`drafting-manuscript`, `executing-research-plan`, `requesting-peer-review`, `finishing-a-research-project`, `writing-research-plan`, `using-research-powers`), `docs/`, `hooks/session-context.md`, the `knowledge-frontmatter` schema, the OpenCode plugin mirror, the example project, and CI (`.github/workflows/lint.yml`). The in-file `bibliography` / `csl` paths in the article and book templates were corrected from `../../bibtex` to `../bibtex` to match the new depth (now consistent with `presentation`).

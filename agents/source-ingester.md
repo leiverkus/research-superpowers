@@ -31,10 +31,19 @@ frontmatter.
 - If a bibkey collides, append a letter suffix and rename the source page
 - Min. 1 verbatim quote per focus block, with page number, max ~5
 - Min. 1–5 claims per focus block, each one sentence with page reference
+- **Typed relations:** for every stance-bearing connection (confirms /
+  contradicts / supplements / builds-on / cites another page) write a typed
+  entry in the page's `relations:` frontmatter — `type` from the controlled
+  vocabulary (supports / contradicts / builds-on / cites / mentions),
+  `confidence: extracted` only with a quote + page, else `inferred`
+  (`ambiguous` if unclear), plus a one-line `because`. `target` must resolve
+  to an existing page. Plain entity mentions stay as wikilinks — no
+  `relations:` entry. See "Typed relations" in the embedded skill.
 - Re-ingest mode (when source page already exists): append a new `## Focus:`
   block, do not overwrite previous focus blocks; replace `## Other content
   in this source`; union the `## Mentioned entities` and `## Connections`
-  sections
+  sections and the `relations:` frontmatter (dedupe by `(target, type)`,
+  keep the higher confidence, merge `because`)
 
 ## Output report (strict markdown)
 
@@ -66,6 +75,10 @@ fresh | append-section (existing focus blocks: N) | update-existing-focus (warne
 
 ### Boundary noted
 <the 1–3 sentence "what this source does NOT address" statement>
+
+### Typed relations written
+| Target | Type | Confidence | Because (short) |
+<one row per `relations:` entry, or "none — no stance-bearing connections">
 
 ### BibTeX entry (or "unchanged from prior ingest" if re-ingest)
 \`\`\`bibtex

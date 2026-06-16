@@ -7,6 +7,11 @@ tags: [chronology, iron-age, modified-conventional, levant]
 bibkey: mazar-2011
 status: review
 author: llm
+relations:
+  - target: finkelstein-piasetzky-2003
+    type: contradicts
+    confidence: extracted
+    because: "Explicitly rejects the Low-Chronology phase-boundary priors of Finkelstein & Piasetzky 2003 (Level 3 of the argument structure)."
 ---
 
 ## Bibliographic Reference

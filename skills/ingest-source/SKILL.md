@@ -41,7 +41,8 @@ Before closing the ingest, check that all five artefacts exist and are linked:
 (2) entities referenced via wikilinks,
 (3) BibTeX entry in `output/bibtex/references.bib` with matching key,
 (4) entry in `knowledge/_meta/log.md`,
-(5) `scripts/lint-wiki.py` exit code 0 for this source.
+(5) `scripts/lint-wiki.py` exit code 0 for this source,
+(6) every `## Connections` line that asserts a stance toward another page (confirms / contradicts / supplements / builds-on / cites) has a matching entry in the page's `relations:` frontmatter, each with a `confidence` value (see "Typed relations" below). Plain mentions stay as wikilinks — no `relations:` entry required for them.
 
 If any condition is missing: explain to the user which, ask for a short reason for skipping, write it to `knowledge/_meta/gate-overrides.log`, and close out the ingest.
 </SOFT-GATE>
@@ -67,11 +68,12 @@ Create TodoWrite tasks for each:
 6. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
 7. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
 8. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
-9. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
-10. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug (only on first ingest of this source; subsequent focus passes don't change BibTeX)
-11. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
-12. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
-13. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
+9. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible.
+10. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
+11. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug (only on first ingest of this source; subsequent focus passes don't change BibTeX)
+12. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
+13. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
+14. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
 
 ## Re-ingest detection
 
@@ -101,6 +103,7 @@ digraph ingest {
     "Extract bibdata" [shape=box];
     "Identify focus-relevant entities" [shape=box];
     "Create or append page" [shape=box];
+    "Derive typed relations" [shape=box];
     "Create/extend entity pages" [shape=box];
     "Add BibTeX" [shape=box];
     "Append log" [shape=box];
@@ -125,7 +128,8 @@ digraph ingest {
     "Re-ingest mode" -> "Identify focus-relevant entities";
     "Extract bibdata" -> "Identify focus-relevant entities";
     "Identify focus-relevant entities" -> "Create or append page";
-    "Create or append page" -> "Create/extend entity pages";
+    "Create or append page" -> "Derive typed relations";
+    "Derive typed relations" -> "Create/extend entity pages";
     "Create/extend entity pages" -> "Add BibTeX";
     "Add BibTeX" -> "Append log";
     "Append log" -> "Run wiki-lint";
@@ -150,8 +154,23 @@ status: review
 author: llm
 bibkey: finkelstein-2003
 tags: [iron-age, chronology, levant]
+relations:
+  - target: low-chronology
+    type: supports
+    confidence: extracted
+    because: "Core argument of the paper (pp. 149–151)."
+  - target: high-chronology
+    type: contradicts
+    confidence: extracted
+    because: "Rejects the 10th-c. dating of Megiddo VA–IVB: «…verbatim…» (p. 156)."
+  - target: mazar-2011
+    type: contradicts
+    confidence: inferred
+    because: "Mazar later defends the Modified Conventional Chronology against this position; not stated in this source."
 ---
 ```
+
+The `relations:` block is **optional per the schema** (`scripts/lint-wiki.py` still passes a page without it), but this skill writes it by default for every stance-bearing connection — that is what populates the *typed*, confidence-tagged graph layer at ingest time (see "Typed relations" below). Plain entity mentions need no entry: the `## Mentioned entities` wikilinks already become `wikilink` edges.
 
 **Body sections** (focus-driven structure):
 
@@ -193,10 +212,70 @@ REPLACED on each re-ingest, not appended — single canonical "what else is here
 ## Connections
 - Confirms / contradicts / supplements: [[other-source]]
 - Referenced in: …
-*Union of all focus passes.*
+*Union of all focus passes. Every stance line here (confirms / contradicts /
+supplements / builds-on / cites) is mirrored by a typed entry in the
+`relations:` frontmatter — the prose line is for humans, the `relations:`
+entry is for the graph.*
 ```
 
-**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Other content in this source`). It replaces `## Other content in this source` with an updated paragraph. It unions `## Mentioned entities` and `## Connections`. It does **not** touch the bibliographic header or earlier focus blocks.
+**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Other content in this source`). It replaces `## Other content in this source` with an updated paragraph. It unions `## Mentioned entities`, `## Connections`, and the `relations:` frontmatter block — deduplicated by `(target, type)`, keeping the **higher-confidence** entry when the same pair recurs (`extracted` > `inferred` > `ambiguous`) and merging the `because` notes. It does **not** touch the bibliographic header or earlier focus blocks.
+
+## Typed relations
+
+The `relations:` frontmatter block is what turns a flat wikilink into a *typed,
+confidence-tagged* edge in the knowledge graph. `scripts/wiki-to-graph.py` reads
+it directly: a wikilink becomes a generic `wikilink` edge, but a `relations:`
+entry becomes an edge carrying your `type` and `confidence` (and the `because`
+shows up in the graph viz and the `relations` queries). Writing it at ingest
+time means the graph is *born* typed instead of needing a later hardening pass.
+
+**What gets an entry — and what does not.** Add a `relations:` entry for every
+connection where this source takes a *stance* toward another page: it confirms,
+contradicts, supplements, builds on, or cites it. Do **not** add entries for
+plain "this entity appears here" mentions — those are already covered by the
+`## Mentioned entities` wikilinks (which become `wikilink` edges anyway).
+
+**Direction.** The relation runs *from this source page to the target*:
+`finkelstein-2003 --contradicts--> high-chronology`.
+
+**`target`** is the bare page slug (e.g. `high-chronology`, `mazar-2011`) and
+**must resolve to an existing page** — `lint-wiki.py` flags a relation to a
+missing page. If the target page does not exist yet, create it (concept/entity)
+or leave the connection as prose only until it does; never point a typed
+relation at a dangling target.
+
+**`type` — recommended controlled vocabulary** (free-form is allowed, but
+sticking to these keeps `relations --type …` queries useful):
+
+| Prose in `## Connections` | `type` |
+|---|---|
+| confirms / agrees with / corroborates | `supports` |
+| contradicts / rejects / argues against | `contradicts` |
+| supplements / extends / builds on | `builds-on` |
+| draws on / cites / relies on | `cites` |
+| (generic association, no stance) | `mentions` |
+
+**`confidence` — be honest, lint measures it.** `lint-wiki.py` reports the
+`inferred + ambiguous` share as the wiki's inference-rate, so do not inflate to
+`extracted`:
+
+- `extracted` — explicitly supported by *this* source, ideally with a verbatim
+  quote and page in `because`.
+- `inferred` — a defensible link you are adding, not stated in the source
+  (e.g. "Mazar later rebuts this"). The honest default when there is no quote.
+- `ambiguous` — the relation is real but its type/direction is unclear.
+
+**`because`** is one line, ideally a quote + page for `extracted` entries. It is
+the natural place to ground an `inferred` relation later: when you find the
+supporting passage, add the quote and flip `confidence` to `extracted`.
+
+```yaml
+relations:
+  - target: high-chronology
+    type: contradicts
+    confidence: extracted
+    because: "«The conventional dating of Megiddo VA–IVB to the 10th century cannot be sustained» (p. 156)."
+```
 
 ## MCP Optimisation (recommended)
 
@@ -281,6 +360,8 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 | "I'll do BibTeX at the end of the day" | The source key IS the BibTeX key — without the entry, lint fails. |
 | "Re-ingest means I should overwrite the old focus block" | No — append. The old focus is still valid (the project still needs that aspect). New focus = new block. |
 | "If two focuses are similar I'll just pick one" | The skill warns at similar-focus detection but the user decides. Don't pretend two focus questions are the same when they aren't. |
+| "I'll just leave the contradiction as a `[[wikilink]]`" | Then the graph sees a generic edge and loses the stance. Mirror every confirms / contradicts / builds-on / cites into a typed `relations:` entry — that is the whole point of the typed-edge layer. |
+| "I'll mark every relation `extracted` so it looks solid" | No — `extracted` means a quote + page backs it. Model-added links are `inferred`. Lint reports the inference-rate; inflating it is dishonest and hides which edges still need grounding. |
 
 ## Key Principles
 
@@ -288,6 +369,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 - **One source = one wiki page, multiple focus blocks** — append over time as the project's needs evolve.
 - **The raw PDF is the archive** — `input/bibliography/<source>.pdf` is the canonical "everything"; the wiki is the interpretation.
 - **Wikilinks before full prose** — link every focus-relevant entity at first mention.
+- **Typed relations at ingest** — stance-bearing connections (confirms / contradicts / builds-on / cites) go into the `relations:` frontmatter as typed, confidence-tagged edges, not just prose wikilinks. The graph is born typed; `confidence: extracted` only with a quote + page.
 - **Verbatim quotations + page** — indispensable for drafts later; at least 1 quote per focus block.
 - **Status: review on first pass** — only moves to `stable` after user review.
 - **Explicit boundaries** — name what the source does NOT address (within the focus). This honesty saves later confusion.

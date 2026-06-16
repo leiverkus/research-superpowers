@@ -7,6 +7,11 @@ tags: [chronology, iron-age, radiocarbon, levant]
 bibkey: finkelstein-piasetzky-2003
 status: review
 author: llm
+relations:
+  - target: mazar-2011
+    type: contradicts
+    confidence: inferred
+    because: "Mazar 2011's Modified Conventional Chronology is a direct counter-position to the Low-Chronology 14C dating argued here; the rebuttal postdates this 2003 source, so the link is added, not stated in it."
 ---
 
 ## Bibliographic Reference
