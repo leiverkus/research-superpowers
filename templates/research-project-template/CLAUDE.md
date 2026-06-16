@@ -60,9 +60,8 @@ project-root/
 │   ├── sources/           ← Summaries of individual sources
 │   └── synthesis/         ← Cross-cutting analyses, comparisons, theses
 ├── output/                ← Publication-ready artefacts
-│   ├── publication/
-│   │   ├── book/          ← Quarto book project (chapter structure)
-│   │   └── article/       ← Quarto article (single file with abstract)
+│   ├── book/              ← Quarto book project (chapter structure)
+│   ├── article/           ← Quarto article (single file with abstract)
 │   ├── presentation/      ← Talks (Quarto Reveal.js/Beamer/PPTX)
 │   ├── data-analysis/     ← Scripts, notebooks (R, Python, Julia)
 │   ├── app/               ← Software repo (e.g. Django/GeoDjango)
@@ -93,7 +92,7 @@ project-root/
 - **File format: plain Markdown (`.md`).** Wiki pages are ordinary
   Markdown with YAML frontmatter — read directly in Foam/Obsidian or the
   GitLab/GitHub repository browser, with no build step. **Quarto is
-  reserved for `output/publication/`** (the article/book/presentation),
+  reserved for `output/`** (the article/book/presentation),
   which genuinely needs formats, CSL, cross-references and figures. The
   wiki is for thinking and steering, not formal output.
 - Every file starts with YAML frontmatter (see frontmatter schema).
@@ -127,7 +126,7 @@ ingest and referenced in the wiki pages.
   ![Stratigraphy of Megiddo](../assets/finkelstein2003-stratigraphy-megiddo.png)
   ```
   The Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for
-  publication pages under `output/publication/`.
+  publication pages under `output/`.
 - **Source attribution:** every figure must state its origin in the
   caption, e.g.:
   ```markdown
@@ -135,7 +134,7 @@ ingest and referenced in the wiki pages.
   ```
 - **Mind copyright:** figures from published works may be used in the
   internal wiki (scholarly work), but not carried over into the
-  publication (`output/publication/`) without permission. For the
+  publication (`output/`) without permission. For the
   publication, create your own figures or obtain reproduction rights.
 
 ### Output folder
@@ -271,9 +270,9 @@ Trigger: human says "Draft [section/chapter]."
 
 Steps:
 1. LLM gathers relevant Synthesis and Source pages.
-2. LLM creates a draft in `output/publication/`.
-   - For a book chapter: in `output/publication/book/`
-   - For an article: in `output/publication/article/`
+2. LLM creates a draft in `output/`.
+   - For a book chapter: in `output/book/`
+   - For an article: in `output/article/`
 3. The draft contains Quarto citations (`@citekey`) referring to
    `output/bibtex/references.bib`.
 4. Human revises the draft.
@@ -283,7 +282,7 @@ Steps:
 The wiki is plain Markdown — no build step. Read and navigate it directly
 in **Foam** or **Obsidian** (wikilinks, backlinks, graph view) or in the
 GitLab/GitHub repository browser. Quarto is **not** used for the knowledge
-layer; it builds only the publication output (`output/publication/`). The
+layer; it builds only the publication output (`output/`). The
 CI lints the wiki structure (`scripts/lint-wiki.py`) and renders + deploys
 the publication on every push to `main`.
 
@@ -587,7 +586,7 @@ For team usage, add the author to the log prefix:
 Split Quarto projects across multiple files:
 
 ```yaml
-# output/publication/_quarto.yml
+# output/book/_quarto.yml
 project:
   type: book
 book:

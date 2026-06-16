@@ -7,8 +7,14 @@ OUTPUT_DIR := _output
 
 .PHONY: all pdf latex html docx clean preview help
 
-## Build all formats at once
-all: pdf html docx
+## Build all formats at once.
+## NOTE: must be a single `quarto render` call. Quarto cleans the output
+## directory on every render, so chaining separate per-format renders
+## (all: pdf html docx) would leave only the last format — the earlier
+## outputs get deleted. `--to all` renders every format declared in the
+## qmd front matter in one pass, side by side.
+all:
+	$(QUARTO) render $(SOURCE) --to all --output-dir $(OUTPUT_DIR)
 
 ## PDF (KOMA-Script scrartcl)
 pdf:

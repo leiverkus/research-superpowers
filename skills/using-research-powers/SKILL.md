@@ -41,7 +41,7 @@ writing-research-plan      → input/ideas/<slug>-plan.md
 literature-review          → input/bibliography/*, output/bibtex/references.bib
 ingest-source (loop)       → knowledge/sources/*, knowledge/entities/*
 executing-research-plan    → output/data-analysis/*, knowledge/synthesis/*
-drafting-manuscript        → output/publication/**/*.qmd (SOFT-GATE: ≥1 stable synthesis + lint green)
+drafting-manuscript        → output/**/*.qmd (SOFT-GATE: ≥1 stable synthesis + lint green)
 requesting-peer-review     → review documents + revisions
 finishing-a-research-project → rendered publication, archived data, grant follow-up
 ```

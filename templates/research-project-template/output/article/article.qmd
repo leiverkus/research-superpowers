@@ -22,8 +22,8 @@ keywords:
   - keyword 2
   - keyword 3
 
-bibliography: ../../bibtex/references.bib
-csl: ../../bibtex/csl/chicago-author-date.csl
+bibliography: ../bibtex/references.bib
+csl: ../bibtex/csl/chicago-author-date.csl
 
 format:
   html:

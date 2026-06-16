@@ -4,6 +4,16 @@ All notable changes to `research-superpowers` are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Publication layout flattened.** `output/publication/article` and `output/publication/book` moved up one level to `output/article` and `output/book`, and the now-empty `output/publication/` wrapper was removed. `article`, `book` and `presentation` are now siblings directly under `output/`. Every path reference was updated to match — template `CLAUDE.md` / `README.md`, `.gitlab-ci.yml`, `.vscode/tasks.json`, `.gitignore`, the skills (`drafting-manuscript`, `executing-research-plan`, `requesting-peer-review`, `finishing-a-research-project`, `writing-research-plan`, `using-research-powers`), `docs/`, `hooks/session-context.md`, the `knowledge-frontmatter` schema, the OpenCode plugin mirror, the example project, and CI (`.github/workflows/lint.yml`). The in-file `bibliography` / `csl` paths in the article and book templates were corrected from `../../bibtex` to `../bibtex` to match the new depth (now consistent with `presentation`).
+
+### Fixed
+
+- **`make all` no longer deletes the earlier formats.** The article, book and presentation Makefiles built each format with a separate `quarto render` call, but Quarto cleans the output directory on every render — so `make all` left only the last format and silently removed the others. The `all` target is now a single `quarto render … --to all` pass that emits every declared format side by side.
+
 ## [0.15.1] — 2026-06-08
 
 Fixes a fake-green in the v0.15.0 install smoke: the marketplace add / install / list steps were tolerant (`|| echo`), so in the real CI run the CLI and `validate` passed but `marketplace add .` and the install actually **failed** and `list` reported no plugins — yet the job stayed green. This made the "tier 2 done / all P1–P7 complete" claim unsubstantiated.

@@ -7,8 +7,14 @@ OUTPUT_DIR := _output
 
 .PHONY: all slides pptx beamer beamer-latex handout clean preview help
 
-## Build all formats at once
-all: slides pptx beamer handout
+## Build all formats at once.
+## NOTE: must be a single `quarto render` call. Quarto cleans the output
+## directory on every render, so chaining separate per-format renders
+## (all: slides pptx beamer handout) would leave only the last format — the
+## earlier outputs get deleted. `--to all` renders every format declared in
+## the qmd front matter (revealjs, pptx, beamer, pdf) in one pass.
+all:
+	$(QUARTO) render $(SOURCE) --to all --output-dir $(OUTPUT_DIR)
 
 ## Reveal.js HTML slides (default format for talks)
 slides:

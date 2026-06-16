@@ -129,7 +129,7 @@ Skill produces the section skeleton first:
 
 You approve the skeleton. The skill drafts each section in prose, citing inline as `[@cohen-1979, p. 79]`, `[@finkelstein-1999]`, etc. Every citation key gets verified against `output/bibtex/references.bib`. Direct quotes come from the source page's "Verbatim quotes" section, never reconstructed from memory.
 
-The skill writes to `output/publication/article/main.qmd` and runs `quarto render`. The first render fails (one citation key collision — you have `mazar-2011` and `mazar-2011b`); the skill resolves it and re-renders successfully.
+The skill writes to `output/article/main.qmd` and runs `quarto render`. The first render fails (one citation key collision — you have `mazar-2011` and `mazar-2011b`); the skill resolves it and re-renders successfully.
 
 Log line appended to `_meta/log.md`.
 
@@ -137,7 +137,7 @@ Log line appended to `_meta/log.md`.
 
 You say "review the article." The skill confirms the manuscript path, identifies discipline (Biblical Archaeology), selects reporting standards (stratigraphic documentation + source criticism), and dispatches two fresh subagents:
 
-- **Constructive reviewer**: writes `output/publication/article/reviews/2026-05-28-constructive-review.md`. Major Issues: "section 4 needs a clearer statement of which Negev sites the Low Chronology directly addresses vs. which it generalises over." Minor Issues, Editorial, Methodological Assessment, etc.
+- **Constructive reviewer**: writes `output/article/reviews/2026-05-28-constructive-review.md`. Major Issues: "section 4 needs a clearer statement of which Negev sites the Low Chronology directly addresses vs. which it generalises over." Minor Issues, Editorial, Methodological Assessment, etc.
 - **Adversarial reviewer**: writes `2026-05-28-adversarial-review.md`. Major Issues: "the manuscript treats Tel Rehov 14C as decisive for Negev datings, but the spatial separation is significant — argue this or weaken the claim."
 
 The skill walks you through each Major and Minor: accept (→ revise), reject (with rationale), defer (with reason in log). You accept 4, defer 1. Decisions log to `_meta/log.md`.
@@ -190,7 +190,7 @@ knowledge/
 
 output/
 ├── bibtex/references.bib
-└── publication/article/
+└── article/
     ├── main.qmd
     ├── main.pdf
     └── reviews/

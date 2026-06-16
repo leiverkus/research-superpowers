@@ -13,7 +13,7 @@ outputs:
     kind: created_or_modified
   - path: output/data-analysis/**
     kind: created_or_modified
-  - path: output/publication/**/*.md
+  - path: output/**/*.md
     kind: created_or_modified
   - path: knowledge/_meta/log.md
     kind: appended
@@ -121,7 +121,7 @@ digraph executing {
 | "Ingest X" | `source-ingester` | `knowledge/sources/`, `knowledge/entities/`, `output/bibtex/` |
 | "Analyze / compute / run" | `analyst` | `output/data-analysis/`, `output/data-analysis/results/` |
 | "Synthesize / integrate / write synthesis" | inline (main conversation) | `knowledge/synthesis/` |
-| "Draft chapter / section / article" | `drafting-manuscript` skill | `output/publication/**/*.md` |
+| "Draft chapter / section / article" | `drafting-manuscript` skill | `output/**/*.md` |
 
 ## Critical Thinking — Cross-Cutting Checklist
 

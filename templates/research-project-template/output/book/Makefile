@@ -6,8 +6,14 @@ OUTPUT_DIR := _output
 
 .PHONY: all pdf latex html docx epub clean preview help
 
-## Build all formats at once
-all: pdf html docx epub
+## Build all formats at once.
+## NOTE: must be a single `quarto render` call. Quarto cleans the project
+## output directory on every render, so chaining separate per-format renders
+## (all: pdf html docx epub) would leave only the last format — the earlier
+## outputs get deleted. `--to all` renders every format declared in
+## _quarto.yml in one pass, side by side.
+all:
+	$(QUARTO) render --to all
 
 ## PDF (KOMA-Script scrbook)
 pdf:

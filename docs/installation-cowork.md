@@ -105,7 +105,7 @@ You can draft chapters and articles without any of this:
 
 > Draft a chapter titled "The Chronology Debate" from the synthesis page chronology-debate.
 
-The `drafting-manuscript` skill writes a `.qmd` file (Quarto Markdown — readable as plain Markdown in any editor) into `output/publication/`. You can read and edit it in Claude or any text editor.
+The `drafting-manuscript` skill writes a `.qmd` file (Quarto Markdown — readable as plain Markdown in any editor) into `output/`. You can read and edit it in Claude or any text editor.
 
 **PDF or HTML output requires Quarto.** This is the one thing you'll eventually need a CLI for. When you're ready to publish:
 

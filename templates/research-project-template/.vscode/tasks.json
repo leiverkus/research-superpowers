@@ -24,7 +24,7 @@
       "label": "Article → PDF",
       "type": "shell",
       "command": "quarto render article.qmd --to pdf --output-dir _output",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "group": "build",
       "problemMatcher": []
     },
@@ -32,7 +32,7 @@
       "label": "Article → HTML",
       "type": "shell",
       "command": "quarto render article.qmd --to html --output-dir _output",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "group": "build",
       "problemMatcher": []
     },
@@ -40,7 +40,7 @@
       "label": "Article → Word",
       "type": "shell",
       "command": "quarto render article.qmd --to docx --output-dir _output",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "group": "build",
       "problemMatcher": []
     },
@@ -48,7 +48,7 @@
       "label": "Article → LaTeX",
       "type": "shell",
       "command": "quarto render article.qmd --to pdf --no-compile --output-dir _output",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "group": "build",
       "problemMatcher": []
     },
@@ -56,7 +56,7 @@
       "label": "Article: Live preview",
       "type": "shell",
       "command": "quarto preview article.qmd",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -66,7 +66,7 @@
       "label": "Book → PDF",
       "type": "shell",
       "command": "quarto render --to pdf",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "group": "build",
       "problemMatcher": []
     },
@@ -74,7 +74,7 @@
       "label": "Book → HTML",
       "type": "shell",
       "command": "quarto render --to html",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "group": "build",
       "problemMatcher": []
     },
@@ -82,7 +82,7 @@
       "label": "Book → Word",
       "type": "shell",
       "command": "quarto render --to docx",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "group": "build",
       "problemMatcher": []
     },
@@ -90,7 +90,7 @@
       "label": "Book → E-Book",
       "type": "shell",
       "command": "quarto render --to epub",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "group": "build",
       "problemMatcher": []
     },
@@ -98,7 +98,7 @@
       "label": "Book → LaTeX",
       "type": "shell",
       "command": "quarto render --to pdf --no-compile",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "group": "build",
       "problemMatcher": []
     },
@@ -106,7 +106,7 @@
       "label": "Book: Live preview",
       "type": "shell",
       "command": "quarto preview",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -173,14 +173,14 @@
       "label": "Clean: Article",
       "type": "shell",
       "command": "rm -rf _output .quarto *.tex *.log *.aux",
-      "options": { "cwd": "${workspaceFolder}/output/publication/article" },
+      "options": { "cwd": "${workspaceFolder}/output/article" },
       "problemMatcher": []
     },
     {
       "label": "Clean: Book",
       "type": "shell",
       "command": "rm -rf _output .quarto",
-      "options": { "cwd": "${workspaceFolder}/output/publication/book" },
+      "options": { "cwd": "${workspaceFolder}/output/book" },
       "problemMatcher": []
     },
     {
@@ -193,7 +193,7 @@
     {
       "label": "Clean: All",
       "type": "shell",
-      "command": "rm -rf output/publication/article/_output output/publication/article/.quarto output/publication/book/_output output/publication/book/.quarto output/presentation/_output output/presentation/.quarto",
+      "command": "rm -rf output/article/_output output/article/.quarto output/book/_output output/book/.quarto output/presentation/_output output/presentation/.quarto",
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }

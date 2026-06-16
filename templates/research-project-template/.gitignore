@@ -19,13 +19,13 @@ input/data/**/*.gpkg
 *.sqlite
 
 # Output build artifacts
-output/publication/**/_output/
-output/publication/**/_site/
-output/publication/**/_book/
-output/publication/**/.quarto/
-output/publication/**/*.tex
-output/publication/**/*.log
-output/publication/**/*.aux
+output/**/_output/
+output/**/_site/
+output/**/_book/
+output/**/.quarto/
+output/**/*.tex
+output/**/*.log
+output/**/*.aux
 output/presentation/_output/
 output/presentation/.quarto/
 output/presentation/*.tex

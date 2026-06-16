@@ -194,7 +194,7 @@ block frontmatter.
 - [ ] Set `status: stable` once reviewed by user
 
 ### Task 4: Draft chapter "*Forschungsstand* — Chronology"
-**Files:** `output/publication/book/text/03-forschungsstand.md`
+**Files:** `output/book/text/03-forschungsstand.md`
 
 - [ ] Confirm `wiki-lint` is green
 - [ ] Draft 2500–3500 words via `drafting-manuscript` skill
@@ -206,7 +206,7 @@ The project is complete when:
 - [ ] `scripts/lint-wiki.py` exits 0
 - [ ] ≥ 15 sources ingested, all with `status: stable` or `review`
 - [ ] `knowledge/synthesis/chronologie-debatte.md` has `status: stable`
-- [ ] `make render` in `output/publication/book/` produces PDF without errors
+- [ ] `make render` in `output/book/` produces PDF without errors
 - [ ] Peer review round completed via `requesting-peer-review`
 - [ ] Hypothesis explicitly confirmed, refuted, or marked "inconclusive — exploratory"
 

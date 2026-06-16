@@ -102,7 +102,7 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 ### Task 6: Draft Article
 
-- Files: `output/publication/article/main.md` (Sections: Introduction / Methods /
+- Files: `output/article/main.md` (Sections: Introduction / Methods /
   Results / Discussion / Conclusion), Target ~9.000 Wörter
 - [ ] Skeleton + Sign-off
 - [ ] Draft section-by-section (6 Sections)
@@ -114,7 +114,7 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 - [ ] Dispatch constructive reviewer (Archäologie-Fokus)
 - [ ] Dispatch adversarial reviewer (Bayes-Methodik-Fokus)
-- [ ] Review-Doku in `output/publication/article/reviews/2026-MM-DD-review.md`
+- [ ] Review-Doku in `output/article/reviews/2026-MM-DD-review.md`
 - [ ] Major-Issues mit Nutzer walken
 
 ### Task 8: Finish
