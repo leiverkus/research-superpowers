@@ -40,9 +40,11 @@ preview:
 clean:
 	rm -rf $(OUTPUT_DIR)
 	rm -rf .quarto
-	# Only the Quarto-generated .tex (named after SOURCE); never the
-	# hand-authored _preamble.tex.
-	rm -f $(SOURCE:.qmd=.tex) *.log *.aux
+	# Remove generated .tex (whatever its name) but never the hand-authored
+	# _preamble.tex. Runtime find sees the actual files, so this is robust
+	# regardless of any output-file override.
+	find . -maxdepth 1 -name '*.tex' ! -name '_preamble.tex' -delete
+	rm -f *.log *.aux
 
 ## Show help
 help:
