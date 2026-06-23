@@ -136,7 +136,7 @@ Full walkthrough: [`docs/tutorial.md`](docs/tutorial.md).
 ## Skill topology
 
 ```
-brainstorming-research → writing-research-plan → literature-review ⇄ ingest-source
+brainstorming-research → writing-research-plan → literature-review → acquire-sources ⇄ ingest-source
    → executing-research-plan → drafting-manuscript → requesting-peer-review → finishing-a-research-project
 ```
 
@@ -144,8 +144,9 @@ brainstorming-research → writing-research-plan → literature-review ⇄ inges
 |---|---|---|
 | `brainstorming-research` | Idea | Turns a vague interest into an approvable design doc |
 | `writing-research-plan` | Plan | Design → research plan (methodology-aware: hermeneutic vs quantitative templates) |
-| `literature-review` | Discovery | Strategic search across DAO + cross-platform databases, produces literature guide + BibTeX |
-| `ingest-source` | Intake | One PDF → wiki source page + entities + BibTeX + log |
+| `literature-review` | Discovery | Strategic search across DAO + cross-platform databases, produces literature guide + BibTeX (no downloads) |
+| `acquire-sources` | Acquisition | Auto-downloads OA PDFs for the A+B set; writes a manual-download worklist for paywalled sources; re-run to reconcile |
+| `ingest-source` | Intake | One acquired PDF → wiki source page + entities + BibTeX + log (hard-stops on a missing original) |
 | `executing-research-plan` | Execution | Routes tasks to subagents; methodology-aware review tiers |
 | `drafting-manuscript` | Drafting | Stable syntheses → publishable prose with inline citations, render-checked |
 | `requesting-peer-review` | Review | Two-stage (constructive + adversarial) with discipline-specific checklists |

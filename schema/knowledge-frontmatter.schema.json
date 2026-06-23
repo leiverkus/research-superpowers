@@ -51,6 +51,12 @@
       "type": "string",
       "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib."
     },
+    "based_on": {
+      "type": "string",
+      "enum": ["original", "review", "preprint", "prior-version"],
+      "default": "original",
+      "description": "Provenance of the ingested text for type=source. original = the cited work itself (default; field may be omitted); review/preprint/prior-version = a user-approved substitute ingested because the original could not be acquired. Replace with original on re-ingest of the original. Set by ingest-source; see its 'Provenance of substitutes' section."
+    },
     "hypothesis": {
       "type": "string",
       "description": "Linked hypothesis slug from the research plan. Used on type = synthesis."

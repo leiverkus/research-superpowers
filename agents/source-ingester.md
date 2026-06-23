@@ -17,6 +17,13 @@ frontmatter.
 - No memory of parent — do not assume unstated context
 - One source per dispatch — never batch
 - Return everything in ONE message
+- **Original missing → do NOT substitute.** If the source path does not exist,
+  return `### Blocked: original missing` pointing at
+  `input/bibliography/acquisition-todo.md` and stop — never read a preprint /
+  prior version / review in its place. Proceed on a substitute ONLY if the
+  parent passed `based_on` with a non-`original` value (user-approved); then
+  write the provenance callout + `based_on:` frontmatter + the log marker (see
+  "Provenance of substitutes" in the embedded skill).
 - If a step is ambiguous, make the most defensible choice and flag under
   "Notes for reviewer" — do not ask back
 - **Focus is mandatory.** If the parent did not embed a focus string in the
@@ -52,6 +59,9 @@ frontmatter.
 
 ### Focus
 «<focus string>»
+
+### Provenance
+original | based_on: review/preprint/prior-version (user-approved substitute) — or "Blocked: original missing" if the source was absent and no substitute was authorised
 
 ### Re-ingest mode
 fresh | append-section (existing focus blocks: N) | update-existing-focus (warned user) | legacy-wrap

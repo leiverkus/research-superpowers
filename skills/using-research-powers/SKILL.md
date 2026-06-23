@@ -38,8 +38,11 @@ brainstorming-research     → input/ideas/<slug>-design.md (SOFT-GATE: design a
 writing-research-plan      → input/ideas/<slug>-plan.md
                               (SOFT-GATE: pre-registration only for methodology=quantitative/mixed;
                                           for hermeneutic, status=ready is enough)
-literature-review          → input/bibliography/*, output/bibtex/references.bib
+literature-review          → input/bibliography/*, output/bibtex/references.bib (search only — no downloads)
+acquire-sources            → input/bibliography/*.pdf, acquisition-todo.md
+                              (auto-download OA; manual worklist for paywalled; re-run to reconcile)
 ingest-source (loop)       → knowledge/sources/*, knowledge/entities/*
+                              (HARD-STOP on a missing original — no silent preprint/review substitution)
 executing-research-plan    → output/data-analysis/*, knowledge/synthesis/*
 drafting-manuscript        → output/**/*.qmd (SOFT-GATE: ≥1 stable synthesis + lint green)
 requesting-peer-review     → review documents + revisions
@@ -122,6 +125,7 @@ Trigger examples:
 - "I have an idea/sketch" → **brainstorming-research**
 - "Write a plan for the project" → **writing-research-plan** (if design doc exists) or **brainstorming-research** first
 - "Find literature on X" → **literature-review**
+- "Get / download the PDFs", "Quellen beschaffen" → **acquire-sources**
 - "Ingest this source" → **ingest-source**
 - "Analyze the data" → **executing-research-plan** (if plan exists) else **writing-research-plan** first
 - "Write the chapter" → **drafting-manuscript** (if synthesis pages stable) else back to synthesis
@@ -132,7 +136,7 @@ Trigger examples:
 ## Skill Types
 
 **Rigid** (must follow the checklist exactly, do not skip steps):
-- brainstorming-research, writing-research-plan, ingest-source, executing-research-plan, drafting-manuscript, finishing-a-research-project
+- brainstorming-research, writing-research-plan, acquire-sources, ingest-source, executing-research-plan, drafting-manuscript, finishing-a-research-project
 
 **Flexible** (adapt principles to context):
 - critical-thinking, literature-review, peer-review, grant-finder, wiki-lint, wiki-graph

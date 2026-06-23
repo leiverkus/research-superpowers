@@ -31,7 +31,7 @@ skill's frontmatter.
   to C; `source_class=suspect` → exclude.
 - For A and B: retrieve full metadata (authors, year, title, venue, DOI/URL,
   abstract)
-- For A: check Unpaywall for legal OA PDF URL (or the MCP's `oa_pdf` field)
+- For A and B: record a legal OA PDF URL in the `oa_pdf` field (from Unpaywall or the MCP's `oa_pdf`). Record the URL only — do **not** download; the `acquire-sources` phase consumes `oa_pdf` to fetch the file.
 - Never fabricate entries — if a database has no results, say so
 - German, English, French abstracts in scope — extract without translating
 - If target count not met after all databases: widen search terms and report

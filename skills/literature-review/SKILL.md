@@ -27,13 +27,15 @@ agents:
   - literature-scout
 ---
 
-## Boundary: literature-review vs ingest-source
+## Boundary: literature-review → acquire-sources → ingest-source
 
-`literature-review` runs SEARCH — discovers candidate sources, grades them, builds a strategic guide, produces BibTeX entries. Outputs land in `input/bibliography/`. **No `knowledge/sources/*.md` is created here.**
+`literature-review` runs SEARCH — discovers candidate sources, grades them, builds a strategic guide, produces BibTeX entries. Outputs land in `input/bibliography/`. **It downloads no PDFs and creates no `knowledge/sources/*.md`.** It records each candidate's `oa_pdf` / DOI so the next phase can fetch it.
 
-`ingest-source` runs INTAKE — takes ONE already-located source PDF and produces the wiki content (Source page, entities, BibTeX entry, log line). It is invoked AFTER `literature-review` for each prioritized source.
+`acquire-sources` runs ACQUISITION — auto-downloads the Open-Access PDFs for the A+B set into `input/bibliography/` and writes `acquisition-todo.md`, a manual-download worklist for everything paywalled or bot-blocked.
 
-The two skills are sequential, not overlapping. A typical session: literature-review once → ingest-source N times.
+`ingest-source` runs INTAKE — takes ONE already-acquired source PDF and produces the wiki content (Source page, entities, BibTeX entry, log line).
+
+The three skills are sequential, not overlapping. A typical session: literature-review once → acquire-sources once (re-run to reconcile) → ingest-source N times.
 
 # Literature Review (Superpowers-Wrapper)
 
@@ -69,12 +71,11 @@ reason (e.g. "narrow topic with small source corpus"), write it into
 2. **Check for existing `literaturguide.md`** in `input/bibliography/` — if it exists, offer to extend rather than redo
 3. **Dispatch `literature-scout` subagent** (see `agents/literature-scout.md`) for database queries
 4. **Screen results** — titles first, then abstracts. Grade by relevance (A/B/C). Minimum 15 A/B sources before proceeding.
-5. **Download OA PDFs** into `input/bibliography/<first-author>-<year>/` where legally possible
-6. **Generate `literaturguide.md`** with 9 sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview) — template in `research-skills/dao-literature-review/examples/literaturguide-example.md`
-7. **Export BibTeX** → merge into `output/bibtex/references.bib` (resolve key conflicts with user before merging)
-8. **Write audit log** → `input/bibliography/audit-log-<date>.json`
-9. **Update `knowledge/_meta/log.md`** with date, query, result count, guide path
-10. **Transition:** offer to loop into `ingest-source` on the top-N priority items
+5. **Generate `literaturguide.md`** with 9 sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview) — template in `research-skills/dao-literature-review/examples/literaturguide-example.md`. Carry each candidate's `oa_pdf` / DOI into the guide for the acquisition phase; **do not download here.**
+6. **Export BibTeX** → merge into `output/bibtex/references.bib` (resolve key conflicts with user before merging)
+7. **Write audit log** → `input/bibliography/audit-log-<date>.json`
+8. **Update `knowledge/_meta/log.md`** with date, query, result count, guide path
+9. **Transition:** offer to run `acquire-sources` on the A+B set — it auto-downloads the Open-Access PDFs and writes a manual-download worklist (`acquisition-todo.md`) for the rest; then `ingest-source` per acquired source.
 
 ## Process Flow
 
@@ -85,12 +86,11 @@ digraph literature_review {
     "Dispatch literature-scout" [shape=box];
     "Screen & grade" [shape=box];
     "Enough A/B sources?" [shape=diamond];
-    "Download OA PDFs" [shape=box];
     "Generate literaturguide.md" [shape=box];
     "Export BibTeX" [shape=box];
     "Write audit log" [shape=box];
     "Update _meta/log" [shape=box];
-    "Offer ingest-source loop" [shape=doublecircle];
+    "Offer acquire-sources" [shape=doublecircle];
 
     "Confirm scope" -> "Existing guide?";
     "Existing guide?" -> "Dispatch literature-scout" [label="no"];
@@ -98,12 +98,11 @@ digraph literature_review {
     "Dispatch literature-scout" -> "Screen & grade";
     "Screen & grade" -> "Enough A/B sources?";
     "Enough A/B sources?" -> "Dispatch literature-scout" [label="<15, widen search"];
-    "Enough A/B sources?" -> "Download OA PDFs" [label="≥15"];
-    "Download OA PDFs" -> "Generate literaturguide.md";
+    "Enough A/B sources?" -> "Generate literaturguide.md" [label="≥15"];
     "Generate literaturguide.md" -> "Export BibTeX";
     "Export BibTeX" -> "Write audit log";
     "Write audit log" -> "Update _meta/log";
-    "Update _meta/log" -> "Offer ingest-source loop";
+    "Update _meta/log" -> "Offer acquire-sources";
 }
 ```
 
@@ -142,12 +141,12 @@ When using MCPs, paste `inline_citation.authoritative_bibliography_line` verbati
 | "English-only is faster" | German and French scholarship goes missing systematically. |
 | "I already know the debate" | Knowing it doesn't replace a documented search — reproducibility. |
 | "The audit log is bureaucracy" | Without it the search isn't replicable. |
-| "URLs are enough, no need for PDFs" | Link rot is real. Save OA key sources locally. |
+| "Let me just download the PDFs while I'm here" | Not in this skill — search is download-free now. Record each `oa_pdf`/DOI; `acquire-sources` does the fetching. |
 
 ## Key Principles
 
 - **Strategic guide, not a paper dump** — structure reading order, debates, gaps
 - **German + English + French where the field demands** — discipline-specific
-- **OA-first** — save PDFs where legally possible
+- **OA-first metadata** — record each candidate's `oa_pdf`/DOI; `acquire-sources` does the downloading
 - **Transparency** — audit log is a mandatory output
-- **Keep the handoff open** — top-N sources flow into `ingest-source` next
+- **Keep the handoff open** — the A+B set flows into `acquire-sources` next, then `ingest-source`

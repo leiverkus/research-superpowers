@@ -74,7 +74,12 @@ project-root/
 ## Core rules
 
 ### Input folder
-- **Immutable.** The LLM reads from `input/` but never writes into it.
+- **Immutable, with one exception.** The LLM treats `input/` as human-owned and
+  never writes into it — **except `input/bibliography/`**, where the
+  `literature-review` and `acquire-sources` skills write their own artefacts
+  (`literaturguide.md`, `audit-log-*.json`, downloaded PDFs,
+  `acquisition-todo.md`, `acquisition-log-*.json`). The human still owns the
+  source PDFs dropped there.
 - **`input/description/`** contains the project description and research
   question. The LLM reads this folder **at the start of every session** and
   uses its contents as orientation for ingest, query, synthesis and lint.
@@ -83,6 +88,15 @@ project-root/
 - New sources are dropped here by the human (PDF, data, notes).
 - File names for PDFs follow the schema: `Lastname - Title - Year.pdf`
   (can be automated with the rename-scientific-pdf skill).
+- **Acquisition before ingest.** After `literature-review`, run
+  `acquire-sources`: it auto-downloads the Open-Access PDFs for the A+B set into
+  `input/bibliography/` and writes `acquisition-todo.md` — a worklist of
+  sources it could not fetch (paywalled / bot-blocked). Download those manually
+  (e.g. via university VPN) under the exact `Lastname - Title - Year.pdf`
+  filename, then re-run `acquire-sources` to reconcile (or ingest the ones
+  already present). `ingest-source` **hard-stops** on a missing original rather
+  than silently using a preprint or review — so acquire first. See
+  `input/bibliography/README.md`.
 - BibTeX entries for new sources are written during ingest into
   `output/bibtex/`, not left in input.
 

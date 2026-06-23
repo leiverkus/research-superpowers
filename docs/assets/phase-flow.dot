@@ -8,6 +8,7 @@ digraph research_flow {
     plan [label="writing-research-plan"];
     prereg_gate [shape=diamond, label="Plan ready?\n(quant: pre-registered,\nherm: ready)"];
     litrev [label="literature-review"];
+    acquire [label="acquire-sources"];
     ingest [label="ingest-source (loop)"];
     sources_gate [shape=diamond, label="Sources\nsufficient?"];
     execute [label="executing-research-plan"];
@@ -34,7 +35,9 @@ digraph research_flow {
     plan -> prereg_gate;
     prereg_gate -> litrev [label="yes"];
     prereg_gate -> plan [label="no, refine"];
-    litrev -> ingest;
+    litrev -> acquire;
+    acquire -> ingest;
+    acquire -> acquire [label="re-run:\nreconcile manual\ndownloads"];
     ingest -> sources_gate;
     sources_gate -> ingest [label="no, more"];
     sources_gate -> execute [label="yes"];

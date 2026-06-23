@@ -15,6 +15,7 @@ Source: [`assets/phase-flow.dot`](assets/phase-flow.dot) is the single source of
   - `requesting-peer-review → drafting-manuscript` — a reviewer finding requires revision.
 - **Pre-registration** applies only when `methodology: quantitative` (fully) or `mixed` (for marked sub-studies). For `methodology: hermeneutic`, `status: ready` is enough — no frozen hypothesis. Deviations on quantitative tasks go into `knowledge/_meta/log.md`; downstream results are flagged `status: exploratory`.
 - **Sources threshold** (~15 A/B sources for a chapter) is a rule of thumb, not magic. SOFT-GATE override with a justification is fine.
+- **Acquisition before ingest.** `acquire-sources` sits between search and ingest: it auto-downloads OA PDFs and writes a manual-download worklist (`acquisition-todo.md`) for paywalled sources. Its self-loop is the reconcile re-run after manual downloads. `ingest-source` hard-stops on a missing original rather than silently substituting a preprint/review.
 - **Reviews** in `executing-research-plan` are methodology-aware: two-stage (spec + quality) for quantitative tasks, synthesis review for hermeneutic.
 - **Dotted edges** are advisory invocations, not mandatory transitions.
 - **`critical-thinking`** is no longer a standalone skill (since v0.2). Its content lives as a cross-cutting checklist in `executing-research-plan` (method selection) and `requesting-peer-review` (evidence audit).

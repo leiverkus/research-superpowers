@@ -55,9 +55,17 @@ If you have `dao-paper-search-mcp` set up (see [`recommended-mcps.md`](recommend
 
 Output: `input/bibliography/literaturguide.md` with ~18 sources graded A/B/C, plus BibTeX entries merged into `output/bibtex/references.bib`, plus `input/bibliography/audit-log-2026-05-27.json`.
 
-**SOFT-GATE:** the skill checks for ≥ 15 distinct sources. We have 18 A/B graded sources, so the gate passes.
+**SOFT-GATE:** the skill checks for ≥ 15 distinct sources. We have 18 A/B graded sources, so the gate passes. The guide records each source's `oa_pdf`/DOI but **downloads nothing** — that is the next phase.
 
-## Phase 4 — Ingest, one source at a time (skill: `ingest-source`)
+## Phase 4 — Acquire the PDFs (skill: `acquire-sources`)
+
+You say "acquire the sources." The skill takes the A+B set from `literaturguide.md` and, for each, tries to fetch an Open-Access PDF — preferring the recorded `oa_pdf`, then resolving via the MCP / Unpaywall by DOI. Every download is **validated** (HTTP 200 + `application/pdf` + `%PDF-` magic bytes + size + not an HTML login page), so a publisher "Access Denied" page is never mistaken for a source.
+
+Output: the open ones land in `input/bibliography/` as `Finkelstein - The Archaeology of the Israelite Settlement - 1988.pdf` etc.; everything paywalled or bot-blocked goes into **`input/bibliography/acquisition-todo.md`** — a table with the DOI, any candidate URL, and the exact filename to save under. Say 11 of 18 download automatically; 7 need you.
+
+You open `acquisition-todo.md`, connect the **university VPN**, and download those 7 originals into `input/bibliography/` under the given filenames. Then you say "acquire the sources" again — the re-run rescans the folder, drops the 7 now-present files from the worklist, and reports "all 18 A+B sources acquired." (Had you skipped this and gone straight to ingest, `ingest-source` would have hard-stopped on the first missing original instead of quietly ingesting a preprint.)
+
+## Phase 5 — Ingest, one source at a time (skill: `ingest-source`)
 
 You say "ingest the Cohen 1979 PDF." The skill first asks for a **focus** — what *this project* takes from *this source* — and proposes the project's research question as the default:
 
@@ -93,7 +101,7 @@ You confirm; the skill appends a new `## Focus: …` block at the bottom of the 
 
 If you have `dao-paper-search-mcp`, the entity pages get populated with `wikidata_qid` (for people) and `idai_gazetteer_id` (for places) — `resolve_author("Israel Finkelstein")` returns `Q461571`; `resolve_site("Tel Megiddo")` returns `2048473`. These authority IDs let you deduplicate later and pull canonical metadata.
 
-## Phase 5 — Executing the plan (skill: `executing-research-plan`)
+## Phase 6 — Executing the plan (skill: `executing-research-plan`)
 
 For each task in the plan, the skill routes:
 
@@ -106,7 +114,7 @@ The skill walks the [Critical Thinking checklist](../skills/executing-research-p
 
 Because `methodology: hermeneutic`, the review is a single-pass "synthesis review" (plausibility + source fidelity), not the two-stage spec+quality review that quantitative tasks would get.
 
-## Phase 6 — Drafting the article (skill: `drafting-manuscript`)
+## Phase 7 — Drafting the article (skill: `drafting-manuscript`)
 
 **SOFT-GATE** check before drafting:
 
@@ -133,7 +141,7 @@ The skill writes to `output/article/main.qmd` and runs `quarto render`. The firs
 
 Log line appended to `_meta/log.md`.
 
-## Phase 7 — Peer review (skill: `requesting-peer-review`)
+## Phase 8 — Peer review (skill: `requesting-peer-review`)
 
 You say "review the article." The skill confirms the manuscript path, identifies discipline (Biblical Archaeology), selects reporting standards (stratigraphic documentation + source criticism), and dispatches two fresh subagents:
 
@@ -144,7 +152,7 @@ The skill walks you through each Major and Minor: accept (→ revise), reject (w
 
 Revisions route back to `drafting-manuscript` for one more pass.
 
-## Phase 8 — Finishing (skill: `finishing-a-research-project`)
+## Phase 9 — Finishing (skill: `finishing-a-research-project`)
 
 The closing checklist:
 
@@ -176,7 +184,9 @@ input/ideas/
 input/bibliography/
 ├── literaturguide.md
 ├── audit-log-2026-05-27.json
-└── [PDFs of each ingested source]
+├── acquisition-todo.md            (manual-download worklist; empty once all acquired)
+├── acquisition-log-2026-05-28.json
+└── [PDFs of each acquired source, "Lastname - Title - Year.pdf"]
 
 knowledge/
 ├── _meta/
@@ -202,7 +212,7 @@ Every step is reproducible from the artefacts. Every claim in the manuscript tra
 
 ## Quantitative sub-study? Add one mid-flow.
 
-If at Phase 6 you realised "actually a Bayesian re-analysis of the published 14C dates would help section 5," you would:
+If at Phase 7 you realised "actually a Bayesian re-analysis of the published 14C dates would help section 5," you would:
 
 1. Go back to `writing-research-plan` and add one task with `pre-registered: true` in the task-block frontmatter.
 2. State hypothesis + operationalisation + stop criterion for that task only.
