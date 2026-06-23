@@ -36,6 +36,10 @@ output/presentation/*.snm
 output/presentation/*.toc
 output/presentation/*.vrb
 
+# ...but keep the hand-authored preamble sources (referenced via
+# include-in-header). Only Quarto-generated .tex are build artifacts.
+!output/**/_preamble.tex
+
 # CI/CD
 public/
 

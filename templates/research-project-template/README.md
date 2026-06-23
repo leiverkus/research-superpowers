@@ -177,7 +177,7 @@ make handout           # A4 handout PDF
 | XeLaTeX | PDF output | `quarto install tinytex` |
 | [Zotero](https://zotero.org) + Better BibTeX | Bibliography | zotero.org/download |
 | Python 3 + PyYAML | Lint script | `pip install pyyaml` |
-| Linux Libertine, Fira Code | Fonts for PDF | See `output/README.md` |
+| Gentium Plus, Ezra SIL, Noto Sans, Fira Code | Fonts for PDF (Semitic transcription: translit. + Greek + Hebrew) | See `output/README.md` |
 
 Optional tools:
 

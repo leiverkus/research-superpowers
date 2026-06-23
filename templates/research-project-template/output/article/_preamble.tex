@@ -1,0 +1,18 @@
+% Additional LaTeX packages for the article (KOMA-Script scrartcl)
+
+\usepackage{microtype}
+
+% Abstract heading
+\renewcommand{\abstractname}{Abstract}
+
+% --- Native Hebrew (RTL) support ---
+% The PDF build uses a Unicode TeX engine (XeLaTeX or LuaLaTeX — Quarto
+% picks one automatically once mainfont is set). pandoc already loads babel
+% because lang: en is set; we add Hebrew to that same babel instance, which
+% pulls in correct RTL/bidi handling. Requires Ezra SIL (SIL, OFL).
+%   Install: download from https://software.sil.org/ezra/ and copy the .ttf
+%   into ~/Library/Fonts/ (macOS) or ~/.fonts/ (Linux).
+% Use in text:  \foreignlanguage{hebrew}{בְּרֵאשִׁית}
+% Polytonic Greek needs no setup — it is covered by the main font (Gentium Plus).
+\babelprovide[import]{hebrew}
+\babelfont[hebrew]{rm}{Ezra SIL}

@@ -32,17 +32,25 @@ format:
     slide-level: 2
     lang: en
   beamer:
+    # Distinct output name: beamer and pdf both produce a PDF. `make all`
+    # renders them separately and collects both into _output/, so they must
+    # not share the name talk.pdf or one would overwrite the other.
+    # Slides = 16:9 Beamer deck.
+    output-file: "talk-slides.pdf"
     theme: metropolis
     fontsize: 11pt
     aspectratio: 169
     lang: en
-    mainfont: "Linux Libertine O"
-    sansfont: "Linux Biolinum O"
+    mainfont: "Gentium Plus"      # transliteration + polytonic Greek
+    sansfont: "Noto Sans"         # headings: broad diacritic coverage incl. ʾ / ʿ
   pdf:
+    # Distinct output name (see beamer above). Handout = A4 article layout
+    # with all content, for reading rather than projection.
+    output-file: "talk-handout.pdf"
     documentclass: scrartcl
     papersize: a4
     fontsize: 11pt
-    mainfont: "Linux Libertine O"
+    mainfont: "Gentium Plus"      # transliteration + polytonic Greek
     number-sections: true
     toc: true
     lang: en

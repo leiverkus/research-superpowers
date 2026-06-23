@@ -78,6 +78,28 @@ That installs and activates it. Restart Claude Code and you'll see a "Research S
 
 If any are missing, [`docs/installation.md`](docs/installation.md#before-you-start) shows how to install each.
 
+**For PDF output only** (Quarto + XeLaTeX/LuaLaTeX — not needed for HTML or the wiki): the
+templates ship with free, OFL-licensed fonts tuned for scholarly transcription
+of Semitic languages — Latin transliteration (ḥ ṣ ṭ ʾ ʿ ā ī ū), polytonic
+Greek, and native Hebrew (RTL):
+
+```bash
+# macOS (Homebrew casks)
+brew install --cask font-gentium-plus font-noto-sans font-fira-code
+# Ezra SIL (Hebrew) has no cask — download from https://software.sil.org/ezra/
+# and copy the .ttf into ~/Library/Fonts/
+```
+
+| Role | Font | Covers |
+|------|------|--------|
+| body | **Gentium Plus** | Latin transliteration + polytonic Greek |
+| headings | **Noto Sans** | transliterated terms incl. ʾ / ʿ |
+| code | **Fira Code** | monospace |
+| Hebrew (RTL) | **Ezra SIL** | native Hebrew with niqqud/cantillation |
+
+Full install + usage notes (incl. the Hebrew `\foreignlanguage` macro) are in
+the template's [`output/README.md`](templates/research-project-template/output/README.md).
+
 ### Create your first research project
 
 After the plugin is installed, scaffold a project from the template:
