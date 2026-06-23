@@ -1,7 +1,7 @@
 # research-superpowers
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.15.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.16.0-blue.svg)](CHANGELOG.md)
 [![Plugin for: Claude Code + OpenCode](https://img.shields.io/badge/plugin-Claude%20Code%20%2B%20OpenCode-purple.svg)](#installation)
 [![Lint](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml)
 
@@ -23,7 +23,7 @@ LLM-assisted research is fast but easy to get wrong:
 
 `research-superpowers` makes the discipline structural:
 
-- **14 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
+- **15 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
 - **6 subagents** for context-isolated heavy lifting (ingest, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
