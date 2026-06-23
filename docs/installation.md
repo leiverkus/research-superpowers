@@ -140,7 +140,7 @@ cd /path/to/your-research-project
 ln -s ~/code/research-superpowers/skills .claude/skills
 ```
 
-OpenCode now discovers all 14 skills and the 6 agents. The SessionStart hook is Claude-Code-specific, so OpenCode users don't get the index injection — instead, mention "Research Superpowers" in your project's `AGENTS.md` and OpenCode will load skills on demand.
+OpenCode now discovers all 15 skills and the 7 agents. The SessionStart hook is Claude-Code-specific, so OpenCode users don't get the index injection — instead, mention "Research Superpowers" in your project's `AGENTS.md` and OpenCode will load skills on demand.
 
 ## Create your first research project
 

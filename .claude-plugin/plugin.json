@@ -1,7 +1,7 @@
 {
   "name": "research-superpowers",
   "description": "Skill-driven research workflow for Claude Code and Cowork: idea → literature → ingest → analysis → draft → peer-review → publication. Methodology-aware (hermeneutic / quantitative / mixed). Focus-driven ingest: source pages capture project-specific extraction (claims relevant to a research focus), not generic summaries. MCP-aware: optional dao-paper-search-mcp + dao-searxng-mcp integration for verified citations and source-class detection. Click-friendly install via the scaffold-research-project skill — no terminal required. Built for theology, biblical archaeology, and digital humanities.",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "author": {
     "name": "Patrick Leiverkus",
     "email": "leiverkus@gmail.com"

@@ -3,13 +3,16 @@ name: ingest-source
 description: Use when adding a scholarly source (PDF, book chapter, article) to the research project wiki under a specific focus. Produces a focus-driven Source page (claims relevant to the project, not a generic summary), extracts Entities, updates BibTeX, and logs the ingest. On re-ingest of the same source with a new focus, appends a new focus block to the existing page rather than overwriting. This is the ONLY skill for bringing sources into the knowledge wiki.
 inputs:
   - name: source_path
-    description: Absolute path to a PDF or text file in input/bibliography/, OR a URL to download (legally, OA only)
+    description: Absolute path to the already-acquired PDF or text file in input/bibliography/ (obtained via acquire-sources). No URL auto-download happens here — if the original is missing, the skill hard-stops (see step 2).
     required: true
   - name: project_root
     description: Absolute path to the research project root
     required: true
   - name: focus
     description: A single-sentence focus statement — what this project takes from this source. If absent, the skill proposes the project's research question (read from input/description/project-description.md) as the default and asks the user to confirm or refine.
+    required: false
+  - name: based_on
+    description: "Provenance of the ingested text: original (default) | review | preprint | prior-version. Only set to a non-original value with explicit user consent when the original PDF cannot be acquired (see 'Provenance of substitutes')."
     required: false
   - name: existing_entities
     description: List of entity slugs already in the wiki, for deduplication
@@ -49,7 +52,7 @@ If any condition is missing: explain to the user which, ask for a short reason f
 
 ## When to use
 
-- A new PDF/book/article has been identified (e.g., from `literature-review` output) and serves a specific aspect of the project's research question
+- A new PDF/book/article has been acquired (via `acquire-sources`, or dropped in by the user) and serves a specific aspect of the project's research question
 - User says "ingest this source", "ingest Finkelstein 2003 focused on the Megiddo stratigraphy", "add this to the wiki for the chronology question"
 - Re-reading an already-ingested source under a new focus (a new chapter draws on a different aspect of the same source)
 - Batch ingest from a literature list — loop this skill, one source per iteration, focus repeated or per-source
@@ -61,7 +64,7 @@ If any condition is missing: explain to the user which, ask for a short reason f
 Create TodoWrite tasks for each:
 
 1. **Determine focus** — read `input/description/*.md` if present; extract the project's research question (look for `## Research question` heading or first H2). Propose: "Default focus from project description: «<research question>». Use this for the ingest or refine? (e.g. 'focus on the stratigraphic argument for Megiddo IVA' is more useful than the whole research question)." If `input/description/` is absent, ask explicitly: "What's the focus for this ingest? One sentence — what aspect of this source serves your project?" **Do not proceed without an explicit confirmed focus string.**
-2. **Locate the source file** — PDF in `input/bibliography/`, or download if URL given
+2. **Locate the acquired original** — expect the PDF in `input/bibliography/` named `Lastname - Title - Year.pdf` (placed there by `acquire-sources`). **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Tell the user the original is not on disk, point them to `input/bibliography/acquisition-todo.md`, and offer to run `acquire-sources`. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
 3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
 4. **Derive slug** — `<lowercase-first-author>-<year>` (e.g. `finkelstein-2003`, `mazar-2011b` for disambiguation)
 5. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
@@ -85,6 +88,27 @@ When step 5 finds an existing source page:
 - **Legacy migration:** if the existing page predates v0.5 (no `## Focus:` headings, uses old `## Core Theses` / `## Method` / etc.), offer: "Wrap the existing content as `## Focus: (legacy — full summary) — <original updated date>` before appending the new focus block?" User chooses; if declined, just append the new focus block alongside the old structure.
 - **Mode logged:** the agent output report names the mode (`fresh` | `append-section` | `update-existing-focus` | `legacy-wrap`).
 
+## Provenance of substitutes
+
+The default and the norm is to ingest the **original** cited work. When the original cannot be acquired (paywalled, not yet downloaded), the honest move is to **stop and route the user to `acquisition-todo.md`** — not to quietly read a preprint, a prior version, or a book review in its place. A substitute has different pagination and sometimes different claims; ingesting it under the original's bibkey silently corrupts provenance.
+
+Only when the user **explicitly consents** to ingest a substitute (e.g. "go ahead and ingest the preprint for now"):
+
+1. Set `based_on:` in the source-page frontmatter — `review | preprint | prior-version` (default `original`, omitted or `original` otherwise).
+2. Add a callout at the top of the focus block:
+   ```markdown
+   > [!warning] Provenance: based on the **preprint**, not the published original.
+   > Pagination and final claims may differ. Re-ingest the original when acquired
+   > (set `based_on: original`).
+   ```
+3. Mark the log line:
+   ```
+   - YYYY-MM-DD · ingest · [[slug]] · based_on: preprint (user-approved substitute) · focus: «<focus>»
+   ```
+4. Keep the source on `acquisition-todo.md` so the original is still acquired later; on re-ingest of the original, flip `based_on` back to `original` and remove the callout.
+
+The `based_on` field is optional in the schema (`schema/knowledge-frontmatter.schema.json`) — `original` pages need no entry.
+
 ## Process Flow
 
 ```dot
@@ -93,6 +117,10 @@ digraph ingest {
     "Default proposed?" [shape=diamond];
     "Confirm/refine focus" [shape=box];
     "Locate source file" [shape=box];
+    "Original present?" [shape=diamond];
+    "HARD-STOP: point to acquisition-todo" [shape=box];
+    "User consents to substitute?" [shape=diamond];
+    "Record provenance (based_on)" [shape=box];
     "Scanned PDF?" [shape=diamond];
     "Invoke ocr" [shape=box];
     "Read source under focus" [shape=box];
@@ -116,7 +144,12 @@ digraph ingest {
     "Default proposed?" -> "Confirm/refine focus" [label="yes"];
     "Default proposed?" -> "Confirm/refine focus" [label="no — ask explicitly"];
     "Confirm/refine focus" -> "Locate source file";
-    "Locate source file" -> "Scanned PDF?";
+    "Locate source file" -> "Original present?";
+    "Original present?" -> "Scanned PDF?" [label="yes"];
+    "Original present?" -> "User consents to substitute?" [label="no"];
+    "User consents to substitute?" -> "HARD-STOP: point to acquisition-todo" [label="no"];
+    "User consents to substitute?" -> "Record provenance (based_on)" [label="yes"];
+    "Record provenance (based_on)" -> "Scanned PDF?";
     "Scanned PDF?" -> "Invoke ocr" [label="yes"];
     "Scanned PDF?" -> "Read source under focus" [label="no"];
     "Invoke ocr" -> "Read source under focus";
@@ -353,6 +386,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 
 | Thought | Reality |
 |---------|---------|
+| "I can't get the original, I'll just ingest the book review / preprint" | No — HARD-STOP. Wrong pagination, second-hand claims, silent misattribution under the original's bibkey. Point the user to `acquisition-todo.md`; ingest a substitute only with explicit consent, recorded as `based_on:` provenance. |
 | "I'll just summarise the whole source — that's safer" | No — the wiki is purpose-built, not an archive. Focus-driven extraction is the discipline. Generic summaries fill the wiki with noise that obscures what the project actually needs. |
 | "The abstract gives me the claims relevant to my focus" | No — claims relevant to a focus often live in a specific section, not the abstract. Full text under the focus lens. |
 | "The default focus from project-description.md is good enough" | Sometimes yes, often no — the project's research question is usually too broad to be a useful per-source focus. Refine for this specific source. |

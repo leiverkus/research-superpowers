@@ -47,12 +47,13 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 
 1. **brainstorming-research** — open question → input/ideas/<slug>-design.md
 2. **writing-research-plan** — design doc → ready plan (status=ready for hermeneutic, status=pre-registered for quantitative/mixed)
-3. **literature-review** — strategic search, produces literaturguide.md + BibTeX
-4. **ingest-source** — one source PDF → wiki content (sources + entities + BibTeX + log)
-5. **executing-research-plan** — work plan tasks via subagents with two-stage review
-6. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd
-7. **requesting-peer-review** — manuscript → constructive + adversarial review
-8. **finishing-a-research-project** — closing checklist, archival
+3. **literature-review** — strategic search, produces literaturguide.md + BibTeX (search only — downloads nothing)
+4. **acquire-sources** — auto-download OA PDFs + write acquisition-todo.md manual worklist for paywalled sources; re-run to reconcile
+5. **ingest-source** — one acquired source PDF → wiki content (sources + entities + BibTeX + log)
+6. **executing-research-plan** — work plan tasks via subagents with two-stage review
+7. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd
+8. **requesting-peer-review** — manuscript → constructive + adversarial review
+9. **finishing-a-research-project** — closing checklist, archival
 
 ## Cross-cutting skills
 
