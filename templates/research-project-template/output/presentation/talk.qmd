@@ -36,13 +36,13 @@ format:
     fontsize: 11pt
     aspectratio: 169
     lang: en
-    mainfont: "Linux Libertine O"
-    sansfont: "Linux Biolinum O"
+    mainfont: "Gentium Plus"      # transliteration + polytonic Greek
+    sansfont: "Noto Sans"         # headings: broad diacritic coverage incl. ʾ / ʿ
   pdf:
     documentclass: scrartcl
     papersize: a4
     fontsize: 11pt
-    mainfont: "Linux Libertine O"
+    mainfont: "Gentium Plus"      # transliteration + polytonic Greek
     number-sections: true
     toc: true
     lang: en

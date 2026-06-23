@@ -36,8 +36,8 @@ format:
     documentclass: scrartcl
     papersize: a4
     fontsize: 11pt
-    mainfont: "Linux Libertine O"
-    sansfont: "Linux Biolinum O"
+    mainfont: "Gentium Plus"      # Latin transliteration (ḥ ṣ ṭ ʾ ʿ ā ī ū) + polytonic Greek
+    sansfont: "Noto Sans"         # headings: broad diacritic coverage incl. ʾ / ʿ
     monofont: "Fira Code"
     number-sections: true
     toc: false
