@@ -21,8 +21,10 @@ brew install --cask mactex
 
 ### Fonts (for PDF with KOMA-Script)
 
-The PDF build uses **XeLaTeX** (selected automatically once `mainfont` is set).
-The templates are tuned for scholarly transcription of Semitic languages —
+The PDF build uses a Unicode TeX engine (**XeLaTeX or LuaLaTeX** — Quarto
+selects one automatically once `mainfont` is set; both work with the setup
+below). The templates are tuned for scholarly transcription of Semitic
+languages —
 academic Latin transliteration (ḥ ṣ ṭ ḏ ṯ ḫ ġ ā ī ū š, plus ʾ / ʿ for
 aleph/ayin), polytonic Greek, and native Hebrew (RTL). All chosen fonts are
 free and OFL-licensed, so they can be redistributed with the project.

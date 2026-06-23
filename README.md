@@ -78,7 +78,7 @@ That installs and activates it. Restart Claude Code and you'll see a "Research S
 
 If any are missing, [`docs/installation.md`](docs/installation.md#before-you-start) shows how to install each.
 
-**For PDF output only** (Quarto/XeLaTeX — not needed for HTML or the wiki): the
+**For PDF output only** (Quarto + XeLaTeX/LuaLaTeX — not needed for HTML or the wiki): the
 templates ship with free, OFL-licensed fonts tuned for scholarly transcription
 of Semitic languages — Latin transliteration (ḥ ṣ ṭ ʾ ʿ ā ī ū), polytonic
 Greek, and native Hebrew (RTL):

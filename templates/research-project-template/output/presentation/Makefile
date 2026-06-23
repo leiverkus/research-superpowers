@@ -44,7 +44,9 @@ preview:
 clean:
 	rm -rf $(OUTPUT_DIR)
 	rm -rf .quarto
-	rm -f *.tex *.log *.aux *.nav *.snm *.toc *.vrb
+	# Only the Quarto-generated .tex (named after SOURCE); never a
+	# hand-authored _preamble.tex.
+	rm -f $(SOURCE:.qmd=.tex) *.log *.aux *.nav *.snm *.toc *.vrb
 
 ## Show help
 help:
