@@ -8,7 +8,10 @@ Three deterministic, CI-friendly checks:
   3. Status distribution
 
 Content checks (contradictions between pages, stale claims) do NOT belong
-here — use the semantic-wiki-review skill for those.
+here — use the semantic-wiki-review skill for those. This script only
+*surfaces* the review findings that skill records as `review_flags:`
+frontmatter (open flags are reported, not computed, and do not fail the
+exit code); it never judges page content itself.
 
 Usage:
     python scripts/lint-wiki.py
@@ -55,6 +58,8 @@ OVERRIDE_WARN_COUNT = 5
 RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous")
 RELATION_KEYS = {"target", "type", "confidence", "because"}
 INFERENCE_WARN_THRESHOLD = 0.50
+
+REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation", "open-question")
 
 
 def load_schema() -> dict:
@@ -305,6 +310,50 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
     return report
 
 
+def report_review_flags(pages: dict[str, Path]) -> tuple[list[str], int]:
+    """Surface single-page content-review findings (`review_flags`) raised by
+    semantic-wiki-review.
+
+    Open flags are a *content* signal, not a structural defect — they are
+    reported here (and gate drafting via the drafting-manuscript SOFT-GATE),
+    but they deliberately do NOT count toward the lint exit code. A wiki with
+    open, known review findings is not malformed. Malformed flags (bad enum,
+    missing key, unknown property) are already caught by the frontmatter schema
+    check above, which does fail the build.
+    """
+    lines: list[str] = []
+    open_total = 0
+    resolved_total = 0
+    for name, path in sorted(pages.items()):
+        fm = parse_frontmatter(path)
+        if not fm:
+            continue
+        flags = fm.get("review_flags")
+        if not isinstance(flags, list):
+            continue
+        for flag in flags:
+            if not isinstance(flag, dict):
+                continue
+            if flag.get("state") == "resolved":
+                resolved_total += 1
+                continue
+            open_total += 1
+            kind = flag.get("kind", "?")
+            detail = str(flag.get("detail", "")).strip()
+            suffix = f" — {detail}" if detail else ""
+            lines.append(f"  OPEN [{kind}]: {path}{suffix}")
+
+    if open_total == 0:
+        tail = f" ({resolved_total} resolved, kept for audit)" if resolved_total else ""
+        return ([f"  No open review flags.{tail}"], 0)
+
+    header = [
+        f"  {open_total} open review flag(s) — advisory content findings. These "
+        f"gate drafting (drafting-manuscript SOFT-GATE), not the lint exit code."
+    ]
+    return (header + lines, open_total)
+
+
 def report_gate_overrides() -> list[str]:
     """Surface SOFT-GATE override activity from the audit log.
 
@@ -414,6 +463,10 @@ def main():
 
     print("\n=== Inference rate ===")
     print("\n".join(report_inference_rate(pages)))
+
+    print("\n=== Review flags ===")
+    review_lines, _open_flags = report_review_flags(pages)
+    print("\n".join(review_lines))
 
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))

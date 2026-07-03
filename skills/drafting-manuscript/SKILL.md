@@ -44,11 +44,18 @@ Before drafting, check:
 (2) Every source cited in the target section exists as `knowledge/sources/*.md` AND has a BibTeX entry
 (3) `wiki-lint` is green on the knowledge tree
 (4) The research plan `<slug>-plan.md` contains an explicit Draft task for this output file
+(5) None of the synthesis / source pages this draft pulls from carries an open `review_flags` entry (`state: open`)
 
 If a condition is unmet: tell the user which (e.g. "no stable synthesis yet"),
 ask for a short reason to draft anyway, write it into
 `knowledge/_meta/gate-overrides.log`, and start the draft. Repeated overrides
 on (3) are a maintenance signal.
+
+On (5): an open flag means a content review found an unresolved concern
+(overstatement, weak support, stale claim) on a page you are about to turn into
+prose — drafting from it would bake the problem into the manuscript. Prefer
+resolving it first (fix the page, set the flag `state: resolved`) over
+overriding. Note which page and flag `kind` in the override reason.
 </SOFT-GATE>
 
 ## When to use
@@ -62,7 +69,7 @@ on (3) are a maintenance signal.
 ## Checklist
 
 1. **Confirm plan task** — find the exact entry in `<slug>-plan.md`; confirm output file path
-2. **Pre-flight checks (SOFT-GATE)** — stable synthesis pages? BibTeX complete? wiki-lint green?
+2. **Pre-flight checks (SOFT-GATE)** — stable synthesis pages? BibTeX complete? wiki-lint green? No open `review_flags` on the pages you pull from?
 3. **Read all referenced synthesis pages** fully
 4. **Read all cited source pages** — especially the "Verbatim quotes (with page)" sections
 5. **Determine target length** from the plan (words / pages / chapter size)
@@ -164,6 +171,7 @@ For articles, use `output/article/main.qmd` with single-file layout.
 | "I'll cite this passage properly later" | Later citations get forgotten. Get it right now, or not at all. |
 | "I'll start drafting; structure can come later" | Skeleton first, sign-off, then prose. |
 | "Wiki-lint isn't needed, I know everything is fine" | Mandatory before every draft — broken wikilinks are invisible when rendered. |
+| "This page is `stable`, so it's safe to draft" | Stable is maturity, not health. An open `review_flag` on it is an unresolved content concern — resolve or override, don't ignore. |
 | "The chapter is so good, I'll ignore the render errors" | A chapter that won't render is not a chapter. |
 
 ## Key Principles

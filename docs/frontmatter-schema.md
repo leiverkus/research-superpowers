@@ -10,7 +10,7 @@ Every `knowledge/**/*.md` page begins with a YAML frontmatter block. The normati
 
 ## Optional fields
 
-`tags`, `sources`, `bibkey` (required on sources), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), and the authority IDs `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities).
+`tags`, `sources`, `bibkey` (required on sources), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities).
 
 ## Field semantics in short
 
@@ -39,6 +39,34 @@ relations:
 - **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`. `lint-wiki.py` reports the share of relations that carry one.
 
 The field is additive: pages without `relations` remain valid, and plain wikilinks continue to work unchanged (the graph export treats them as `extracted` edges).
+
+## Review flags (optional)
+
+`review_flags` records **single-page content-review findings** raised by the `semantic-wiki-review` skill (or a human reviewer). It is a *third, independent axis*, deliberately kept apart from the other two:
+
+| Axis | Field | Owned by | Answers |
+|------|-------|----------|---------|
+| Maturity | `status` | the user | how finished / trusted is this page? |
+| Page↔page conflict | `relations: contradicts` | ingest / review | does this page disagree with *another* page? |
+| Page-level health | `review_flags` | review | does *this* page's own content have an open concern? |
+
+Keeping them separate matters: a review must never overwrite the user's `status`, and the case that matters most — a `status: stable` page that a newer source now undercuts — is only representable when `stable` and an open flag can coexist.
+
+```yaml
+review_flags:
+  - kind: overstatement          # overstatement | weak-support | stale | missing-citation | open-question
+    detail: "Dates the destruction 'securely' to 925 BCE; the source says 'probably'."
+    raised_by: semantic-wiki-review
+    detected: 2026-07-03
+    state: open                  # open | resolved
+    # resolved: 2026-07-10       # optional — set when state moves to resolved
+```
+
+- **kind** — the class of concern (enum above). A conflict *between two pages* is not a flag; it is a `relations: contradicts` edge.
+- **state** — `open` gates drafting: `drafting-manuscript` will not draft from a page with an open flag without a logged override, and `wiki-lint` surfaces open flags in its `Review flags` section (advisory — it does **not** fail the exit code on them; only a *malformed* flag fails, via schema validation).
+- **Resolve in place**, don't delete: set `state: resolved` (and optionally a `resolved:` date) so the audit trail survives.
+
+The field is additive: pages without `review_flags` remain valid.
 
 ## Minimal example
 

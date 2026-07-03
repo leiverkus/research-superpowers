@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Single-page review findings as a first-class channel: `review_flags`.** Content-review findings about *one page's own content* (an overstatement, a weakly-supported or stale claim, a missing citation, an open question) now have a dedicated, structured home in that page's frontmatter — a **third axis**, deliberately kept apart from the two that already existed. `status` stays human-owned maturity (`draft → review → stable`, agents never self-promote); `relations: contradicts` records a conflict *between two* pages; `review_flags` records a concern about *this* page. This makes the case that matters representable: a `status: stable` page that a newer source now undercuts keeps its blessing **and** carries an open flag, instead of a review clobbering the user's `stable` decision. Each flag has `kind` (`overstatement | weak-support | stale | missing-citation | open-question`), `state` (`open | resolved`), `raised_by`, `detected`, an optional `detail`, and an optional `resolved` date. Schema-optional; pages without it stay valid (`schema/knowledge-frontmatter.schema.json`, mirrored into template + example; conformance cases added in `tests/test_schema_conformance.py`, stdlib-subset ⇄ jsonschema parity green).
+  - **`semantic-wiki-review` now records findings on the pages**, not only in the dated `_meta/` report. The audit stays non-destructive to *content* — it writes `review_flags` (and `relations: contradicts` for page↔page conflicts) as frontmatter metadata, never touches prose, and never changes `status`. The dated report remains the human-readable digest and the sole home of the report-only categories (missing cross-references, suspect/aggregator citations). Findings are resolved in place via `state: resolved`, not by deletion.
+  - **`drafting-manuscript` gates on open flags (SOFT-GATE #5).** It will not draft from a synthesis/source page carrying a `state: open` flag without a logged override in `gate-overrides.log` — so a known content concern cannot be silently baked into the manuscript. Preference is to resolve first, then draft.
+  - **`wiki-lint` surfaces open flags** in a new `=== Review flags ===` section (script + Python-free fallback). Advisory by design: open flags are reported and gate drafting, but do **not** fail the lint exit code (a wiki with known, open findings is not malformed); a *malformed* flag still fails via schema validation. The example project's chronology-debate synthesis demonstrates one honest open `weak-support` flag (it leans on two stub sources and an inferred contradiction).
+
 ## [0.16.0] — 2026-06-23
 
 ### Added
