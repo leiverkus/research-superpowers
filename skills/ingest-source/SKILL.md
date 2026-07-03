@@ -223,7 +223,18 @@ The `relations:` block is **optional per the schema** (`scripts/lint-wiki.py` st
 
 ### Direct quotes (supporting the above)
 > "…" (p. XX)
-*Min. 1 per focus block, max ~5. Always verbatim, always with page.*
+*Min. 1 per focus block, max ~5. Always verbatim, always with page. Prefer
+passages that carry an **explanation or an example** (why the author holds the
+claim, or a concrete case), not just a restatement of the claim — these are the
+raw material a later draft needs to avoid dense bullet-prose.*
+
+### Examples & illustrations (for later drafting)
+- <concrete case the source uses to support a claim — a specific artefact, site, dataset, event, or passage> (p. XX)
+*0–3 bullets. Only real examples the source actually gives — the illustrative
+material that makes a claim intelligible. This is what `drafting-manuscript`
+reaches for when a page is otherwise too thin to develop; capturing it (or at
+least its page anchor) here saves re-reading the PDF later. Omit the section if
+the source offers no examples under this focus.*
 
 ### Boundary: what this source does NOT address (within this focus)
 *1–3 sentences. Explicit gaps a reader following the focus should know about.*
@@ -405,5 +416,6 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 - **Wikilinks before full prose** — link every focus-relevant entity at first mention.
 - **Typed relations at ingest** — stance-bearing connections (confirms / contradicts / builds-on / cites) go into the `relations:` frontmatter as typed, confidence-tagged edges, not just prose wikilinks. The graph is born typed; `confidence: extracted` only with a quote + page.
 - **Verbatim quotations + page** — indispensable for drafts later; at least 1 quote per focus block.
+- **Capture the examples, not just the claims** — the concrete cases a source uses (an artefact, site, dataset, passage) are what let a later draft develop a point instead of reflowing a bullet. Record them (or their page anchor) in `### Examples & illustrations`; a claim page with no examples produces dense prose downstream.
 - **Status: review on first pass** — only moves to `stable` after user review.
 - **Explicit boundaries** — name what the source does NOT address (within the focus). This honesty saves later confusion.

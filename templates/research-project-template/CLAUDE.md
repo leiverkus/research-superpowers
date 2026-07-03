@@ -172,6 +172,27 @@ ingest and referenced in the wiki pages.
   `output/bibtex/references.bib`.
 - Code in `data-analysis/` and `code/` has its own README files.
 
+### Manuscript style (drafting depth)
+
+The wiki is deliberately terse; the manuscript must not be. When `drafting-manuscript`
+turns wiki pages into prose it reads this block first — **tune these to the
+project's discipline and genre.** Defaults:
+
+- **Develop, don't reflow.** Each substantive point becomes a developed passage
+  (claim → the source's grounding → a concrete example → why it matters), not
+  one sentence per wiki bullet. Prose that just restates bullets is unfinished.
+- **Examples and explanations are required**, and they must come **from the
+  sources** — the source pages' `### Direct quotes` / `### Examples &
+  illustrations`, or the original PDF in `input/bibliography/` at the cited
+  pages. Reaching back to the source for depth is expected; inventing depth from
+  memory is not.
+- **Grounded elaboration is cited; expository framing (transitions, restating an
+  argument's logic) is uncited.** New factual claims from memory are forbidden.
+- **Target length is a floor for development, not a quota** — set generous word
+  counts on Draft tasks so the draft is forced to elaborate rather than compress.
+- **Register:** academic, discipline-appropriate Fachsprache, impersonal voice
+  (adjust here if the project wants first-person plural, essayistic tone, etc.).
+
 ## Frontmatter schema
 
 Every wiki page in `knowledge/` is a `.md` file with YAML frontmatter
@@ -298,12 +319,17 @@ Trigger: human says "Draft [section/chapter]."
 
 Steps:
 1. LLM gathers relevant Synthesis and Source pages.
-2. LLM creates a draft in `output/`.
+2. LLM creates a draft in `output/`, following the **Manuscript style
+   (drafting depth)** rules above — develop each point with examples and
+   explanation drawn from the sources, do not reflow bullets into flat prose.
    - For a book chapter: in `output/book/`
    - For an article: in `output/article/`
-3. The draft contains Quarto citations (`@citekey`) referring to
+3. Where a wiki page is too thin to develop a point, the LLM reaches back to the
+   source — its `### Direct quotes` / `### Examples & illustrations`, or the
+   original PDF in `input/bibliography/` at the cited pages — and cites what it uses.
+4. The draft contains Quarto citations (`@citekey`) referring to
    `output/bibtex/references.bib`.
-4. Human revises the draft.
+5. Human revises the draft.
 
 ### 5. Read the wiki
 
