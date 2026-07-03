@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Acquisition gate inside `executing-research-plan`.** A plan run now guarantees every ingest task's original PDF is on disk *before* the first `source-ingester` is dispatched, instead of letting each ingest hard-stop one source at a time. The gate scans `input/bibliography/`, runs `acquire-sources` (dispatching the `source-acquirer` subagent for ≥ ~8 missing items) on the A+B set, and — when originals remain missing — enters an interactive resume loop: it surfaces the `acquisition-todo.md` worklist, marks the dependent ingest todos `blocked`, pauses, and on resume reconciles newly-added PDFs, offering to search open-access **alternatives** (a different OA source on the same topic, via `literature-review`) or continue with the acquired subset. Non-blocked downstream work (analysis on existing data) is not held up. Reflected in the process-flow diagram, routing table, red flags, and `using-research-powers`.
+- **Weighted source table as the head of `literaturguide.md`.** `literature-review` now opens the guide with a required table (`Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link`) before the nine prose sections. This is the canonical weighting `acquire-sources` filters on (by `Grade`, default A+B) to build its download worklist — closing the hand-off between search and acquisition.
+
+### Changed
+
+- **Canonical, flat PDF naming: `autor-jahr-kurztitel.pdf`.** All source PDFs live directly in `input/bibliography/` — flat, no per-source subfolders — under one lowercase-ASCII, hyphen-separated scheme (`autor` = first author's surname with umlaut/ß folding and particles removed; `jahr` = four-digit year + disambiguation letter; `kurztitel` = 1–3 significant title words). This single flat folder is the source of truth `acquire-sources` reconciles against and `ingest-source` reads from; the wiki slug / bibkey is the `autor-jahr` prefix. `acquire-sources` writes downloads straight to this name; manual downloads are renamed to it before ingest. Applied across `acquire-sources`, `ingest-source`, the template `CLAUDE.md` / `README.md` / `input/bibliography/README.md`, `docs/tutorial.md`, and `docs/installation-cowork.md`; the example plans now carry an explicit *Acquire source PDFs* task before ingest.
+- **`writing-research-plan` decomposes with an explicit acquisition step.** Plans now enumerate data sources with a status (acquire pending / on disk / already in wiki) and insert an *Acquire-sources* task before ingest tasks, so the Acquire → Ingest → Analysis → Synthesis → Draft chain has no gaps.
+- **Template software directory renamed `output/app/` → `output/code/`** (with matching `.gitignore` paths and the tree in `CLAUDE.md` / `README.md`), aligning the folder name with how the skills refer to it.
+- **`grant-finder`: reference path made relative** (`research-skills/dao-grant-finder/`), removing a hard-coded absolute machine path from the skill.
+
 ## [0.16.0] — 2026-06-23
 
 ### Added

@@ -64,7 +64,7 @@ project-root/
 │   ├── article/           ← Quarto article (single file with abstract)
 │   ├── presentation/      ← Talks (Quarto Reveal.js/Beamer/PPTX)
 │   ├── data-analysis/     ← Scripts, notebooks (R, Python, Julia)
-│   ├── app/               ← Software repo (e.g. Django/GeoDjango)
+│   ├── code/              ← Software repo (e.g. Django/GeoDjango)
 │   └── bibtex/            ← .bib file(s) + CSL styles
 │       ├── references.bib
 │       └── csl/           ← Citation Style Language files
@@ -86,14 +86,28 @@ project-root/
   Several files can live here (e.g. project description, exposé, proposal
   draft, methodological guidelines).
 - New sources are dropped here by the human (PDF, data, notes).
-- File names for PDFs follow the schema: `Lastname - Title - Year.pdf`
-  (can be automated with the rename-scientific-pdf skill).
+- **All source PDFs live directly in `input/bibliography/` — flat, no
+  subfolders.** This one folder is the single source of truth that
+  `acquire-sources` reconciles against and `ingest-source` reads from. Skills
+  never create per-source subfolders here; if a PDF arrives nested, it is moved
+  up to the top level.
+- **PDF filename schema (canonical): `autor-jahr-kurztitel.pdf`** — all
+  lowercase ASCII, hyphen-separated. `autor` = first author's surname (umlauts
+  → `ae`/`oe`/`ue`, `ß` → `ss`; particles and spaces removed, e.g.
+  "van der Toorn" → `vandertoorn`); `jahr` = four-digit year (add a
+  disambiguation letter for clashes: `finkelstein-2003b`); `kurztitel` = one to
+  three significant title words, hyphen-joined, stopwords dropped. Example:
+  `finkelstein-2003-low-chronology.pdf`. `acquire-sources` writes downloads
+  straight to this name; manually fetched PDFs are renamed to it before ingest.
+  The wiki slug / bibkey is the `autor-jahr` prefix (filename minus
+  `-kurztitel`).
 - **Acquisition before ingest.** After `literature-review`, run
   `acquire-sources`: it auto-downloads the Open-Access PDFs for the A+B set into
   `input/bibliography/` and writes `acquisition-todo.md` — a worklist of
   sources it could not fetch (paywalled / bot-blocked). Download those manually
-  (e.g. via university VPN) under the exact `Lastname - Title - Year.pdf`
-  filename, then re-run `acquire-sources` to reconcile (or ingest the ones
+  (e.g. via university VPN) and save them flat in `input/bibliography/` under the
+  exact `autor-jahr-kurztitel.pdf` filename the worklist gives, then re-run
+  `acquire-sources` to reconcile (or ingest the ones
   already present). `ingest-source` **hard-stops** on a missing original rather
   than silently using a preprint or review — so acquire first. See
   `input/bibliography/README.md`.
@@ -156,7 +170,7 @@ ingest and referenced in the wiki pages.
   emerges: manuscript, analysis, software.
 - Quarto/LaTeX projects reference the shared BibTeX file in
   `output/bibtex/references.bib`.
-- Code in `data-analysis/` and `app/` has its own README files.
+- Code in `data-analysis/` and `code/` has its own README files.
 
 ## Frontmatter schema
 

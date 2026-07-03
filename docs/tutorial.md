@@ -61,7 +61,7 @@ Output: `input/bibliography/literaturguide.md` with ~18 sources graded A/B/C, pl
 
 You say "acquire the sources." The skill takes the A+B set from `literaturguide.md` and, for each, tries to fetch an Open-Access PDF — preferring the recorded `oa_pdf`, then resolving via the MCP / Unpaywall by DOI. Every download is **validated** (HTTP 200 + `application/pdf` + `%PDF-` magic bytes + size + not an HTML login page), so a publisher "Access Denied" page is never mistaken for a source.
 
-Output: the open ones land in `input/bibliography/` as `Finkelstein - The Archaeology of the Israelite Settlement - 1988.pdf` etc.; everything paywalled or bot-blocked goes into **`input/bibliography/acquisition-todo.md`** — a table with the DOI, any candidate URL, and the exact filename to save under. Say 11 of 18 download automatically; 7 need you.
+Output: the open ones land flat in `input/bibliography/` as `finkelstein-1988-israelite-settlement.pdf` etc. (canonical `autor-jahr-kurztitel.pdf`, no subfolders); everything paywalled or bot-blocked goes into **`input/bibliography/acquisition-todo.md`** — a table with the DOI, any candidate URL, and the exact filename to save under. Say 11 of 18 download automatically; 7 need you.
 
 You open `acquisition-todo.md`, connect the **university VPN**, and download those 7 originals into `input/bibliography/` under the given filenames. Then you say "acquire the sources" again — the re-run rescans the folder, drops the 7 now-present files from the worklist, and reports "all 18 A+B sources acquired." (Had you skipped this and gone straight to ingest, `ingest-source` would have hard-stopped on the first missing original instead of quietly ingesting a preprint.)
 
@@ -186,7 +186,7 @@ input/bibliography/
 ├── audit-log-2026-05-27.json
 ├── acquisition-todo.md            (manual-download worklist; empty once all acquired)
 ├── acquisition-log-2026-05-28.json
-└── [PDFs of each acquired source, "Lastname - Title - Year.pdf"]
+└── [PDFs of each acquired source, flat — "autor-jahr-kurztitel.pdf"]
 
 knowledge/
 ├── _meta/

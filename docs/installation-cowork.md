@@ -79,7 +79,7 @@ Find any scholarly PDF you want to read. Save it into `input/bibliography/` of y
 
 Back in Claude, say:
 
-> Ingest this PDF: input/bibliography/finkelstein-2003.pdf
+> Ingest this PDF: input/bibliography/finkelstein-2003-low-chronology.pdf
 
 The `ingest-source` skill reads the full PDF, extracts the key claims, identifies the people, places, and concepts mentioned, and writes structured wiki pages to `knowledge/sources/` and `knowledge/entities/`. Plus a BibTeX entry and a log line.
 

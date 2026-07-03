@@ -44,6 +44,8 @@ acquire-sources            → input/bibliography/*.pdf, acquisition-todo.md
 ingest-source (loop)       → knowledge/sources/*, knowledge/entities/*
                               (HARD-STOP on a missing original — no silent preprint/review substitution)
 executing-research-plan    → output/data-analysis/*, knowledge/synthesis/*
+                              (runs an acquisition gate before ingest tasks — invokes
+                               acquire-sources automatically inside a plan run, not only interactively)
 drafting-manuscript        → output/**/*.qmd (SOFT-GATE: ≥1 stable synthesis + lint green)
 requesting-peer-review     → review documents + revisions
 finishing-a-research-project → rendered publication, archived data, grant follow-up

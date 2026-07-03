@@ -64,9 +64,9 @@ If any condition is missing: explain to the user which, ask for a short reason f
 Create TodoWrite tasks for each:
 
 1. **Determine focus** — read `input/description/*.md` if present; extract the project's research question (look for `## Research question` heading or first H2). Propose: "Default focus from project description: «<research question>». Use this for the ingest or refine? (e.g. 'focus on the stratigraphic argument for Megiddo IVA' is more useful than the whole research question)." If `input/description/` is absent, ask explicitly: "What's the focus for this ingest? One sentence — what aspect of this source serves your project?" **Do not proceed without an explicit confirmed focus string.**
-2. **Locate the acquired original** — expect the PDF in `input/bibliography/` named `Lastname - Title - Year.pdf` (placed there by `acquire-sources`). **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Tell the user the original is not on disk, point them to `input/bibliography/acquisition-todo.md`, and offer to run `acquire-sources`. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
+2. **Locate the acquired original** — expect the PDF **flat** in `input/bibliography/` (no subfolders) named `autor-jahr-kurztitel.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Tell the user the original is not on disk, point them to `input/bibliography/acquisition-todo.md`, and offer to run `acquire-sources`. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
 3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
-4. **Derive slug** — `<lowercase-first-author>-<year>` (e.g. `finkelstein-2003`, `mazar-2011b` for disambiguation)
+4. **Derive slug** — the `autor-jahr` prefix of the filename (filename minus `-kurztitel`), i.e. `<lowercase-first-author>-<year>` (e.g. `finkelstein-2003`, `mazar-2011b` for disambiguation)
 5. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
 6. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
 7. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
@@ -401,7 +401,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 
 - **Focus-driven, not summary-driven** — the wiki documents what THIS project takes from THIS source. Generic content stays in the PDF.
 - **One source = one wiki page, multiple focus blocks** — append over time as the project's needs evolve.
-- **The raw PDF is the archive** — `input/bibliography/<source>.pdf` is the canonical "everything"; the wiki is the interpretation.
+- **The raw PDF is the archive** — `input/bibliography/autor-jahr-kurztitel.pdf` (flat, no subfolders) is the canonical "everything"; the wiki is the interpretation.
 - **Wikilinks before full prose** — link every focus-relevant entity at first mention.
 - **Typed relations at ingest** — stance-bearing connections (confirms / contradicts / builds-on / cites) go into the `relations:` frontmatter as typed, confidence-tagged edges, not just prose wikilinks. The graph is born typed; `confidence: extracted` only with a quote + page.
 - **Verbatim quotations + page** — indispensable for drafts later; at least 1 quote per focus block.

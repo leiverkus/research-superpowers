@@ -59,7 +59,7 @@ digraph grants {
 
 ## Reference Content
 
-`/Users/patrick/Documents/Aktuell/research-workflow/research-skills/dao-grant-finder/`:
+`research-skills/dao-grant-finder/`:
 
 - `SKILL.md` — full 11-section template
 - `foundations.yaml` — curated funder database (DFG, ERC, VolkswagenStiftung, Gerda Henkel, Fritz Thyssen, bilateral German–Israeli programmes, etc.)

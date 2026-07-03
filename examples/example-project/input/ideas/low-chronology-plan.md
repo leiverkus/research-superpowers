@@ -33,9 +33,9 @@ methodology: hermeneutic
 - [[finkelstein-piasetzky-2003]] — *already ingested* (focus: 14C reconciliation between Low and Modified Conventional Chronologies)
 - [[mazar-2011]] — stub ingested (focus: Modified Conventional Chronology response to the Low Chronology)
 - [[regev-et-al-2020]] — stub ingested (focus: current Tel Rehov 14C dataset)
-- Cohen 1979 — *ingest pending* (focus: stratigraphic and ceramic argument for 10th-c. Negev fortress horizon)
-- Finkelstein 1999 — *ingest pending* (focus: Low Chronology methodology)
-- Finkelstein 2003 — *ingest pending* (focus: Low Chronology applied to Megiddo and the southern Levant)
+- Cohen 1979 — *acquire pending* (focus: stratigraphic and ceramic argument for 10th-c. Negev fortress horizon)
+- Finkelstein 1999 — *acquire pending* (focus: Low Chronology methodology)
+- Finkelstein 2003 — *acquire pending* (focus: Low Chronology applied to Megiddo and the southern Levant)
 
 Forschungsstand literature: discovered by a `literature-review` pass; ingested per source under a project-question-aligned focus.
 
@@ -52,7 +52,15 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] Generate `literaturguide.md` in 9-section format
 - [ ] Update `references.bib`
 
-### Task 2: Ingest foundational sources
+### Task 2: Acquire source PDFs
+
+**Files:** `input/bibliography/*.pdf`, `input/bibliography/acquisition-todo.md`
+
+- [ ] Run `acquire-sources` on the A+B set from `literaturguide.md` (auto-download OA PDFs, write the manual-download worklist)
+- [ ] Download paywalled originals manually (VPN) into `input/bibliography/`, flat, under the exact `autor-jahr-kurztitel.pdf` filename
+- [ ] Re-run `acquire-sources` to reconcile until the foundational originals are present (or explicitly deferred)
+
+### Task 3: Ingest foundational sources
 
 **Files:** `knowledge/sources/*.md`, `knowledge/entities/*.md`
 
@@ -62,7 +70,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] (Finkelstein & Piasetzky 2003 already ingested; re-ingest only if the focus drifts)
 - [ ] Wiki-lint exits 0
 
-### Task 3: Ingest *Forschungsstand* sources
+### Task 4: Ingest *Forschungsstand* sources
 
 **Files:** `knowledge/sources/*.md`
 
@@ -70,7 +78,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] Each ingest produces source page + entity stubs + BibTeX entry + log line
 - [ ] Wiki-lint exits 0 after each batch of 3 ingests
 
-### Task 4: Synthesise the chronology debate
+### Task 5: Synthesise the chronology debate
 
 **Files:** `knowledge/synthesis/chronology-debate.md`
 
@@ -80,7 +88,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] Apply Critical-Thinking checklist (`executing-research-plan`) before marking ready
 - [ ] User sets `status: stable` after review (agents never self-promote)
 
-### Task 5: Draft article
+### Task 6: Draft article
 
 **Files:** `output/article/article.md`
 
@@ -91,7 +99,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] Inline citations as `[@bibkey, p. XX]` only from `output/bibtex/references.bib`
 - [ ] `quarto render` exits 0
 
-### Task 6: Peer review
+### Task 7: Peer review
 
 **Files:** `output/article/reviews/`
 
@@ -100,7 +108,7 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 - [ ] Classify each issue Major / Minor / Editorial
 - [ ] Walk user through each with accept / reject / defer decisions
 
-### Task 7: Finish
+### Task 8: Finish
 
 - [ ] Closing checklist (see `finishing-a-research-project`)
 - [ ] Zenodo DOI for the manuscript + supplementary
