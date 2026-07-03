@@ -112,6 +112,45 @@
           }
         }
       }
+    },
+    "review_flags": {
+      "type": "array",
+      "description": "Optional single-page content-review findings, raised by the semantic-wiki-review skill (or a human reviewer). A DISTINCT axis from `status` and from `relations`: `status` is human-owned maturity (draft/review/stable) and is never touched by a review; `relations: contradicts` records a conflict BETWEEN two pages; `review_flags` records a concern about THIS page's own content (an overstatement, a weakly-supported claim, a stale assertion). A page can be `status: stable` AND carry an open flag — that is the important case (a blessed page a newer source now undercuts). An `open` flag gates drafting: `drafting-manuscript` will not draft from the page without a logged override, and `wiki-lint` surfaces open flags (it does not fail CI on them). Cleared/kept for audit via `state: resolved`, not by deletion. Pages without this field remain valid.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "state", "raised_by", "detected"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["overstatement", "weak-support", "stale", "missing-citation", "open-question"],
+            "description": "The class of concern. overstatement = epistemic overreach (claim stronger than the source supports); weak-support = assertion without a resolving [[source]] / @citekey; stale = superseded or complicated by a newer ingest; missing-citation = a claim that needs a citation it lacks; open-question = an unresolved point flagged for the author."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Optional one-line description of the concern, ideally quoting the flagged claim. Recommended — it is what makes the flag actionable without re-reading the audit report."
+          },
+          "raised_by": {
+            "type": "string",
+            "description": "Who raised the flag: 'semantic-wiki-review' for the content-audit skill, or a human reviewer's name/handle."
+          },
+          "detected": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO YYYY-MM-DD when the flag was raised."
+          },
+          "state": {
+            "type": "string",
+            "enum": ["open", "resolved"],
+            "description": "open = unresolved; gates drafting and is surfaced by lint. resolved = addressed; kept as an audit trail rather than deleted."
+          },
+          "resolved": {
+            "type": "string",
+            "format": "date",
+            "description": "Optional ISO YYYY-MM-DD when the flag moved to state=resolved."
+          }
+        }
+      }
     }
   },
   "allOf": [

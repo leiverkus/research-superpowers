@@ -18,6 +18,12 @@ relations:
     type: contradicts
     confidence: inferred
     because: "Mazar's Modified Conventional Chronology dates the Iron IIA onset ~50 years higher than the Low-Chronology reading this synthesis builds on."
+review_flags:
+  - kind: weak-support
+    detail: "Leans on [[mazar-2011]] and [[regev-et-al-2020]], both still stub source pages, and the contradiction against Mazar is confidence=inferred — not yet grounded in a full reading. Ingest both fully before drafting from this synthesis."
+    raised_by: semantic-wiki-review
+    detected: 2026-05-28
+    state: open
 ---
 
 # Chronology Debate, Iron Age IIA — Negev Fortress Lens

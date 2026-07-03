@@ -46,10 +46,11 @@ than overridden — the override is an audit trail, not a substitute.
 3. **Parse output** into categories: errors, warnings, orphans
 4. **Fix errors inline** (missing frontmatter fields, broken wikilinks, invalid `type` values)
 5. **Assess warnings** — stale pages, status inconsistency, empty sections — decide with user: fix / defer / ignore
-6. **Handle orphans** — pages with no incoming wikilinks: decide link-in, delete, or mark as root
-7. **Re-run lint** until exit 0 on errors
-8. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred)
-9. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
+6. **Review the open review flags** — the `=== Review flags ===` section lists open `review_flags` (content findings from `semantic-wiki-review`). These do **not** fail the exit code, but they **gate drafting** (see `drafting-manuscript`): decide with the user per flag — fix the underlying issue and set `state: resolved`, or leave it open and let drafting log an override. Do not clear a flag by deleting it.
+7. **Handle orphans** — pages with no incoming wikilinks: decide link-in, delete, or mark as root
+8. **Re-run lint** until exit 0 on errors
+9. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred, N open flags)
+10. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
 
 **See also:** `scripts/wiki-to-graph.py` is the sibling tool for *structure analysis* (not validation) — it exports the wiki as a graph (`graph.json` / `graph.graphml`) and reports god_nodes (most-connected pages) and bridges (entities joining otherwise-unconnected sources). Useful after a lint pass to spot hubs and weak links; it reads the same `relations` frontmatter the linter validates.
 
@@ -81,7 +82,8 @@ For users on Cowork or any environment without a shell — or any project where 
    - if `idai_gazetteer_id` is present, it matches `^\d+$`
 4. Report any failures in the same format as the Python script: `MISSING: <path> — required field '<field>' is missing` / `INVALID: <path> — <field>='<value>' (allowed: …)`.
 5. Print a status summary: total pages, draft/review/stable distribution.
-6. **Explicitly skip** wikilink resolution and orphan detection. State this in the output so the user knows what's not covered.
+6. **Surface open `review_flags`** — these live in frontmatter, so the fallback can list them cheaply (page, `kind`, `detail`). Report count + list, exactly as the script's `=== Review flags ===` section does; they are advisory (gate drafting, not this check).
+7. **Explicitly skip** wikilink resolution and orphan detection. State this in the output so the user knows what's not covered.
 
 **What the fallback does NOT do:**
 
@@ -134,6 +136,8 @@ digraph lint {
 - Wikilinks `[[...]]` resolve to existing files
 - No duplicate page titles within a section
 - Orphan detection (pages with zero incoming wikilinks)
+- Structured `relations` blocks resolve + the inference-rate (share of `inferred`/`ambiguous` edges)
+- Open `review_flags` (content findings from `semantic-wiki-review`) — **surfaced only**: advisory, they gate `drafting-manuscript`, not the lint exit code
 
 ## Common Fixes
 
