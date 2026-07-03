@@ -55,7 +55,7 @@ The plan templates below show both variants.
 2. **Lock the hypothesis** — one sentence, falsifiable or argumentatively prüfbar, in the user's own words after confirmation
 3. **Define falsification criteria** — what observation would make you reject the hypothesis
 4. **Enumerate data sources** — exact sources, with status (acquire pending / on disk / already in wiki)
-5. **Decompose into tasks** — an Acquire-sources task (before ingest), then Ingest tasks, Analysis tasks, Synthesis tasks, Draft tasks; each step 2–15 min
+5. **Decompose into tasks** — an Acquire-sources task (before ingest), then Ingest tasks, Analysis tasks, Synthesis tasks, Draft tasks; each step 2–15 min. Give every Draft task a **realistic, generous word count** — it is a floor for development, not a quota; too-tight targets are the main cause of dense, bullet-reflowed prose (see `drafting-manuscript`)
 6. **Specify verification criteria** — how we know the project is done (lint green, N sources ingested, chapter renders, …)
 7. **Write plan doc** to `input/ideas/<slug>-plan.md` using the template below
 8. **Self-review** — no placeholders, type consistency across tasks, spec coverage from design doc
