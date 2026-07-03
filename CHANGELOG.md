@@ -6,12 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-### Changed
-
-- **Manuscript drafting now writes with depth instead of reflowing bullets.** Drafts built straight from the deliberately terse wiki came out dense and compressed — one flat sentence per wiki bullet, no examples, no explanation. `drafting-manuscript` reframes the "wiki is the single source of truth" rule so it governs *what is claimed*, while treating the wiki as a **pointer to the depth, not the depth itself**: when a page is too thin to develop a point, the drafter reaches back to the source — the source page's `### Direct quotes` / `### Examples & illustrations`, or the original PDF in `input/bibliography/` at the cited page anchors (on disk thanks to `acquire-sources`) — and cites what it uses. A new *Writing with depth* section distinguishes grounded elaboration (from the source, cited — encouraged) from expository framing (uncited) and new-claims-from-memory (still forbidden), gives an assertion → grounding → example → significance paragraph pattern, and adds a reach-back checklist step, process-flow branch, red flags, and key principles. The `drafter` subagent contract now receives the source PDF paths and reports which it reached into.
-  - **`ingest-source` captures the raw material for that depth.** A new `### Examples & illustrations (for later drafting)` subsection in each focus block records the concrete cases a source uses (artefact, site, dataset, passage) with page anchors, and the `### Direct quotes` guidance now prefers passages that carry an explanation or example. A claim-only page produces dense prose downstream.
-  - **Per-project house style.** The template `CLAUDE.md` gains a *Manuscript style (drafting depth)* block — tunable per project (density, examples, register, target length) — which `drafting-manuscript` reads before drafting; the Draft workflow references it.
-  - **`writing-research-plan`** now directs Draft tasks to carry a generous word count as a floor for development, since too-tight targets are the main driver of compressed prose.
+## [0.17.0] — 2026-07-03
 
 ### Added
 
@@ -28,6 +23,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **`writing-research-plan` decomposes with an explicit acquisition step.** Plans now enumerate data sources with a status (acquire pending / on disk / already in wiki) and insert an *Acquire-sources* task before ingest tasks, so the Acquire → Ingest → Analysis → Synthesis → Draft chain has no gaps.
 - **Template software directory renamed `output/app/` → `output/code/`** (with matching `.gitignore` paths and the tree in `CLAUDE.md` / `README.md`), aligning the folder name with how the skills refer to it.
 - **`grant-finder`: reference path made relative** (`research-skills/dao-grant-finder/`), removing a hard-coded absolute machine path from the skill.
+- **Manuscript drafting now writes with depth instead of reflowing bullets.** Drafts built straight from the deliberately terse wiki came out dense and compressed — one flat sentence per wiki bullet, no examples, no explanation. `drafting-manuscript` reframes the "wiki is the single source of truth" rule so it governs *what is claimed*, while treating the wiki as a **pointer to the depth, not the depth itself**: when a page is too thin to develop a point, the drafter reaches back to the source — the source page's `### Direct quotes` / `### Examples & illustrations`, or the original PDF in `input/bibliography/` at the cited page anchors (on disk thanks to `acquire-sources`) — and cites what it uses. A new *Writing with depth* section distinguishes grounded elaboration (from the source, cited — encouraged) from expository framing (uncited) and new-claims-from-memory (still forbidden), gives an assertion → grounding → example → significance paragraph pattern, and adds a reach-back checklist step, process-flow branch, red flags, and key principles. The `drafter` subagent contract now receives the source PDF paths and reports which it reached into.
+  - **`ingest-source` captures the raw material for that depth.** A new `### Examples & illustrations (for later drafting)` subsection in each focus block records the concrete cases a source uses (artefact, site, dataset, passage) with page anchors, and the `### Direct quotes` guidance now prefers passages that carry an explanation or example. A claim-only page produces dense prose downstream.
+  - **Per-project house style.** The template `CLAUDE.md` gains a *Manuscript style (drafting depth)* block — tunable per project (density, examples, register, target length) — which `drafting-manuscript` reads before drafting; the Draft workflow references it.
+  - **`writing-research-plan`** now directs Draft tasks to carry a generous word count as a floor for development, since too-tight targets are the main driver of compressed prose.
 
 ## [0.16.0] — 2026-06-23
 
