@@ -46,7 +46,7 @@ This skill wraps the detailed workflow of `research-skills/dao-literature-review
 <SOFT-GATE>
 Before closing the literature phase, check:
 (1) ≥ 15 distinct, discipline-appropriate sources are catalogued
-(2) `literaturguide.md` (or equivalent) exists in `input/bibliography/`
+(2) `literaturguide.md` exists in `input/bibliography/` and opens with the **weighted source table** (columns `Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link`)
 (3) `output/bibtex/references.bib` is updated
 (4) `knowledge/_meta/log.md` has a new entry
 
@@ -71,7 +71,7 @@ reason (e.g. "narrow topic with small source corpus"), write it into
 2. **Check for existing `literaturguide.md`** in `input/bibliography/` — if it exists, offer to extend rather than redo
 3. **Dispatch `literature-scout` subagent** (see `agents/literature-scout.md`) for database queries
 4. **Screen results** — titles first, then abstracts. Grade by relevance (A/B/C). Minimum 15 A/B sources before proceeding.
-5. **Generate `literaturguide.md`** with 9 sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview) — template in `research-skills/dao-literature-review/examples/literaturguide-example.md`. Carry each candidate's `oa_pdf` / DOI into the guide for the acquisition phase; **do not download here.**
+5. **Generate `literaturguide.md`** — it **opens with the weighted source table** (required; columns `Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link` — see "The weighted source table" below), followed by the 9 prose sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview); prose layout per the canonical example (see "Reference Content"). Carry each candidate's `oa_pdf` / DOI into the table for the acquisition phase; **do not download here.**
 6. **Export BibTeX** → merge into `output/bibtex/references.bib` (resolve key conflicts with user before merging)
 7. **Write audit log** → `input/bibliography/audit-log-<date>.json`
 8. **Update `knowledge/_meta/log.md`** with date, query, result count, guide path
@@ -106,10 +106,51 @@ digraph literature_review {
 }
 ```
 
+## The weighted source table (required — section 1 of the guide)
+
+`literaturguide.md` **opens with one graded master table** so the reader sees the
+whole weighted corpus at a glance and `acquire-sources` can read the weighting
+deterministically. The columns are fixed:
+
+```markdown
+## 1. Quellentabelle (gewichtet)
+
+| Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link |
+|-------|------------|-----------|-----------|----------|
+| A | Finkelstein 2003 | low-chronology | ✓ OA | [10.1179/…](https://doi.org/10.1179/…) |
+| A | Mazar 2005 | chronology-debate | ◐ UB | [10.…](https://doi.org/10.…) |
+| B | Finkelstein & Piasetzky 2011 | gap-narrowing | ✓ OA | [10.5615/…](https://doi.org/10.5615/…) |
+| C | Kenyon 1957 | digging-up-jericho | ○ Fernleihe | — |
+
+Legende — **Grade:** A core/must-read · B supporting · C peripheral/context.
+**OA/Zugang:** ✓ OA (auto-downloadable) · ◐ UB (university licence) · ○ Fernleihe (ILL/paywalled, manual) · ✗ (no copy located).
+```
+
+Column rules:
+
+- **Grade** — relevance to *this project's* research question: **A** must-read /
+  core, **B** important / supporting, **C** peripheral / context. Sort A → B → C,
+  then by year. This is the column `acquire-sources` filters on (`grade_scope`,
+  default `A,B`).
+- **Autor Jahr** — first author's surname + year, matching the `autor-jahr` wiki
+  slug / bibkey (letter suffix for clashes: `Mazar 2011b`).
+- **Kurztitel** — the **same** short title used in the PDF filename
+  `autor-jahr-kurztitel.pdf` (one to three significant words, hyphen-joined,
+  lowercase). Keeps table row, downloaded file, and wiki page in lockstep.
+- **OA/Zugang** — access route, drives acquisition routing: `✓ OA` auto-download,
+  `◐ UB` / `○ Fernleihe` → manual worklist, `✗` → no copy located yet.
+- **DOI/Link** — a clickable DOI (preferred) or landing / OA-PDF URL; `—` if none.
+
+The 9 prose sections (reading order, debates, methods, gaps, full bibliography,
+audit log) follow the table and add the qualitative depth. This table — not the
+prose-only canonical example — is the binding spec for the weighting; if the
+example shows an ungraded list, the table here takes precedence and is prepended.
+
 ## Reference Content
 
-The full API reference, query templates, and 9-section literaturguide.md template live in the original skill at:
-`/Users/patrick/Documents/Aktuell/research-workflow/research-skills/dao-literature-review/`
+The full API reference, query templates, and the 9-section prose layout of
+literaturguide.md live in the original skill at:
+`/Users/patrick/Documents/Aktuell/AI-Tooling/research-workflow/research-skills/dao-literature-review/`
 
 Key files:
 - `SKILL.md` — full workflow (English/German, all databases)

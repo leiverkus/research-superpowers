@@ -1,6 +1,6 @@
 ---
 name: acquire-sources
-description: Use AFTER literature-review and BEFORE ingest-source to obtain the actual PDFs for the A+B graded sources. Auto-downloads Open-Access PDFs into input/bibliography/ (named "Lastname - Title - Year.pdf") and writes a manual-download worklist (acquisition-todo.md) for everything paywalled or bot-blocked, so the user can fetch originals via university VPN. Re-run to reconcile manually-downloaded files. Triggers on "acquire the sources", "download the literature", "get the PDFs", "Quellen beschaffen", "lade die Literatur herunter". NOT a search skill (that is literature-review), NOT an ingest skill (that is ingest-source).
+description: Use AFTER literature-review and BEFORE ingest-source to obtain the actual PDFs for the A+B graded sources. Auto-downloads Open-Access PDFs flat into input/bibliography/ (named "autor-jahr-kurztitel.pdf", no subfolders) and writes a manual-download worklist (acquisition-todo.md) for everything paywalled or bot-blocked, so the user can fetch originals via university VPN. Re-run to reconcile manually-downloaded files. Triggers on "acquire the sources", "download the literature", "get the PDFs", "Quellen beschaffen", "lade die Literatur herunter". NOT a search skill (that is literature-review), NOT an ingest skill (that is ingest-source).
 inputs:
   - name: literaturguide_path
     description: Path to input/bibliography/literaturguide.md produced by literature-review
@@ -15,7 +15,7 @@ inputs:
     description: Path to output/bibtex/references.bib for DOI/citekey reconciliation. Default output/bibtex/references.bib.
     required: false
 outputs:
-  - path: input/bibliography/<Lastname - Title - Year>.pdf
+  - path: input/bibliography/<autor-jahr-kurztitel>.pdf
     kind: created
   - path: input/bibliography/acquisition-todo.md
     kind: created_or_modified
@@ -46,7 +46,7 @@ Get the actual PDFs onto disk before ingest. Two outcomes per source: either an 
 <SOFT-GATE>
 Before closing acquisition, check:
 (1) every A+B source in `literaturguide.md` is in exactly one bucket: `downloaded` | `already-present` | `manual` | `skipped`,
-(2) every `downloaded`/`already-present` file exists in `input/bibliography/` under its `Lastname - Title - Year.pdf` name AND passed PDF validation (not an HTML page),
+(2) every `downloaded`/`already-present` file exists **flat** in `input/bibliography/` (no subfolders) under its `autor-jahr-kurztitel.pdf` name AND passed PDF validation (not an HTML page),
 (3) `input/bibliography/acquisition-todo.md` lists every `manual` item (or states "none — all sources acquired"),
 (4) `input/bibliography/acquisition-log-<date>.json` is written,
 (5) `knowledge/_meta/log.md` has a new `acquire` entry.
@@ -59,6 +59,7 @@ Report counts: "Acquired N of M A+B sources. K need manual download — see `acq
 - `literature-review` has produced a `literaturguide.md` and you want the PDFs before ingest
 - You manually downloaded some originals via VPN and want to reconcile the worklist (re-run)
 - A draft or ingest run reported a missing original and you need to acquire it
+- `executing-research-plan`'s **acquisition gate** invokes this before ingest tasks — automatically inside a plan run, not only as a standalone user-triggered step (the skill is idempotent and reconcile-capable, so it is safe to call from the gate's resume loop)
 
 **NOT for:** searching (use `literature-review`), reading a source into the wiki (use `ingest-source`), or downloading a single ad-hoc URL.
 
@@ -66,8 +67,8 @@ Report counts: "Acquired N of M A+B sources. K need manual download — see `acq
 
 Create TodoWrite tasks for each:
 
-1. **Build the A+B worklist** — read `literaturguide_path` and `bibtex_path`. For every source graded in `grade_scope` (default `A,B`), collect: `bibkey`, authors, year, short title, grade, `doi`, `url`, `oa_pdf` (the per-candidate fields the `literature-scout` agent emits), and the target filename `Lastname - Title - Year.pdf` (first author's surname; sanitise the title — strip `/ : * ? " < > |`, collapse whitespace, keep it short).
-2. **Reconcile against disk first (idempotent)** — scan `input/bibliography/*.pdf`. Match each worklist item by exact target filename, then fuzzily by `Lastname` + `Year`. A match → `already-present`; **never re-download it.**
+1. **Build the A+B worklist** — read `literaturguide_path` and `bibtex_path`. The guide's **weighted source table** (section 1, columns `Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link`) is the canonical weighting: filter on its `Grade` column by `grade_scope` (default `A,B`). For every in-scope source collect: `bibkey`, authors, year, short title (the `Kurztitel` cell), grade, `doi`, `url`, `oa_pdf` (the per-candidate fields the `literature-scout` agent emits), and the canonical target filename `autor-jahr-kurztitel.pdf` — all lowercase ASCII, hyphen-separated: `autor` = first author's surname (umlauts → `ae`/`oe`/`ue`, `ß` → `ss`; particles/spaces removed), `jahr` = four-digit year (letter suffix for clashes, `finkelstein-2003b`), `kurztitel` = one to three significant title words with stopwords dropped. e.g. `finkelstein-2003-low-chronology.pdf`. **Flat in `input/bibliography/` — never a subfolder.**
+2. **Reconcile against disk first (idempotent)** — scan `input/bibliography/*.pdf` (top level only — files are flat). Match each worklist item by exact target filename, then fuzzily by `autor` + `jahr` prefix (catches a file that differs only in its `kurztitel`). A match → `already-present`; **never re-download it.**
 3. **Resolve a download URL** for each still-missing item, in priority order:
    (a) `oa_pdf` carried in the guide / scout output;
    (b) `dao-paper-search-mcp` by DOI — `search_crossref` / `search_openalex` / `search_core` / `search_zenodo` / `search_arxiv` → `oa_pdf` (OpenAlex: `best_oa_location.pdf_url`);
@@ -85,7 +86,7 @@ Create TodoWrite tasks for each:
 
 ```bash
 URL="…"
-TARGET="input/bibliography/Lastname - Title - Year.pdf"
+TARGET="input/bibliography/autor-jahr-kurztitel.pdf"   # e.g. finkelstein-2003-low-chronology.pdf — flat, no subfolder
 TMP="$(mktemp -t acq).pdf"
 # Capture curl's OWN exit status (network errors → curl_error). The -w format
 # ends in \n so the later `read` gets a terminated line and does not falsely
@@ -130,9 +131,10 @@ Regenerated on every run (resolved items disappear). Layout:
 
 These A+B sources could not be auto-downloaded (paywalled, bot-blocked, or no
 Open-Access copy). Download each **original** PDF via your university VPN /
-library proxy, save it into `input/bibliography/` under the **exact** "Save as"
-filename below, then **re-run acquire-sources** to reconcile (resolved rows
-disappear) — or run `ingest-source` on the ones already present.
+library proxy, save it **flat in `input/bibliography/`** (no subfolders) under
+the **exact** "Save as" filename below, then **re-run acquire-sources** to
+reconcile (resolved rows disappear) — or run `ingest-source` on the ones
+already present.
 
 Do NOT substitute a preprint, prior version, or book review for the original —
 `ingest-source` hard-stops on a missing original.
@@ -141,7 +143,7 @@ Last updated: <YYYY-MM-DD> · <K> of <M> A+B sources still needed.
 
 | ☐ | Citekey | Author Year | Short title | Grade | DOI / landing | Best download URL(s) | Save as (exact filename) |
 |---|---------|-------------|-------------|-------|---------------|----------------------|--------------------------|
-| [ ] | finkelstein-2003 | Finkelstein 2003 | Low Chronology Revisited | A | [10.1179/…](https://doi.org/10.1179/…) | <links or "—"> | `Finkelstein - The Low Chronology and the Problem of Iron Age Palestine - 2003.pdf` |
+| [ ] | finkelstein-2003 | Finkelstein 2003 | Low Chronology Revisited | A | [10.1179/…](https://doi.org/10.1179/…) | <links or "—"> | `finkelstein-2003-low-chronology.pdf` |
 ```
 
 The `Citekey` and `Save as` columns are load-bearing: they tie the manually-downloaded file to its BibTeX key and to the filename `ingest-source` expects. `DOI / landing` gives the canonical resolver; `Best download URL(s)` lists any concrete-but-unfetchable PDF candidate worth a browser try.
@@ -163,7 +165,7 @@ Mirrors the `audit-log-<date>.json` convention of `literature-review`:
       "resolved_url": "https://…", "url_source": "unpaywall|oa_pdf|crossref|openalex|core|none",
       "outcome": "downloaded|already-present|manual|skipped",
       "reason": "html_login_page|not_pdf_content_type|cloudflare_block|too_small|no_oa_url|null",
-      "saved_as": "Finkelstein - … - 2003.pdf",
+      "saved_as": "finkelstein-2003-low-chronology.pdf",
       "validated": { "http": 200, "content_type": "application/pdf", "magic_pdf": true, "bytes": 842113 }
     }
   ]
@@ -251,6 +253,6 @@ For a worklist of ≥ ~8 items, dispatch the `source-acquirer` subagent (see `ag
 - **Files on disk before ingest** — the manual worklist is a first-class output, not a failure.
 - **Validate every download** — content-type + magic bytes + size + not-HTML. A saved error page is never a source.
 - **Idempotent** — reconcile against disk first; re-run any number of times.
-- **Exact filenames tie manual downloads to ingest** — `Lastname - Title - Year.pdf`, the convention `ingest-source` looks for.
+- **Exact filenames tie manual downloads to ingest** — `autor-jahr-kurztitel.pdf`, flat in `input/bibliography/` (no subfolders), the convention `ingest-source` looks for.
 - **OA-first, paywall-routed** — attempt the open repositories, route publisher paywalls straight to the human.
 - **Transparency** — the audit JSON records every resolution and every failure reason.

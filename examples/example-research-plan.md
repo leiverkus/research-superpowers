@@ -56,9 +56,11 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 ## Tasks
 
-### Task 1: Literature & Source Ingest
+### Task 1: Literature, Acquisition & Source Ingest
 
 - [ ] Literature-scout dispatch (OpenAlex, IxTheo, Zenon-DAI, 2001–2026)
+- [ ] `acquire-sources` on the A+B set → auto-download OA PDFs into `input/bibliography/` + `acquisition-todo.md`
+- [ ] Manual downloads (VPN) for paywalled originals; re-run `acquire-sources` to reconcile until A/B originals are on disk or deferred
 - [ ] Ingest `[[finkelstein-piasetzky-2003]]`
 - [ ] Ingest `[[finkelstein-piasetzky-2011]]`
 - [ ] Ingest `[[mazar-2011]]`

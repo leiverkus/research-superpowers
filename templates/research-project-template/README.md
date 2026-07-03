@@ -116,7 +116,7 @@ output/                Publication-ready artefacts
 ├── article/           Scholarly article with abstract
 ├── presentation/      Talks (Reveal.js, Beamer, PowerPoint)
 ├── data-analysis/     Scripts and notebooks
-├── app/               Software repository
+├── code/              Software repository
 └── bibtex/            Bibliography and CSL styles
 
 scripts/                Wiki tooling

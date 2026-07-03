@@ -54,8 +54,8 @@ The plan templates below show both variants.
 1. **Read the design doc** — `input/ideas/<slug>-design.md`. If it does not exist or is not approved, stop and invoke `brainstorming-research`.
 2. **Lock the hypothesis** — one sentence, falsifiable or argumentatively prüfbar, in the user's own words after confirmation
 3. **Define falsification criteria** — what observation would make you reject the hypothesis
-4. **Enumerate data sources** — exact sources, with status (pending ingest / already in wiki)
-5. **Decompose into tasks** — Ingest tasks, Analysis tasks, Synthesis tasks, Draft tasks; each step 2–15 min
+4. **Enumerate data sources** — exact sources, with status (acquire pending / on disk / already in wiki)
+5. **Decompose into tasks** — an Acquire-sources task (before ingest), then Ingest tasks, Analysis tasks, Synthesis tasks, Draft tasks; each step 2–15 min
 6. **Specify verification criteria** — how we know the project is done (lint green, N sources ingested, chapter renders, …)
 7. **Write plan doc** to `input/ideas/<slug>-plan.md` using the template below
 8. **Self-review** — no placeholders, type consistency across tasks, spec coverage from design doc
@@ -163,21 +163,28 @@ block frontmatter.
 
 ## Data Sources
 
-- [[finkelstein-2003]] — *ingest pending*
-- [[mazar-2011]] — *already in knowledge/sources/*
+- [[finkelstein-2003]] — *acquire pending* (not yet on disk)
+- [[mazar-2011]] — *on disk, ingest pending*
 - Dataset: `input/data/megiddo-stratigraphy.csv`
 - Archive: Israel Antiquities Authority, IAA-Nr. XXX (access: on-site visit required)
 
 ## Tasks
 
-### Task 1: Ingest foundational sources
+### Task 1: Acquire source PDFs
+**Files:** `input/bibliography/*.pdf`, `input/bibliography/acquisition-todo.md`
+
+- [ ] Run `acquire-sources` on the A+B set from `literaturguide.md` (auto-downloads Open-Access PDFs, writes the manual-download worklist)
+- [ ] Download any paywalled originals manually (university VPN / library proxy) into `input/bibliography/`, flat, under the exact `autor-jahr-kurztitel.pdf` filename
+- [ ] Re-run `acquire-sources` to reconcile until the required originals are present (or explicitly deferred)
+
+### Task 2: Ingest foundational sources
 **Files:** `knowledge/sources/*.md`, `output/bibtex/references.bib`
 
 - [ ] Ingest Finkelstein 2003 via `ingest-source` skill → `knowledge/sources/finkelstein-2003.md`
 - [ ] Ingest Mazar 2011 via `ingest-source` skill → `knowledge/sources/mazar-2011.md`
 - [ ] Verify BibTeX keys match citation style (chicago-author-date.csl)
 
-### Task 2: Analyze stratigraphic sequence
+### Task 3: Analyze stratigraphic sequence
 **Files:** `output/data-analysis/stratigraphy.py`, `output/data-analysis/results/phases.json`
 
 - [ ] Create `stratigraphy.py` — loads `input/data/megiddo-stratigraphy.csv`
@@ -185,7 +192,7 @@ block frontmatter.
 - [ ] Save posterior to `results/phases.json`
 - [ ] Write assumption-check note in `knowledge/synthesis/stratigraphy-assumptions.md`
 
-### Task 3: Synthesize into a stable knowledge page
+### Task 4: Synthesize into a stable knowledge page
 **Files:** `knowledge/synthesis/chronologie-debatte.md`
 
 - [ ] Pull entities [[tel-megiddo]], [[tel-rehov]], [[finkelstein]], [[mazar]]
@@ -193,7 +200,7 @@ block frontmatter.
 - [ ] Cite ≥ 10 sources from BibTeX
 - [ ] Set `status: stable` once reviewed by user
 
-### Task 4: Draft chapter "*Forschungsstand* — Chronology"
+### Task 5: Draft chapter "*Forschungsstand* — Chronology"
 **Files:** `output/book/text/03-forschungsstand.md`
 
 - [ ] Confirm `wiki-lint` is green
@@ -230,7 +237,7 @@ Append to `knowledge/_meta/log.md` whenever scope, method, or data sources chang
 3. **Type consistency:** if task 2 writes `phases.json`, does task 3 reference exactly that file?
 4. **Falsifiability:** is the hypothesis actually testable, or just a thesis?
 5. **Granularity:** are all steps 2–15 min? Split longer ones
-6. **No gaps between Ingest → Analysis → Synthesis → Draft**
+6. **No gaps between Acquire → Ingest → Analysis → Synthesis → Draft**
 
 Fix errors inline.
 

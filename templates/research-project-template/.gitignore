@@ -45,9 +45,9 @@ public/
 
 output/data-analysis/__pycache__/
 output/data-analysis/.ipynb_checkpoints/
-output/app/__pycache__/
-output/app/venv/
-output/app/node_modules/
+output/code/__pycache__/
+output/code/venv/
+output/code/node_modules/
 
 # Generated knowledge-graph export (scripts/wiki-to-graph.py)
 knowledge/_meta/graph/
