@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.19.1] — 2026-07-12
+
 ### Fixed
 
 - **Empty-wiki graph build no longer breaks the Pages deploy (regression from 0.19.0).** On a *freshly scaffolded* project, `knowledge/` contains only `_example-` / `_meta` pages — both excluded from the graph — so `wiki-to-graph.py` found zero pages and exited non-zero. Under the new CI graph job that meant the `build-graph` step failed and took the **entire** Pages deploy (article + book + graph) down with it, on every project until its first ingest. An empty wiki is now treated as the legitimate pre-ingest state it is: the build prints a note, writes valid empty exports (`graph.json` / `graph.graphml` / `GRAPH_REPORT.md` / `graph.html`), and exits 0, so CI publishes an empty `/graph/` that fills in as sources are ingested. A genuinely wrong `--knowledge-dir` is still caught by the not-found check and still fails. Verified end-to-end on a fresh scaffold (lint → Quarto render → graph build → `public/` assembly, with `/graph/` populated); regression guard added (`tests/test_wiki_robustness.py::test_fresh_scaffold_build_exits_zero`) exercising the real CLI, not the internals.
