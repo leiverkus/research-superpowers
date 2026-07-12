@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.19.0] — 2026-07-12
+
 ### Added
 
 - **CI publishes the knowledge graph to Pages (auto-rebuild, no committed artefacts).** The graph exports are gitignored build artefacts and the agent queries the graph *live*, so the only thing that ever goes stale is the human-facing `graph.html` / `GRAPH_REPORT.md`. Rather than a local git post-commit hook (which, with the exports gitignored, would only refresh untracked files nobody else sees), the freshness now lives where it pays off: the template CI rebuilds the graph on every push to `main` and publishes it under **`/graph/`** on Pages, alongside the article (`/`) and book (`/book/`). The team reads an always-current interactive graph + deterministic report in the browser without running Python or committing `graph.html`. Implemented in the template `.gitlab-ci.yml` (new `build-graph` job + `/graph/` in the `pages` deploy) and **mirrored for GitHub-hosted projects** in a new `.github/workflows/pages.yml` (lint → render + graph → deploy to GitHub Pages). The just-added determinism of `GRAPH_REPORT.md` is what makes this clean — no timestamp churn. Template `CLAUDE.md` documents both pipelines and the one-time GitHub Pages source setting.
