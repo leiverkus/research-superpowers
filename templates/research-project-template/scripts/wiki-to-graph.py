@@ -23,7 +23,7 @@ What it produces (under --out-dir, default ``knowledge/_meta/graph/``):
 Nodes
   One node per wiki page. ``type`` is taken verbatim from the page frontmatter
   (entity | concept | source | synthesis). An optional ``subtype`` is derived
-  only from unambiguous signals (gnd_id → person, idai_gazetteer_id → place).
+  only from unambiguous signals (gnd_id / orcid → person, idai_gazetteer_id → place).
   Meta pages (``_meta/``) and template examples (``_example-`` / ``_beispiel-``)
   are excluded.
 
@@ -139,7 +139,7 @@ def derive_subtype(fm: dict) -> str | None:
         return None
     if fm.get("idai_gazetteer_id"):
         return "place"
-    if fm.get("gnd_id"):
+    if fm.get("gnd_id") or fm.get("orcid"):
         return "person"
     return None
 

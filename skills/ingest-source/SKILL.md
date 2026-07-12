@@ -338,11 +338,13 @@ Take the string verbatim — it is structurally guarded against author/year hall
 
 ```text
 resolve_author(name="Israel Finkelstein")
-  → wikidata_qid="Q461571", gnd_id="118533533", …
+  → orcid="0000-…", wikidata_qid="Q461571", gnd_id="118533533", …
 
 resolve_site(name="Tel Megiddo")
   → idai_gazetteer_id="2048473", coordinates=…
 ```
+
+For **living researchers, prefer `orcid`** — it covers working scientists where GND / Wikidata frequently do not (a real portfolio audit found the shared method-paper authors unresolvable in either, but present on ORCID). Take it from `resolve_author`'s `orcid` field, or from orcid.org; never guess one.
 
 Write `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` into the entity page's frontmatter (schema fields optional, see `schema/knowledge-frontmatter.schema.json`). Example:
 

@@ -63,8 +63,9 @@ REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation
 
 # Authority-ID fields on type=entity. These are the join key that makes an
 # entity matchable ACROSS projects (scripts/wiki-global-graph.py); coverage is
-# reported as an advisory signal, never a hard error.
-AUTHORITY_FIELDS = ("gnd_id", "idai_gazetteer_id", "wikidata_qid")
+# reported as an advisory signal, never a hard error. orcid covers living
+# researchers (where gnd_id / wikidata_qid often do not).
+AUTHORITY_FIELDS = ("orcid", "gnd_id", "idai_gazetteer_id", "wikidata_qid")
 
 
 def load_schema() -> dict:
@@ -459,8 +460,9 @@ def report_authority_coverage(pages: dict[str, Path], verbose: bool = False) -> 
     if untagged:
         report.append(
             "  Untagged entities are invisible to cross-project linkage. Sites should "
-            "carry idai_gazetteer_id, persons gnd_id / wikidata_qid (resolve via "
-            "dao-paper-search resolve_site / resolve_author); datasets / methods / "
+            "carry idai_gazetteer_id; living researchers orcid (the key that covers "
+            "working scientists — prefer it over gnd_id / wikidata_qid); resolve via "
+            "dao-paper-search resolve_site / resolve_author. Datasets / methods / "
             "software may legitimately have none — review the list.")
         if verbose:
             report.append("  Untagged entities:")
