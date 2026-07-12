@@ -226,23 +226,12 @@ jobs:
           print("template build config OK")
           PY
 
-      - name: Agent contract — every agent references an existing skill
-        run: |
-          failed=0
-          for f in agents/*.md; do
-            impl=$(grep '^implements:' "$f" | awk '{print $2}')
-            if [ -z "$impl" ]; then
-              echo "::error file=$f::missing 'implements:' field"
-              failed=1
-              continue
-            fi
-            if [ ! -d "skills/$impl" ]; then
-              echo "::error file=$f::implements '$impl' but skills/$impl does not exist"
-              failed=1
-            fi
-          done
-          [ $failed -eq 0 ] && echo "all 6 agents reference valid skills"
-          exit $failed
+      - name: Agent ↔ skill contract (scripts/lint-plugin.py)
+        # Run the full contract linter, not a reduced shell re-implementation:
+        # it checks agent→skill AND skill→agent existence, symmetry, and that
+        # agent files carry no procedural checklist (that belongs in SKILL.md).
+        # stdlib-only, so no install step needed.
+        run: python scripts/lint-plugin.py
 
       - name: Skill frontmatter is valid YAML
         run: |
