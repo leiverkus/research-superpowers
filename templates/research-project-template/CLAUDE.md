@@ -387,6 +387,22 @@ natively. For
   "command": ["python3", "scripts/graph_mcp.py"] } }
 ```
 
+### Across several projects (authority overlap)
+
+If you run more than one research project, `scripts/wiki-global-graph.py` reports
+which entities and sources they **share** — matched on the authority IDs the
+frontmatter already carries (`gnd_id` / `idai_gazetteer_id` / `wikidata_qid` for
+entities, `bibkey` for sources), never on fuzzy title guessing:
+
+```bash
+python scripts/wiki-global-graph.py overlap ../other-project . --json
+```
+
+It reports the shared identifiers (the `same_as` edges a merged global graph
+would draw) and states the concept/no-ID blind spot. This is step 1 of the
+cross-project graph; the merged-graph steps are on the roadmap (see the plugin's
+`docs/ROADMAP.md`).
+
 ## Meta files
 
 ### `knowledge/_meta/index.md`
