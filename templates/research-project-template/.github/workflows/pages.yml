@@ -1,0 +1,86 @@
+# GitHub-Actions mirror of .gitlab-ci.yml for GitHub-hosted research projects.
+#
+# On every push to `main`: lint the wiki, render the publication (article + book)
+# to HTML, rebuild the knowledge graph, and deploy everything to GitHub Pages —
+# article at `/`, book at `/book/`, the interactive graph + GRAPH_REPORT.md at
+# `/graph/`. The wiki graph is a gitignored build artifact, so CI rebuilds it
+# fresh: the published graph is always current and nobody commits graph.html.
+#
+# The wiki itself is plain Markdown and is NOT rendered here — read it in the
+# repository browser, Foam, or Obsidian. PDF builds run locally via the Makefiles.
+#
+# To enable: repo Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: Publish (Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege + the OIDC token the Pages deployment needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One live deployment at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # Structural wiki check (frontmatter, wikilinks, orphans) over knowledge/**/*.md.
+  lint-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet pyyaml
+      - run: python scripts/lint-wiki.py
+
+  # Render the publication, rebuild the graph, assemble the Pages site.
+  build:
+    needs: lint-wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render article and book to HTML
+        run: |
+          set -e
+          (cd output/article && quarto render article.qmd --to html --output-dir _output)
+          (cd output/book && quarto render --to html)
+
+      - name: Rebuild knowledge graph (graph.html + GRAPH_REPORT.md)
+        run: |
+          pip install --quiet pyyaml
+          python scripts/wiki-to-graph.py --out-dir graph-export
+
+      - name: Assemble Pages site (article → /, book → /book/, graph → /graph/)
+        run: |
+          mkdir -p public public/book public/graph
+          cp -r output/article/_output/* public/ 2>/dev/null || true
+          mv public/article.html public/index.html 2>/dev/null || true
+          cp -r output/book/_output/* public/book/ 2>/dev/null || true
+          cp -r graph-export/* public/graph/ 2>/dev/null || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  # Deploy the assembled site to GitHub Pages (main only, via needs on build).
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
