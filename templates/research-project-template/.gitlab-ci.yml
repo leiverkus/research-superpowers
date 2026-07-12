@@ -61,6 +61,22 @@ build-book:
     expire_in: 1 week
   <<: *on_main_or_mr
 
+# Wissensgraph neu bauen (interaktives graph.html + deterministischer
+# GRAPH_REPORT.md). Die Graph-Exporte sind gitignored (Build-Artefakt), daher
+# baut die CI sie bei jedem Push frisch und stellt sie unter /graph/ bereit —
+# niemand commitet graph.html, das Team liest immer den aktuellen Stand.
+build-graph:
+  stage: build
+  image: python:3.12-slim
+  script:
+    - pip install --quiet pyyaml
+    - python scripts/wiki-to-graph.py --out-dir graph-export
+  artifacts:
+    paths:
+      - graph-export/
+    expire_in: 1 week
+  <<: *on_main_or_mr
+
 # GitLab Pages deployen: Artikel unter /, Buch unter /book/.
 pages:
   stage: deploy
@@ -68,6 +84,7 @@ pages:
   dependencies:
     - build-article
     - build-book
+    - build-graph
   script:
     - mkdir -p public
     # Artikel als Hauptseite
@@ -76,6 +93,9 @@ pages:
     # Buch unter /book/
     - mkdir -p public/book
     - cp -r output/book/_output/* public/book/ 2>/dev/null || true
+    # Wissensgraph unter /graph/ (graph.html öffnen; GRAPH_REPORT.md daneben)
+    - mkdir -p public/graph
+    - cp -r graph-export/* public/graph/ 2>/dev/null || true
   artifacts:
     paths:
       - public

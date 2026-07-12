@@ -39,7 +39,8 @@ with an explicit output layer for scientific publication.
 ```
 project-root/
 ├── CLAUDE.md              ← This document (schema & conventions)
-├── .gitlab-ci.yml         ← CI/CD pipeline (lint wiki + render publication)
+├── .gitlab-ci.yml         ← CI/CD (GitLab): lint wiki + render publication + graph → Pages
+├── .github/workflows/     ← CI/CD (GitHub Actions): same pipeline, GitHub Pages
 ├── .mcp.json             ← Registers the wiki-graph MCP (Claude Code)
 ├── scripts/
 │   ├── lint-wiki.py       ← Structural check of the wiki
@@ -478,21 +479,31 @@ or Zotero (see section "Team collaboration").
   `draft/kapitel-3-methodik`.
 - `lint/<date>` — maintenance runs, e.g. `lint/2026-04-15`.
 
-### CI/CD (GitLab pipeline)
+### CI/CD (GitLab pipeline / GitHub Actions)
 
-The file `.gitlab-ci.yml` configures an automatic pipeline:
+Two equivalent pipelines ship with the template — use whichever host you are on:
+`.gitlab-ci.yml` (GitLab) and `.github/workflows/pages.yml` (GitHub Actions).
+Both do the same thing:
 
-- **On push to `main` (and on merge requests):** the wiki is linted
-  (`scripts/lint-wiki.py`), and article and book are rendered to HTML.
-  On `main` the publication is deployed as GitLab Pages. The wiki itself
-  is plain Markdown and is **not** rendered — read it in the repository
-  browser, Foam, or Obsidian.
-- **Reachable at:** `https://team.gitlab.university.de/project/`
+- **On push to `main` (and on GitLab merge requests):** the wiki is linted
+  (`scripts/lint-wiki.py`), article and book are rendered to HTML, and the
+  **knowledge graph is rebuilt** (`scripts/wiki-to-graph.py`). On `main` all of
+  it is deployed to Pages. The wiki itself is plain Markdown and is **not**
+  rendered — read it in the repository browser, Foam, or Obsidian.
+- **Reachable at** the project's Pages URL:
   - Article: `/` (main page)
   - Book: `/book/`
+  - **Knowledge graph: `/graph/`** — the interactive `graph.html` (open it in
+    the browser) plus the deterministic `GRAPH_REPORT.md` overview.
 
-The team can read the current state in the browser without having to
-install Quarto locally. PDF builds still run locally via the Makefiles.
+The graph exports are gitignored (a build artifact), so CI rebuilds them fresh
+on every push: the published `/graph/` is always current and nobody commits
+`graph.html`. The team can read the current state in the browser without
+installing Quarto or running Python locally. PDF builds still run locally via
+the Makefiles.
+
+> **GitHub Pages one-time setup:** repo *Settings → Pages → Build and
+> deployment → Source: "GitHub Actions"*. GitLab Pages needs no setup.
 
 ## Team collaboration
 
