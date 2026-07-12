@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **`wiki-lint` mis-resolved aliased / anchored wikilinks and let self-links hide orphans.** `lint_wikilinks` compared the *raw* wikilink target against page slugs, so a valid `[[b|alias]]` or `[[b#heading]]` was wrongly reported as a BROKEN link and its target `b` wrongly reported as an orphan; conversely a page linking only to itself (`[[a]]` in `a.md`) counted as its own incoming link and hid as non-orphan. Lint now normalises the target to the bare slug (reusing `_relation_target`, the same reduction the graph builder already applied) and ignores self-links — matching `wiki-to-graph.py`. Tests in `tests/test_wiki_tools.py`.
+- **Stale doc counters and an unchecked CI gate.** README + `docs/README.md` still said "6 subagents" and "12 SKILL.md files"; the real counts are 7 agents and 15 skills. Corrected, and the docs-in-sync CI check (which previously pinned only "N skills") now also pins the subagent/agent counts and the layout-tree "N SKILL.md files" counts, so these can't drift unnoticed again.
+- **Release negative tests no longer leak `::error::` annotations.** `scripts/release.py` deliberately emits `::error::` GitHub-Actions annotations on its failure paths; the release unit tests exercise those paths directly, so a *green* test job printed real error annotations into the Actions log. The tests now capture stdout/stderr around those calls (`tests/test_release.py`), keeping the annotations to genuine release-check runs.
+
 ## [0.21.0] — 2026-07-12
 
 ### Added

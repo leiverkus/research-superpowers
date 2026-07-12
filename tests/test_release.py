@@ -4,7 +4,9 @@ Covers changelog-section extraction, tag normalisation, and that the live
 repo metadata is self-consistent. Stdlib unittest — no pytest.
 """
 import argparse
+import contextlib
 import importlib.util
+import io
 import json
 import pathlib
 import tempfile
@@ -21,6 +23,16 @@ def _load(name, path):
 
 
 rel = _load("release_helper", ROOT / "scripts" / "release.py")
+
+
+def _quiet(fn, *args, **kwargs):
+    """Run a release.py command with stdout+stderr captured, returning its exit
+    code. release.py deliberately emits ``::error::`` GitHub-Actions annotations
+    on its failure paths (so a real release run surfaces problems); the negative
+    tests below exercise exactly those paths, so without capture a *green* test
+    job would print real error annotations into the Actions log."""
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        return fn(*args, **kwargs)
 
 SAMPLE = """# Changelog
 
@@ -105,7 +117,7 @@ class _TempRepo(unittest.TestCase):
 
 class CmdBump(_TempRepo):
     def test_full_bump_updates_everything(self):
-        rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
+        rc = _quiet(rel.cmd_bump,argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 0)
         self.assertEqual(json.loads(self.plugin.read_text(encoding="utf-8"))["version"], "0.2.0")
         self.assertEqual(json.loads(self.market.read_text(encoding="utf-8"))["plugins"][0]["version"], "0.2.0")
@@ -115,9 +127,9 @@ class CmdBump(_TempRepo):
         self.assertIsNotNone(rel.extract_changelog_section("0.2.0"))
 
     def test_bump_is_idempotent_no_duplicate_section(self):
-        rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
+        _quiet(rel.cmd_bump,argparse.Namespace(version="0.2.0", date="2026-02-02"))
         first = self.changelog.read_text(encoding="utf-8")
-        rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
+        rc = _quiet(rel.cmd_bump,argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 0)
         # second bump must not insert a second 0.2.0 heading
         self.assertEqual(self.changelog.read_text(encoding="utf-8").count("## [0.2.0]"), 1)
@@ -127,7 +139,7 @@ class CmdBump(_TempRepo):
         self.readme.write_text("# x\n\nno badge here\n", encoding="utf-8")
         before = {f: f.read_text(encoding="utf-8")
                   for f in (self.plugin, self.market, self.readme, self.changelog)}
-        rc = rel.cmd_bump(argparse.Namespace(version="0.2.0", date="2026-02-02"))
+        rc = _quiet(rel.cmd_bump,argparse.Namespace(version="0.2.0", date="2026-02-02"))
         self.assertEqual(rc, 1)                       # fail-closed, not silent no-op
         # atomic: a failed bump must not leave a half-updated repo
         for f, text in before.items():
@@ -135,36 +147,36 @@ class CmdBump(_TempRepo):
                              f"{f.name} was modified by a failed bump")
 
     def test_bump_rejects_bad_semver(self):
-        self.assertEqual(rel.cmd_bump(argparse.Namespace(version="0.2", date=None)), 1)
+        self.assertEqual(_quiet(rel.cmd_bump,argparse.Namespace(version="0.2", date=None)), 1)
 
 
 class CmdCheck(_TempRepo):
     def _bump_all_to(self, v):
         # set both manifests + a changelog section so only the tag varies
-        rel.cmd_bump(argparse.Namespace(version=v, date="2026-02-02"))
+        _quiet(rel.cmd_bump,argparse.Namespace(version=v, date="2026-02-02"))
 
     def test_all_agree_passes(self):
         self._bump_all_to("0.2.0")
-        self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2.0")), 0)
+        self.assertEqual(_quiet(rel.cmd_check,argparse.Namespace(tag="v0.2.0")), 0)
 
     def test_tag_mismatch_fails(self):
         self._bump_all_to("0.2.0")
-        self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.3.0")), 1)
+        self.assertEqual(_quiet(rel.cmd_check,argparse.Namespace(tag="v0.3.0")), 1)
 
     def test_manifest_mismatch_fails(self):
         self._bump_all_to("0.2.0")
         self.market.write_text(json.dumps({"plugins": [{"version": "0.9.9"}]}, indent=2) + "\n", encoding="utf-8")
-        self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2.0")), 1)
+        self.assertEqual(_quiet(rel.cmd_check,argparse.Namespace(tag="v0.2.0")), 1)
 
     def test_missing_changelog_section_fails(self):
         # manifests at 0.2.0 but no changelog entry for it
         self.plugin.write_text(json.dumps({"name": "x", "version": "0.2.0"}, indent=2) + "\n", encoding="utf-8")
         self.market.write_text(json.dumps({"plugins": [{"version": "0.2.0"}]}, indent=2) + "\n", encoding="utf-8")
-        self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2.0")), 1)
+        self.assertEqual(_quiet(rel.cmd_check,argparse.Namespace(tag="v0.2.0")), 1)
 
     def test_non_semver_tag_fails(self):
         self._bump_all_to("0.2.0")
-        self.assertEqual(rel.cmd_check(argparse.Namespace(tag="v0.2")), 1)
+        self.assertEqual(_quiet(rel.cmd_check,argparse.Namespace(tag="v0.2")), 1)
 
 
 if __name__ == "__main__":

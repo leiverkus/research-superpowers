@@ -201,5 +201,36 @@ class AuthorityCoverage(unittest.TestCase):
             self.assertEqual(lw.report_authority_coverage(lw.collect_pages(kn)), ["  No entity pages."])
 
 
+class WikilinkResolution(unittest.TestCase):
+    def test_alias_and_heading_links_resolve(self):
+        # `[[b|alias]]` and `[[b#heading]]` are valid links to b — they must not
+        # be flagged BROKEN, and b (being linked) must not be an orphan.
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/a.md", ENTITY.replace("Body.", "See [[b|the B page]] and [[b#Intro]]."))
+            _write(d, "knowledge/b.md", ENTITY)
+            broken, orphans = lw.lint_wikilinks(lw.collect_pages(kn))
+            self.assertEqual(broken, [], f"aliased/anchored links wrongly flagged: {broken}")
+            self.assertFalse(any(o.endswith("b.md (no incoming links)") for o in orphans),
+                             "b is linked via alias/anchor → not an orphan")
+
+    def test_dangling_link_still_broken(self):
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/a.md", ENTITY.replace("Body.", "[[does-not-exist]]"))
+            broken, _ = lw.lint_wikilinks(lw.collect_pages(kn))
+            self.assertTrue(any("does-not-exist" in b for b in broken))
+
+    def test_self_link_does_not_hide_orphan(self):
+        # A page linking only to itself has no real incoming link → still an orphan.
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/a.md", ENTITY.replace("Body.", "[[a]] refers to itself"))
+            broken, orphans = lw.lint_wikilinks(lw.collect_pages(kn))
+            self.assertEqual(broken, [])
+            self.assertTrue(any(o.endswith("a.md (no incoming links)") for o in orphans),
+                            "a self-link must not save a page from orphan status")
+
+
 if __name__ == "__main__":
     unittest.main()
