@@ -79,6 +79,19 @@ class AuthorityOverlap(unittest.TestCase):
             # exactly the two genuine cross-project ids
             self.assertEqual(len(overlap), 2)
 
+    def test_shared_orcid_matches_across_drifted_slugs(self):
+        # The Evidentia case: the same researcher appears in two modules under
+        # DIFFERENT slugs (enrico-crema vs crema). Slug matching can't see it;
+        # a shared orcid can. This is why orcid is an authority join key.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "entities/enrico-crema.md", "entity", "Enrico Crema", orcid="0000-0001-6727-5138")
+            _page(d, "proj-b", "entities/crema.md", "entity", "E. Crema", orcid="0000-0001-6727-5138")
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            overlap, _ = gg.build_overlap(roots)
+            self.assertEqual([(o["field"], o["value"]) for o in overlap],
+                             [("orcid", "0000-0001-6727-5138")])
+            self.assertEqual({x["slug"] for x in overlap[0]["occurrences"]}, {"enrico-crema", "crema"})
+
     def test_missing_knowledge_dir_is_skipped_not_fatal(self):
         with tempfile.TemporaryDirectory() as d:
             _page(d, "proj-a", "entities/x.md", "entity", "X", gnd_id="1")

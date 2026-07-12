@@ -8,8 +8,9 @@ describe the same real-world entity or cite the same source. Identity across
 projects cannot rely on slugs (they collide and drift); the robust join key is
 the authority IDs the frontmatter already carries:
 
-  * ``type=entity`` : ``gnd_id`` (persons), ``idai_gazetteer_id`` (places),
-    ``wikidata_qid``
+  * ``type=entity`` : ``orcid`` (living researchers — the key that actually
+    covers working scientists), ``gnd_id`` (persons), ``idai_gazetteer_id``
+    (places), ``wikidata_qid``
   * ``type=source`` : ``bibkey`` (BibTeX key; stable via Better BibTeX)
 
 This tool is the first, high-precision step. It does **not** build the merged
@@ -59,6 +60,7 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 # each is a globally unique identifier, so an exact match across projects is a
 # reliable "same real-world thing" signal.
 AUTHORITY_FIELDS = (
+    ("orcid", "ORCID (researchers)"),
     ("gnd_id", "GND (persons)"),
     ("idai_gazetteer_id", "iDAI.gazetteer (places)"),
     ("wikidata_qid", "Wikidata"),
