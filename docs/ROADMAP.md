@@ -329,16 +329,28 @@ cheap way to check that empirically before investing.
 
 ## Step 1 — `authority-overlap` report  ·  small  ·  dependency-free  ·  ✅ shipped
 
-> **Status: done.** `scripts/wiki-global-graph.py overlap <root> <root> …`
-> reports which `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` / `bibkey`
-> occur in ≥2 projects — the exact set of `same_as` edges a global graph would
-> draw — and states the concept/entity-without-ID blind spot. Deterministic,
-> `--json`, stdlib+PyYAML. Tests in `tests/test_global_graph.py`.
+> **Status: done (v0.20.0), verified end-to-end.**
+> `scripts/wiki-global-graph.py overlap <root> <root> …` reports which
+> `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` / `bibkey` occur in ≥2
+> projects — the exact set of `same_as` edges a global graph would draw — and
+> states the concept/entity-without-ID blind spot. Deterministic, `--json`,
+> stdlib+PyYAML. Tests in `tests/test_global_graph.py`.
 
 **Acceptance (met).** Given N project roots, lists every shared authority id
 with the projects and pages it appears in; ids in only one project, or with
 differing values, are not reported; missing `knowledge/` dirs are skipped, not
 fatal; output is byte-stable across runs.
+
+**Real-scaffold verification.** Beyond the unit tests, the shipped script was
+run on two *real* scaffolds, each with a different genuine source ingested
+(Toffolo et al. 2014 in one, Fantalkin/Finkelstein/Piasetzky 2011 in the other)
+but sharing the same site and scholar, using authority IDs resolved live via
+`dao-paper-search` (Tel Megiddo → iDAI.gazetteer `2132671`; Israel Finkelstein →
+Wikidata `Q717237`). Both wikis linted clean; the report correctly surfaced the
+two shared entity IDs as cross-project `same_as` edges and correctly did **not**
+report the two projects' differing `bibkey`s — confirming the entity-level
+cross-project link (the "same person/place in two works" case) fires while
+distinct sources stay separate. Deterministic across re-runs.
 
 ## Step 2 — `merge`  ·  medium  ·  dependency-free
 
