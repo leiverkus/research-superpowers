@@ -365,6 +365,8 @@ Later research runs can deduplicate along these authority IDs and pull in canoni
 
 **Do this by default for persons and places** — the authority ID is the join key that makes an entity matchable *across projects* (`scripts/wiki-global-graph.py overlap`); an untagged site or person is invisible to cross-project linkage. Datasets, methods, and software entities legitimately have no applicable ID — skip them. `scripts/lint-wiki.py` surfaces the coverage (`=== Authority-ID coverage ===`) and lists untagged entities as a worklist, so the gap stays visible rather than silently accumulating.
 
+**For `type: concept` pages, the join key is `getty_aat_id`** (the Getty AAT controlled vocabulary, `vocab.getty.edu/aat`), or `wikidata_qid` / `gnd_id` where AAT has no matching term. There is no resolver for concepts — look the term up and take the bare id; never guess one. Tagging shared methods/concepts (a technique two modules both use) is what makes concept-level cross-project links visible — the deepest tissue of a methods portfolio. `lint-wiki.py` reports this separately (`=== Vocabulary coverage (concepts) ===`); a project-specific concept with no external term may legitimately stay untagged.
+
 ## BibTeX Entry Convention
 
 Key = slug exactly. Example:

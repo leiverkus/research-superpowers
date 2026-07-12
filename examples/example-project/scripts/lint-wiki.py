@@ -66,6 +66,9 @@ REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation
 # reported as an advisory signal, never a hard error. orcid covers living
 # researchers (where gnd_id / wikidata_qid often do not).
 AUTHORITY_FIELDS = ("orcid", "gnd_id", "idai_gazetteer_id", "wikidata_qid")
+# Concepts have no gazetteer/ORCID identity; their controlled-vocabulary join
+# key is Getty AAT (or Wikidata / GND where AAT has no matching term).
+CONCEPT_AUTHORITY_FIELDS = ("getty_aat_id", "wikidata_qid", "gnd_id")
 
 
 def load_schema() -> dict:
@@ -455,6 +458,8 @@ def report_authority_coverage(pages: dict[str, Path], verbose: bool = False) -> 
     """
     entities = []
     for slug, path in pages.items():
+        if "_meta" in path.parts:          # index/log are meta, not content pages
+            continue
         fm = parse_frontmatter(path)
         if fm and fm.get("type") == "entity":
             has_id = any(str(fm.get(f, "")).strip() for f in AUTHORITY_FIELDS)
@@ -475,6 +480,46 @@ def report_authority_coverage(pages: dict[str, Path], verbose: bool = False) -> 
             "software may legitimately have none — review the list.")
         if verbose:
             report.append("  Untagged entities:")
+            report.extend(f"    - {slug}" for slug in untagged)
+        else:
+            preview = ", ".join(untagged[:8]) + (" …" if len(untagged) > 8 else "")
+            report.append(f"  Untagged ({len(untagged)}): {preview}   [--verbose for the full worklist]")
+    return report
+
+
+def report_concept_coverage(pages: dict[str, Path], verbose: bool = False) -> list[str]:
+    """Advisory: how many `type=concept` pages carry a controlled-vocabulary
+    join key (getty_aat_id / wikidata_qid / gnd_id).
+
+    Concepts have no authority ID by default, so cross-project *concept* overlap
+    — the deepest tissue of a methods portfolio (a method recurring across
+    modules) — is invisible until they are tagged. This is **not** an error (a
+    project-specific concept may have no external term) and does not affect the
+    exit code; it is surfaced so the gap is visible and doubles as a worklist.
+    """
+    concepts = []
+    for slug, path in pages.items():
+        if "_meta" in path.parts:          # index/log are meta, not content pages
+            continue
+        fm = parse_frontmatter(path)
+        if fm and fm.get("type") == "concept":
+            has_id = any(str(fm.get(f, "")).strip() for f in CONCEPT_AUTHORITY_FIELDS)
+            concepts.append((slug, has_id))
+    if not concepts:
+        return ["  No concept pages."]
+
+    untagged = sorted(slug for slug, has_id in concepts if not has_id)
+    tagged = len(concepts) - len(untagged)
+    pct = tagged / len(concepts) * 100
+    report = [f"  {tagged} of {len(concepts)} concept page(s) carry a vocabulary ID ({pct:.0f}%)."]
+    if untagged:
+        report.append(
+            "  Untagged concepts are invisible to cross-project concept linkage. Tag "
+            "shared methods/concepts with getty_aat_id (vocab.getty.edu/aat), or "
+            "wikidata_qid / gnd_id where AAT has no term; a project-specific concept "
+            "may legitimately have none — review the list.")
+        if verbose:
+            report.append("  Untagged concepts:")
             report.extend(f"    - {slug}" for slug in untagged)
         else:
             preview = ", ".join(untagged[:8]) + (" …" if len(untagged) > 8 else "")
@@ -534,6 +579,9 @@ def main():
 
     print("\n=== Authority-ID coverage (entities) ===")
     print("\n".join(report_authority_coverage(pages, args.verbose)))
+
+    print("\n=== Vocabulary coverage (concepts) ===")
+    print("\n".join(report_concept_coverage(pages, args.verbose)))
 
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))

@@ -11,6 +11,10 @@ the authority IDs the frontmatter already carries:
   * ``type=entity`` : ``orcid`` (living researchers — the key that actually
     covers working scientists), ``gnd_id`` (persons), ``idai_gazetteer_id``
     (places), ``wikidata_qid``
+  * ``type=concept``: ``getty_aat_id`` (Getty AAT — the controlled-vocabulary
+    key for methods / concepts), or ``wikidata_qid`` / ``gnd_id`` where AAT has
+    no matching term. This is what makes concept-level cross-project links —
+    the deepest tissue of a methods portfolio — mechanically visible.
   * ``type=source`` : ``bibkey`` (BibTeX key; stable via Better BibTeX)
 
 This tool is the first, high-precision step. It does **not** build the merged
@@ -64,6 +68,7 @@ AUTHORITY_FIELDS = (
     ("gnd_id", "GND (persons)"),
     ("idai_gazetteer_id", "iDAI.gazetteer (places)"),
     ("wikidata_qid", "Wikidata"),
+    ("getty_aat_id", "Getty AAT (concepts)"),
     ("bibkey", "BibTeX key (sources)"),
 )
 ID_FIELDS = [f for f, _ in AUTHORITY_FIELDS]
@@ -140,11 +145,13 @@ def build_overlap(roots: list[Path]):
         entities = [p for p in pages if p["type"] == "entity"]
         concepts = [p for p in pages if p["type"] == "concept"]
         ent_with_id = [p for p in entities if p["ids"]]
+        con_with_id = [p for p in concepts if p["ids"]]
         projects.append({
             "project": label, "path": str(root), "missing": False,
             "pages": len(pages), "entities": len(entities),
             "entities_with_authority_id": len(ent_with_id),
             "concepts": len(concepts),
+            "concepts_with_vocab_id": len(con_with_id),
         })
         for page in pages:
             for field, value in page["ids"].items():
@@ -195,14 +202,16 @@ def _print_report(overlap, projects) -> None:
             print(f"      {occ}")
         print()
 
-    # Honest blind spot: concept-level overlap is invisible to an ID-only match.
-    total_concepts = sum(p.get("concepts", 0) for p in present)
+    # Honest blind spot: only *untagged* pages are invisible to an ID-only match.
+    # Concepts can now carry a vocabulary id (getty_aat_id / wikidata_qid /
+    # gnd_id); those that don't are the remaining blind spot.
+    con_without_id = sum(p.get("concepts", 0) - p.get("concepts_with_vocab_id", 0)
+                         for p in present)
     ent_without_id = sum(p.get("entities", 0) - p.get("entities_with_authority_id", 0)
                          for p in present)
-    print("Blind spot: concepts carry no authority ID, so cross-project *concept* "
-          "overlap is not detected here.")
-    print(f"  {total_concepts} concept page(s) and {ent_without_id} entity page(s) "
-          "without any authority ID were not eligible for matching.")
+    print("Blind spot: pages without a join id are not eligible for matching.")
+    print(f"  {con_without_id} concept page(s) without a vocabulary id (getty_aat_id / "
+          f"wikidata_qid / gnd_id) and {ent_without_id} entity page(s) without an authority id.")
 
 
 def cmd_overlap(args) -> int:

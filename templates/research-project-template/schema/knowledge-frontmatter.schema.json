@@ -90,6 +90,11 @@
       "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$",
       "description": "ORCID iD (e.g. 0000-0002-1825-0097). Used on type=entity for living researchers — the authority key that actually covers working scientists (where GND / Wikidata often do not), so it is the reliable cross-project join key for method / software papers. Bare iD, no URL. Resolvable via dao-paper-search resolve_author (orcid field) or orcid.org."
     },
+    "getty_aat_id": {
+      "type": "string",
+      "pattern": "^300[0-9]{6}$",
+      "description": "Getty AAT (Art & Architecture Thesaurus) subject ID (e.g. 300054327 for 'archaeology'). Used mainly on type=concept to give concepts / methods a controlled-vocabulary join key — the cross-project link an authority-less concept otherwise lacks. Bare 9-digit iD (300xxxxxx). Look up at vocab.getty.edu/aat; wikidata_qid / gnd_id are alternatives where AAT has no matching term."
+    },
     "relations": {
       "type": "array",
       "description": "Optional structured, confidence-tagged relations to other wiki pages. Complements free-text wikilinks and makes relation type and confidence machine-readable; consumed by scripts/wiki-to-graph.py and validated by scripts/lint-wiki.py. Pages without this field remain valid.",

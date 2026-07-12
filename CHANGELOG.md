@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`getty_aat_id` — a controlled-vocabulary join key for concepts (concept-vocabulary lever, step 1).** Concepts had no authority ID, so cross-project *concept* overlap — the deepest tissue of a methods portfolio (a technique recurring across modules under different slugs) — was the standing blind spot. Rather than build a bespoke glossary, this reuses the existing authority-ID machinery: a new `getty_aat_id` field (Getty AAT, pattern-validated `300xxxxxx`, 3-way mirrored) becomes a first-class `overlap` join key, and `wikidata_qid` / `gnd_id` on concept pages work as fallbacks where AAT has no term. `overlap` now matches concepts across drifted slugs (e.g. `point-process` ↔ `spp`); its blind-spot line now honestly counts *untagged* concepts instead of claiming all concepts are unmatchable. `wiki-lint` gains a `=== Vocabulary coverage (concepts) ===` advisory section (the concept analogue of authority coverage). `ingest-source` documents concept tagging. Conformance + overlap + coverage tests added.
+
+### Fixed
+
+- **Coverage reports no longer miscount `_meta/` pages as content.** `_meta/log.md` can carry `type: concept` to satisfy frontmatter validation; the new concept-coverage report (and the entity-coverage report) now skip `_meta/` pages, so index/log are not counted as content entities/concepts.
+
 ## [0.21.3] — 2026-07-12
 
 ### Changed
