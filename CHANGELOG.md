@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **Contract linter now actually gates the structural rules it documents.** `docs/skill-contract.md` said `lint-plugin.py` *enforces* the agent↔skill contract, but three structural violations — a missing `implements:` field, broken agent↔skill symmetry, and a dangling agent back-pointer — were emitted as warnings and the linter exited `0`. They are now hard errors that fail the build. The one genuinely fuzzy check, the agent checklist-depth **heuristic**, stays advisory (reported, never fails) — and the doc now says so explicitly, splitting the rules into *enforced* vs *advisory*. Gate semantics locked by `tests/test_lint_plugin.py`.
+
 ## [0.21.2] — 2026-07-12
 
 ### Changed
