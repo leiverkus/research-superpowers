@@ -92,6 +92,19 @@ class AuthorityOverlap(unittest.TestCase):
                              [("orcid", "0000-0001-6727-5138")])
             self.assertEqual({x["slug"] for x in overlap[0]["occurrences"]}, {"enrico-crema", "crema"})
 
+    def test_shared_getty_aat_matches_concepts_across_slugs(self):
+        # The concept-vocabulary lever: the same method recurs across modules as
+        # concept pages under different slugs; a shared getty_aat_id links them
+        # (what slug matching and the entity authority keys can't).
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "concepts/point-process.md", "concept", "Spatial point process", getty_aat_id="300444444")
+            _page(d, "proj-b", "concepts/spp.md", "concept", "Point-pattern analysis", getty_aat_id="300444444")
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            overlap, _ = gg.build_overlap(roots)
+            self.assertEqual([(o["field"], o["value"]) for o in overlap],
+                             [("getty_aat_id", "300444444")])
+            self.assertEqual({x["slug"] for x in overlap[0]["occurrences"]}, {"point-process", "spp"})
+
     def test_missing_knowledge_dir_is_skipped_not_fatal(self):
         with tempfile.TemporaryDirectory() as d:
             _page(d, "proj-a", "entities/x.md", "entity", "X", gnd_id="1")

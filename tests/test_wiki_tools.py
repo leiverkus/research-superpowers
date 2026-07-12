@@ -164,6 +164,17 @@ author: llm
 Body.
 """
 
+CONCEPT = """---
+title: "A concept"
+type: concept
+created: 2026-04-15
+updated: 2026-04-15
+status: review
+author: llm
+---
+Body.
+"""
+
 
 class LintExcludesGeneratedExports(unittest.TestCase):
     def test_graph_report_md_is_not_a_wiki_page(self):
@@ -199,6 +210,25 @@ class AuthorityCoverage(unittest.TestCase):
             kn = pathlib.Path(d) / "knowledge"
             _write(d, "knowledge/sources/a.md", VALID)     # a source, not an entity
             self.assertEqual(lw.report_authority_coverage(lw.collect_pages(kn)), ["  No entity pages."])
+
+    def test_concept_vocabulary_coverage(self):
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/concepts/tagged.md",
+                   CONCEPT.replace("author: llm\n", 'author: llm\ngetty_aat_id: "300054327"\n'))
+            _write(d, "knowledge/concepts/untagged.md", CONCEPT)
+            report = "\n".join(lw.report_concept_coverage(lw.collect_pages(kn), verbose=True))
+            self.assertIn("1 of 2 concept page(s) carry a vocabulary ID", report)
+            self.assertIn("untagged", report)
+            self.assertNotIn("- tagged", report)
+
+    def test_meta_pages_are_not_counted_as_content(self):
+        # _meta/log.md may carry `type: concept` to satisfy frontmatter validation;
+        # it must not be counted as a content concept.
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/_meta/log.md", CONCEPT)   # meta file typed as concept
+            self.assertEqual(lw.report_concept_coverage(lw.collect_pages(kn)), ["  No concept pages."])
 
 
 class WikilinkResolution(unittest.TestCase):

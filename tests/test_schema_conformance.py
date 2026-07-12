@@ -67,6 +67,8 @@ CASES = [
     ("orcid-valid", _variant(type="entity", bibkey=_DELETE, orcid="0000-0002-1825-0097"), True),
     ("orcid-valid-checkdigit-x", _variant(type="entity", bibkey=_DELETE, orcid="0000-0002-1694-233X"), True),
     ("orcid-bad-pattern", _variant(type="entity", bibkey=_DELETE, orcid="0000-0002-1825"), False),
+    ("getty-aat-valid", _variant(type="concept", bibkey=_DELETE, getty_aat_id="300054327"), True),
+    ("getty-aat-bad-pattern", _variant(type="concept", bibkey=_DELETE, getty_aat_id="54327"), False),
     ("wrong-type", _variant(title=42), False),
     ("source-missing-bibkey", _variant(bibkey=_DELETE), False),
     ("array-item-type", _variant(tags=[1, 2]), False),
