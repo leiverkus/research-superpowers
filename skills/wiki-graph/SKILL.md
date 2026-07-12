@@ -18,6 +18,8 @@ outputs:
     kind: created
   - path: knowledge/_meta/graph/graph.graphml
     kind: created
+  - path: knowledge/_meta/graph/GRAPH_REPORT.md
+    kind: created
   - path: knowledge/synthesis/<slug>.md
     kind: created_or_modified
   - path: knowledge/_meta/log.md
@@ -56,11 +58,12 @@ The graph is computed deterministically by `scripts/wiki-to-graph.py`; this skil
 3. **For a targeted question — query the live graph** (recomputed from the `.md` on each call, so always current; deterministic — do not eyeball JSON):
    - `python scripts/wiki-to-graph.py neighbors <slug> [--depth N] [--relation TYPE]`
    - `… path <a> <b>` — shortest connection between two pages
-   - `… god-nodes [--top-n N]` · `… bridges` · `… communities [--min-size N]` · `… stats`
+   - `… god-nodes [--top-n N]` · `… bridges` · `… communities [--min-size N]` · `… stats` · `… report`
+   - `communities` are labelled with their most-connected member's title (deterministic, no LLM); `report` prints the full `GRAPH_REPORT.md` to stdout
    - `… relations [--type cites|contradicts|builds-on|…] [--confidence inferred] [--node <slug>]`
    - `… search <term>` — find a node by id/title
    - Node tokens may be a unique substring (fuzzy-resolved); add `--json` to any query for machine-readable output.
-4. **For an overview or the visual — build the exports** — `python scripts/wiki-to-graph.py` writes `graph.html` (interactive, self-contained), `graph.json`, and `graph.graphml` into `knowledge/_meta/graph/`.
+4. **For an overview or the visual — build the exports** — `python scripts/wiki-to-graph.py` writes `graph.html` (interactive, self-contained), `graph.json`, `graph.graphml`, and `GRAPH_REPORT.md` into `knowledge/_meta/graph/`. `GRAPH_REPORT.md` is a deterministic prose summary (overview, god nodes, bridges, labelled communities, asserted relations, suggested questions) — the static, git-diffable sibling of `graph.html`; hand it to the user for a no-browser read, or get just the text on stdout with `python scripts/wiki-to-graph.py report`.
 5. **Answer grounded in the output** (query result or `graph.json` — see "Reading the output"); never from memory. With no specific question, give the overview: god nodes, bridges, inference-rate, dangling/orphan signal.
 6. **Be honest about confidence and gaps** (see "Honesty rules"). If the user asks about a connection that is not in the graph, say so — and offer to add a `relations` entry or a wikilink rather than asserting it.
 7. **Offer the viz** — for an interactive look, point the user to `knowledge/_meta/graph/graph.html` (opens in any browser, no install; filter/search/click). For heavy layout or community detection, `graph.graphml` opens in Gephi/yEd.

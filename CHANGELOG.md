@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.18.0] — 2026-07-12
+
+### Added
+
+- **`GRAPH_REPORT.md` — a deterministic prose summary of the knowledge graph.** `scripts/wiki-to-graph.py` now writes a fourth artefact alongside `graph.json` / `graph.graphml` / `graph.html`: a human-readable Markdown report with an overview (page/link/community counts, node types, inference-rate, dangling-link warning), the god nodes as a degree-ranked table, the bridges, the labelled communities, an **Asserted relations** section grouping the typed `relations:` edges by type (with `(inferred)` / `(ambiguous)` markers and each edge's `because` rationale), and a **Suggested questions** section whose prompts are generated from the structure and name real pages (the most-central hub, each bridge, each contradiction, plus a nudge when the inference-rate is high or links dangle). It is the static, git-diffable sibling of `graph.html` for a no-browser read — and, in keeping with the plugin's grounding discipline, it invents nothing: every line traces back to `graph.json`, every page is emitted as a `[[wikilink]]`, and it carries **no timestamp** so an unchanged wiki reproduces the file byte-for-byte (clean diffs, no churn). Available three ways: written automatically on the default build, printed to stdout via the new `report` sub-command (`python scripts/wiki-to-graph.py report`), and exposed as the `graph_report` MCP tool. Convergent with the report step in [Graphify](https://github.com/Graphify-Labs/graphify), adapted to the wiki's grounded, deterministic model.
+- **Deterministic, LLM-free community labels.** `communities` were numbered (`community 3 (7)`); each now carries a `label` = the title of its most-connected member (its local hub, tie-broken by slug, source titles trimmed to their "Author Year" head). The label flows into `graph.json`, the cluster boxes in `graph.html`, the `communities` CLI output, `GRAPH_REPORT.md`, and the `graph_communities` MCP tool — turning anonymous cluster numbers into a readable at-a-glance sense of each theme, without an LLM call. Additive and schema-safe (existing community fields unchanged); the partition stays deterministic across runs.
+
+### Fixed
+
+- **`communities` sub-command help text** said "label propagation"; the implementation is greedy modularity (Clauset–Newman–Moore) — corrected in the CLI help and the module docstring.
+
 ## [0.17.0] — 2026-07-03
 
 ### Added
