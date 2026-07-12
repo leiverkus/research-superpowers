@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.22.1] — 2026-07-12
+
+### Fixed
+
+- **Template `.gitignore` now excludes source bibliography PDFs.** `input/data/` large binaries were ignored but `input/bibliography/*.pdf` — where `acquire-sources` downloads source PDFs — was not, so a `git add -A` on a scaffolded project would sweep in the (often large, copyright-bound) source library. A real project's bibliography ran to ~590 MB. Added `input/bibliography/*.pdf` to the template `.gitignore` (text artefacts — `literaturguide.md`, `audit-log-*.json`, `references.bib` — stay tracked; use Git LFS if you do want the PDFs versioned), matching the `CLAUDE.md` convention that the bibliography lives in Zotero/Nextcloud, not git.
+
 ## [0.22.0] — 2026-07-12
 
 ### Added
