@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.20.0] — 2026-07-12
+
 ### Added
 
 - **Cross-project authority-overlap report (`wiki-global-graph.py overlap`) — step 1 of the global-graph roadmap.** A researcher running several `research-project` instances has the same real-world entities and sources recurring across them; a *global* graph would connect those. The hard part is identity resolution across projects (slugs both collide and drift), so the whole track is built on the robust join key the frontmatter already carries — `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` (entities) and `bibkey` (sources) — with **no fuzzy title matching** (which would invent links). This first, cheap step does not build the merged graph: it takes N project roots and reports which authority IDs occur in ≥2 projects — the exact set of `same_as` edges a global graph would draw — and states the concept/entity-without-ID blind spot honestly, so you can decide *empirically* whether a global graph is worth building before investing. Deterministic (sorted, no timestamp), `--json`, stdlib + PyYAML, mirrored into the template + example, tested in `tests/test_global_graph.py`. Steps 2 (`merge`) and 3 (`serve`) are specced in `docs/ROADMAP.md` → "Cross-project graph" and deliberately deferred until ≥2 projects with overlapping, authority-ID-tagged entities exist.
