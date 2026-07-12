@@ -97,13 +97,15 @@ Result: the Skill checklist exists in exactly one file. The Agent file declares 
 
 ## Lint check
 
-A future `scripts/lint-plugin.py` (not part of the first cut) will verify:
+`scripts/lint-plugin.py` **enforces** these contracts — run in CI (the "Agent ↔
+skill contract" job) and locally before a PR:
 
 - Every Agent's `implements:` field references an existing Skill.
-- Agent files do not contain a numbered checklist of more than 3 items (heuristic for "duplicates SKILL.md").
 - Every Skill referenced as `agents:` exists.
+- Symmetry: if an Agent implements Skill X, Skill X lists that Agent (and vice-versa).
+- Agent files do not contain a numbered checklist of more than 3 items (heuristic for "duplicates SKILL.md").
 
-For now, the constraint is editorial — when changing a workflow, change the Skill; the Agent stays untouched.
+The constraint is enforced, not just editorial — when changing a workflow, change the Skill; the Agent stays untouched.
 
 ## When NOT to follow this pattern
 

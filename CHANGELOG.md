@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.21.2] — 2026-07-12
+
+### Changed
+
+- **CI runs the full agent↔skill contract linter.** The `Agent contract` job was a reduced shell re-implementation that only checked agent→skill existence (and printed a stale "all 6 agents"). It now runs `python scripts/lint-plugin.py` directly, which additionally verifies skill→agent existence, agent/skill symmetry, and that agent files carry no procedural checklist (that belongs in `SKILL.md`). stdlib-only, no install step. `docs/skill-contract.md` updated to say the linter *enforces* the contract (it was still described as a future, editorial-only rule).
+
 ## [0.21.1] — 2026-07-12
 
 ### Fixed
