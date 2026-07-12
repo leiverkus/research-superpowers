@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.20.1] — 2026-07-12
+
+### Added
+
+- **`wiki-lint` reports authority-ID coverage on entities (cross-project tagging discipline).** A new advisory `=== Authority-ID coverage (entities) ===` section reports how many `type=entity` pages carry an authority ID (`gnd_id` / `idai_gazetteer_id` / `wikidata_qid`) and lists the untagged ones (`--verbose` for the full worklist). Authority IDs are the join key that makes an entity matchable *across* projects (`wiki-global-graph.py overlap`); an untagged site or person is invisible to cross-project linkage and to a future merged graph. Advisory by design — datasets / methods / software entities legitimately have no applicable ID, so it never fails the lint, it just keeps the gap visible instead of letting it silently accumulate (a real portfolio audit found 0 of 135 entities tagged across ten wikis — the connective tissue simply wasn't there). `ingest-source` already resolves IDs for persons/places via `dao-paper-search`; this closes the loop by measuring it. Tests in `tests/test_wiki_tools.py`.
+
+### Fixed
+
+- **`wiki-lint` no longer false-flags the generated `GRAPH_REPORT.md` (regression from 0.18.0).** `wiki-to-graph.py` writes `GRAPH_REPORT.md` into `knowledge/_meta/graph/`; being a `.md` file, `lint-wiki.py` picked it up as a wiki page and reported it as "no valid YAML frontmatter" + an orphan. It was hidden in CI (the graph export dir is gitignored, so a fresh checkout never sees it) but hit anyone running `wiki-to-graph.py` and then `lint-wiki.py` locally. Lint now excludes the generated `_meta/graph/` export dir (both page collection and duplicate-slug detection), leaving index/log and orphan semantics untouched. Regression guard in `tests/test_wiki_tools.py`.
+
 ## [0.20.0] — 2026-07-12
 
 ### Added

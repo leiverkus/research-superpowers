@@ -361,6 +361,8 @@ idai_gazetteer_id: "2048473"
 
 Later research runs can deduplicate along these authority IDs and pull in canonical metadata.
 
+**Do this by default for persons and places** — the authority ID is the join key that makes an entity matchable *across projects* (`scripts/wiki-global-graph.py overlap`); an untagged site or person is invisible to cross-project linkage. Datasets, methods, and software entities legitimately have no applicable ID — skip them. `scripts/lint-wiki.py` surfaces the coverage (`=== Authority-ID coverage ===`) and lists untagged entities as a worklist, so the gap stays visible rather than silently accumulating.
+
 ## BibTeX Entry Convention
 
 Key = slug exactly. Example:

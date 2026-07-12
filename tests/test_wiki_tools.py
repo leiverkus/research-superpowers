@@ -153,5 +153,53 @@ class GraphRobustness(unittest.TestCase):
         self.assertEqual(r1, r2)
 
 
+ENTITY = """---
+title: "An entity"
+type: entity
+created: 2026-04-15
+updated: 2026-04-15
+status: review
+author: llm
+---
+Body.
+"""
+
+
+class LintExcludesGeneratedExports(unittest.TestCase):
+    def test_graph_report_md_is_not_a_wiki_page(self):
+        # GRAPH_REPORT.md is written by wiki-to-graph.py into _meta/graph/. It is
+        # a build artefact, not a page — lint must not pick it up (it has no
+        # frontmatter and no incoming links, so it would false-positive as an
+        # error + orphan). Regression guard for the 0.18.0 report interaction.
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/entities/foo.md", ENTITY)
+            _write(d, "knowledge/_meta/graph/GRAPH_REPORT.md", "# Knowledge-graph report\n\nNo frontmatter.\n")
+            pages = lw.collect_pages(kn)
+            self.assertIn("foo", pages)
+            self.assertNotIn("GRAPH_REPORT", pages)
+            self.assertEqual(lw.find_duplicate_slugs(kn), {})
+
+
+class AuthorityCoverage(unittest.TestCase):
+    def test_reports_tagged_and_lists_untagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/entities/tagged.md",
+                   ENTITY.replace("author: llm\n", 'author: llm\nidai_gazetteer_id: "2132671"\n'))
+            _write(d, "knowledge/entities/untagged.md", ENTITY)
+            pages = lw.collect_pages(kn)
+            report = "\n".join(lw.report_authority_coverage(pages, verbose=True))
+            self.assertIn("1 of 2 entity page(s) carry an authority ID", report)
+            self.assertIn("untagged", report)              # the untagged slug is listed
+            self.assertNotIn("- tagged", report)           # the tagged one is not in the worklist
+
+    def test_advisory_only_no_entities(self):
+        with tempfile.TemporaryDirectory() as d:
+            kn = pathlib.Path(d) / "knowledge"
+            _write(d, "knowledge/sources/a.md", VALID)     # a source, not an entity
+            self.assertEqual(lw.report_authority_coverage(lw.collect_pages(kn)), ["  No entity pages."])
+
+
 if __name__ == "__main__":
     unittest.main()
