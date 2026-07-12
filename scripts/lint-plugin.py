@@ -156,8 +156,8 @@ def main() -> int:
     for agent_name, agent in agents.items():
         implements = agent["fm"].get("implements")
         if not implements:
-            warnings.append(
-                f"[WARN]  agents/{agent_name}.md  missing `implements:` field"
+            errors.append(
+                f"[ERR]   agents/{agent_name}.md  missing `implements:` field"
             )
             continue
         if implements not in skills:
@@ -188,8 +188,8 @@ def main() -> int:
         if isinstance(skill_agents, str):
             skill_agents = [skill_agents]
         if agent_name not in skill_agents:
-            warnings.append(
-                f"[WARN]  agents/{agent_name}.md  implements: '{implements}', "
+            errors.append(
+                f"[ERR]   agents/{agent_name}.md  implements: '{implements}', "
                 f"but skills/{implements}/SKILL.md does not list '{agent_name}' in agents:"
             )
 
@@ -208,8 +208,8 @@ def main() -> int:
                 # agent is reused (e.g. source-ingester in executing-research-plan)
                 # only warn if the agent's primary skill doesn't exist at all
                 if back not in skills:
-                    warnings.append(
-                        f"[WARN]  skills/{skill_name}/SKILL.md  lists agent '{a}', "
+                    errors.append(
+                        f"[ERR]   skills/{skill_name}/SKILL.md  lists agent '{a}', "
                         f"but {a}.implements = '{back}' (skill not found)"
                     )
 
