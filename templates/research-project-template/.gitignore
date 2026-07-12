@@ -22,8 +22,11 @@ input/data/**/*.gpkg
 # Nextcloud, see CLAUDE.md); too large and copyright-bound to commit. Downloaded
 # by acquire-sources into input/bibliography/. The text artefacts there
 # (literaturguide.md, audit-log-*.json, references.bib) stay tracked.
-# If you do want them versioned, use Git LFS instead of removing this rule.
+# If you do want them versioned, use Git LFS instead of removing these rules.
+# Both lines: flat (current convention) AND per-source subfolders (older layout,
+# e.g. input/bibliography/<slug>/<slug>.pdf) — nested PDFs must be caught too.
 input/bibliography/*.pdf
+input/bibliography/**/*.pdf
 
 # Output build artifacts
 output/**/_output/

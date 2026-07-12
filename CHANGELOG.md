@@ -6,7 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-## [0.22.1] — 2026-07-12
+## [0.22.2] — 2026-07-12
+
+### Fixed
+
+- **`.gitignore` bibliography rule now also catches nested subfolders.** The 0.22.1 rule `input/bibliography/*.pdf` only matched PDFs *directly* in `input/bibliography/`; a project using the older per-source-subfolder layout (`input/bibliography/<slug>/<slug>.pdf`) would still commit those. Added `input/bibliography/**/*.pdf` so nested PDFs are ignored too (found while purging a real repo's history — the flat rule left ~160 MB of subfolder PDFs behind on the first pass). Text artefacts stay tracked; both patterns are commented.
 
 ### Fixed
 
