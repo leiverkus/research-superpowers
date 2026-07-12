@@ -18,6 +18,13 @@ input/data/**/*.prj
 input/data/**/*.gpkg
 *.sqlite
 
+# Source bibliography PDFs — human-owned, kept local (Zotero group library /
+# Nextcloud, see CLAUDE.md); too large and copyright-bound to commit. Downloaded
+# by acquire-sources into input/bibliography/. The text artefacts there
+# (literaturguide.md, audit-log-*.json, references.bib) stay tracked.
+# If you do want them versioned, use Git LFS instead of removing this rule.
+input/bibliography/*.pdf
+
 # Output build artifacts
 output/**/_output/
 output/**/_site/
