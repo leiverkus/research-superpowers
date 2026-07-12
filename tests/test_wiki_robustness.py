@@ -112,6 +112,37 @@ class EmptyAndDegenerate(unittest.TestCase):
             self.assertEqual(edges, [])
 
 
+class Bridges(unittest.TestCase):
+    def test_two_sources_sharing_one_entity_produce_a_bridge(self):
+        # Ingesting a SECOND source that shares exactly one entity with the first
+        # — and no other — makes that entity a bridge: it joins two otherwise
+        # unconnected source clusters. This is the "bridges fill in" case a
+        # single-source wiki cannot produce (one source → no bridges).
+        with tempfile.TemporaryDirectory() as d:
+            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[entity-a]]", bibkey="a-2026"))
+            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[entity-b]]", bibkey="b-2026"))
+            _write(d, "entities/shared-site.md", _page("Shared site", typ="entity"))
+            _write(d, "entities/entity-a.md", _page("Entity A", typ="entity"))
+            _write(d, "entities/entity-b.md", _page("Entity B", typ="entity"))
+            _, nodes, edges, _ = _graph(d)
+            bridges = wg.compute_bridges(nodes, edges)
+            self.assertEqual([b["id"] for b in bridges], ["shared-site"],
+                             f"expected shared-site to bridge, got {bridges}")
+            self.assertEqual(bridges[0]["connects"], 2)
+            self.assertEqual(sorted(bridges[0]["sources"]), ["source-a", "source-b"])
+
+    def test_no_bridge_when_sources_share_a_second_entity(self):
+        # Control against false positives: if the two sources also share a
+        # SECOND entity, they collapse into one cluster and nothing bridges.
+        with tempfile.TemporaryDirectory() as d:
+            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[also-shared]]", bibkey="a-2026"))
+            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[also-shared]]", bibkey="b-2026"))
+            _write(d, "entities/shared-site.md", _page("Shared site", typ="entity"))
+            _write(d, "entities/also-shared.md", _page("Also shared", typ="entity"))
+            _, nodes, edges, _ = _graph(d)
+            self.assertEqual(wg.compute_bridges(nodes, edges), [])
+
+
 class MalformedWikilinks(unittest.TestCase):
     def test_empty_bracket_link_ignored(self):
         with tempfile.TemporaryDirectory() as d:
