@@ -1242,8 +1242,15 @@ def main() -> int:
 
     pages = collect_pages(args.knowledge_dir)
     if not pages:
-        print(f"Error: no wiki pages found under '{args.knowledge_dir}'.")
-        return 1
+        # The directory exists (checked above) but holds only _example-/_meta
+        # pages, which are excluded — i.e. a freshly scaffolded project before
+        # the first ingest. An empty graph is a legitimate state, not an error:
+        # CI must still build and publish an (empty) /graph/ before any source
+        # is ingested. Fall through and write empty exports rather than exiting
+        # non-zero and breaking the whole Pages deploy. A genuinely wrong path
+        # is already caught by the not-found check above.
+        print(f"Note: no ingested wiki pages under '{args.knowledge_dir}' yet "
+              "(only examples/meta) — building an empty graph.")
 
     # Page slugs must be unique — wikilinks resolve by slug, so duplicates would
     # silently collapse to one node. Fail loudly instead.

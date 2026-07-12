@@ -70,6 +70,28 @@ class EmptyAndDegenerate(unittest.TestCase):
             node_comm, comms = wg.compute_communities(nodes, edges)
             self.assertEqual((node_comm, comms), ({}, []))
 
+    def test_fresh_scaffold_build_exits_zero(self):
+        # A freshly scaffolded project holds only _example-/_meta pages (both
+        # excluded), so the graph is empty. The build must still exit 0 and emit
+        # valid empty exports — otherwise CI's build-graph step fails and takes
+        # the whole Pages deploy (article + book + graph) down with it. This is
+        # the regression guard for that: run the real CLI, not the internals.
+        with tempfile.TemporaryDirectory() as d:
+            _write(d, "knowledge/sources/_example-foo.md", _page("Example"))
+            _write(d, "knowledge/_meta/index.md", "# index\n")
+            out = pathlib.Path(d) / "out"
+            r = subprocess.run(
+                [sys.executable, str(SCRIPTS / "wiki-to-graph.py"),
+                 "--knowledge-dir", str(pathlib.Path(d) / "knowledge"),
+                 "--out-dir", str(out)],
+                capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            data = json.loads((out / "graph.json").read_text(encoding="utf-8"))
+            self.assertEqual(data["stats"]["nodes"], 0)
+            self.assertEqual(data["stats"]["edges"], 0)
+            self.assertTrue((out / "graph.html").exists(), "empty graph.html not written")
+            self.assertTrue((out / "GRAPH_REPORT.md").exists(), "empty report not written")
+
     def test_single_page_no_links(self):
         with tempfile.TemporaryDirectory() as d:
             _write(d, "a.md", _page("A"))
