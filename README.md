@@ -1,7 +1,7 @@
 # research-superpowers
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.21.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.21.1-blue.svg)](CHANGELOG.md)
 [![Plugin for: Claude Code + OpenCode](https://img.shields.io/badge/plugin-Claude%20Code%20%2B%20OpenCode-purple.svg)](#installation)
 [![Lint](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml)
 
@@ -24,7 +24,7 @@ LLM-assisted research is fast but easy to get wrong:
 `research-superpowers` makes the discipline structural:
 
 - **15 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
-- **6 subagents** for context-isolated heavy lifting (ingest, draft, review, analysis, literature search, lint)
+- **7 subagents** for context-isolated heavy lifting (ingest, acquire, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
 - **Audit-trail SOFT-GATES** that prompt for a written override reason and log it, instead of silently blocking
@@ -196,8 +196,8 @@ research-superpowers/
 │   ├── knowledge-frontmatter.schema.json
 │   └── README.md
 ├── hooks/                        # SessionStart hook injects the skill index
-├── skills/                       # 12 SKILL.md files (the SOT for each workflow)
-├── agents/                       # 6 thin-pointer subagents
+├── skills/                       # 15 SKILL.md files (the SOT for each workflow)
+├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline
 │   ├── schema/                   # mirror of plugin schema (for project-local lint)

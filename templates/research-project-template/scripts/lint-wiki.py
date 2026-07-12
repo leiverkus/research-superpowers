@@ -226,11 +226,20 @@ def lint_wikilinks(pages: dict[str, Path]) -> tuple[list[str], list[str]]:
     broken = []
 
     for name, path in pages.items():
-        for target in find_wikilinks(path):
+        for raw in find_wikilinks(path):
+            # Normalise `[[b|alias]]` / `[[b#heading]]` to the bare slug before
+            # resolving — otherwise a valid aliased/anchored link is falsely
+            # flagged BROKEN and its target falsely reported as an orphan (the
+            # graph builder normalises the same way). Self-links don't count as
+            # an incoming link — else a page linking only to itself hides as
+            # non-orphan.
+            target = _relation_target(raw)
+            if not target or target == name:
+                continue
             if target in incoming:
                 incoming[target].add(name)
             else:
-                broken.append(f"  BROKEN: {path} → [[{target}]] (target does not exist)")
+                broken.append(f"  BROKEN: {path} → [[{raw}]] (target does not exist)")
 
     skip = {"index", "log"}
     orphans = [

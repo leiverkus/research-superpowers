@@ -338,11 +338,23 @@ jobs:
               print(f"::error::README version badge ({m and m.group(1)}) != plugin.json ({version})"); failed = 1
 
           skills = sorted(p.name for p in pathlib.Path("skills").iterdir() if (p / "SKILL.md").exists())
-          # Every "<N> skills" mention in README + docs/ must equal the real count.
+          agents = sorted(p.name for p in pathlib.Path("agents").glob("*.md"))
+          # Every counter mention in README + docs/ must equal the real count.
+          # Skills were already pinned; subagent counts and the layout-tree file
+          # counts previously drifted unchecked (README said "6 subagents",
+          # "12 SKILL.md files"), so pin those too.
+          checks = [
+              (r"(\d+) skills", len(skills), "skills"),
+              (r"(\d+) (?:thin-pointer )?subagents", len(agents), "agents"),
+              (r"(\d+) agents\b", len(agents), "agents"),
+              (r"(\d+) SKILL\.md files", len(skills), "SKILL.md files"),
+          ]
           for doc in [pathlib.Path("README.md")] + sorted(pathlib.Path("docs").glob("*.md")):
-              for m in re.finditer(r"(\d+) skills", doc.read_text(encoding="utf-8")):
-                  if int(m.group(1)) != len(skills):
-                      print(f"::error file={doc}::says '{m.group(0)}' but there are {len(skills)} skills"); failed = 1
+              text = doc.read_text(encoding="utf-8")
+              for pat, real, label in checks:
+                  for m in re.finditer(pat, text):
+                      if int(m.group(1)) != real:
+                          print(f"::error file={doc}::says '{m.group(0)}' but there are {real} {label}"); failed = 1
 
           session = pathlib.Path("hooks/session-context.md").read_text(encoding="utf-8")
           for s in skills:
