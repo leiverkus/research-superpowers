@@ -296,3 +296,67 @@ rather than rejecting it:
   feature the stdlib subset can't express, the CI cross-check is exactly the
   signal to either extend the subset or revisit making `jsonschema` a runtime
   dependency — a decision made on evidence, not pre-emptively.
+
+---
+
+# Feature track — Cross-project graph (global graph)
+
+Distinct from the P1–P7 *maturity* backlog above: this is a **new capability**,
+not hardening. `wiki-to-graph.py` maps one project. A researcher running several
+`research-project` instances (e.g. Theology / Biblical Archaeology / DH) has the
+same real-world entities and sources recurring across projects — "Tel Megiddo",
+"Israel Finkelstein", a shared DOI. A *global* graph would surface those
+cross-project connections (the same concept developed in two works; two projects
+leaning on the same source toward opposite conclusions).
+
+**Why it is hard / lower priority.** The core problem is **identity resolution
+across projects**, a data-quality problem more than a code problem. Within a
+project identity is the slug (unique, enforced). Across projects slugs both
+collide (`tel-megiddo.md` twice) and drift (`entity-tel-megiddo` vs
+`tel-megiddo`). It also breaks clean invariants: unique slugs, the per-project
+output dir, the CI-Pages publish (no single project's CI can publish a
+cross-project artefact), and the single-project MCP.
+
+**The robust join key already exists** in the frontmatter: `gnd_id` (persons),
+`idai_gazetteer_id` (places), `wikidata_qid`, and `bibkey` (sources). The whole
+track is built on exact authority-ID matching — **no fuzzy title matching**,
+which would invent false links. Concepts (no authority ID) are the known blind
+spot and are reported as such, never guessed.
+
+**Honest trigger.** Build the later steps only once you actually have ≥2 mature
+projects with *overlapping, authority-ID-tagged* entities. Step 1 (below) is the
+cheap way to check that empirically before investing.
+
+## Step 1 — `authority-overlap` report  ·  small  ·  dependency-free  ·  ✅ shipped
+
+> **Status: done.** `scripts/wiki-global-graph.py overlap <root> <root> …`
+> reports which `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` / `bibkey`
+> occur in ≥2 projects — the exact set of `same_as` edges a global graph would
+> draw — and states the concept/entity-without-ID blind spot. Deterministic,
+> `--json`, stdlib+PyYAML. Tests in `tests/test_global_graph.py`.
+
+**Acceptance (met).** Given N project roots, lists every shared authority id
+with the projects and pages it appears in; ids in only one project, or with
+differing values, are not reported; missing `knowledge/` dirs are skipped, not
+fatal; output is byte-stable across runs.
+
+## Step 2 — `merge`  ·  medium  ·  dependency-free
+
+**Approach.** Reuse `wiki-to-graph.py`'s per-project graph, namespace every node
+by project (`projA::slug`), and add a `same_as` edge for each overlap-report
+match. Emit a combined `graph.json` / `graph.html` to a location outside any
+single project (a chosen output dir or a small `~/.research-projects` registry).
+Keep nodes separate + linked (not merged) to preserve per-project provenance.
+
+**Acceptance.** A merged `graph.html` where shared entities visibly bridge two
+projects' sub-graphs; every `same_as` edge traces back to a shared authority id;
+no fuzzy matches; deterministic output.
+
+## Step 3 — `serve`  ·  medium  ·  dependency-free
+
+**Approach.** A cross-project variant of `graph_mcp.py` so `neighbors` / `path`
+can span projects ("where else have I used Finkelstein?"). Optional; only worth
+it once Step 2 is in real use.
+
+**Acceptance.** MCP tools answer cross-project queries against the merged graph,
+same live-recompute model as the single-project server.
