@@ -61,6 +61,11 @@ INFERENCE_WARN_THRESHOLD = 0.50
 
 REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation", "open-question")
 
+# Authority-ID fields on type=entity. These are the join key that makes an
+# entity matchable ACROSS projects (scripts/wiki-global-graph.py); coverage is
+# reported as an advisory signal, never a hard error.
+AUTHORITY_FIELDS = ("gnd_id", "idai_gazetteer_id", "wikidata_qid")
+
 
 def load_schema() -> dict:
     """Load the frontmatter JSON schema. Fails loudly if missing."""
@@ -169,10 +174,19 @@ def find_wikilinks(path: Path) -> set[str]:
     return set(re.findall(r"\[\[([^\]]+)\]\]", text))
 
 
+def _is_generated_export(page: Path) -> bool:
+    """True for files under the generated ``knowledge/_meta/graph/`` export dir
+    (``GRAPH_REPORT.md`` and friends, written by ``wiki-to-graph.py``). These are
+    build artefacts, not wiki pages, so lint must not treat them as content — a
+    stray ``GRAPH_REPORT.md`` would otherwise be flagged as a page with no
+    frontmatter and as an orphan."""
+    return page.parent.name == "graph" and page.parent.parent.name == "_meta"
+
+
 def collect_pages(wiki_dir: Path) -> dict[str, Path]:
     pages = {}
     for page in wiki_dir.rglob("*.md"):
-        if page.name.startswith(("_beispiel-", "_example-")):
+        if page.name.startswith(("_beispiel-", "_example-")) or _is_generated_export(page):
             continue
         pages[page.stem] = page
     return pages
@@ -184,7 +198,7 @@ def find_duplicate_slugs(wiki_dir: Path) -> dict[str, list[str]]:
     slug used more than once."""
     seen: dict[str, list[str]] = {}
     for page in wiki_dir.rglob("*.md"):
-        if page.name.startswith(("_beispiel-", "_example-")):
+        if page.name.startswith(("_beispiel-", "_example-")) or _is_generated_export(page):
             continue
         seen.setdefault(page.stem, []).append(str(page))
     return {slug: paths for slug, paths in seen.items() if len(paths) > 1}
@@ -418,6 +432,45 @@ def lint_status_distribution(pages: dict[str, Path]) -> list[str]:
     return report
 
 
+def report_authority_coverage(pages: dict[str, Path], verbose: bool = False) -> list[str]:
+    """Advisory: how many `type=entity` pages carry an authority ID
+    (gnd_id / idai_gazetteer_id / wikidata_qid).
+
+    Authority IDs are the join key that makes an entity matchable *across*
+    projects (`scripts/wiki-global-graph.py overlap`) — an untagged entity is
+    invisible to cross-project linkage and to a future merged graph. This is
+    **not** an error (a dataset / method / software entity may have no
+    applicable ID) and does not affect the exit code; it is surfaced so the gap
+    is visible and the untagged list doubles as a tagging worklist.
+    """
+    entities = []
+    for slug, path in pages.items():
+        fm = parse_frontmatter(path)
+        if fm and fm.get("type") == "entity":
+            has_id = any(str(fm.get(f, "")).strip() for f in AUTHORITY_FIELDS)
+            entities.append((slug, has_id))
+    if not entities:
+        return ["  No entity pages."]
+
+    untagged = sorted(slug for slug, has_id in entities if not has_id)
+    tagged = len(entities) - len(untagged)
+    pct = tagged / len(entities) * 100
+    report = [f"  {tagged} of {len(entities)} entity page(s) carry an authority ID ({pct:.0f}%)."]
+    if untagged:
+        report.append(
+            "  Untagged entities are invisible to cross-project linkage. Sites should "
+            "carry idai_gazetteer_id, persons gnd_id / wikidata_qid (resolve via "
+            "dao-paper-search resolve_site / resolve_author); datasets / methods / "
+            "software may legitimately have none — review the list.")
+        if verbose:
+            report.append("  Untagged entities:")
+            report.extend(f"    - {slug}" for slug in untagged)
+        else:
+            preview = ", ".join(untagged[:8]) + (" …" if len(untagged) > 8 else "")
+            report.append(f"  Untagged ({len(untagged)}): {preview}   [--verbose for the full worklist]")
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description="Wiki lint for the research wiki")
     parser.add_argument(
@@ -467,6 +520,9 @@ def main():
     print("\n=== Review flags ===")
     review_lines, _open_flags = report_review_flags(pages)
     print("\n".join(review_lines))
+
+    print("\n=== Authority-ID coverage (entities) ===")
+    print("\n".join(report_authority_coverage(pages, args.verbose)))
 
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))

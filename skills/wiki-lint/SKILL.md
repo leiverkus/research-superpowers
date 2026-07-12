@@ -47,10 +47,11 @@ than overridden — the override is an audit trail, not a substitute.
 4. **Fix errors inline** (missing frontmatter fields, broken wikilinks, invalid `type` values)
 5. **Assess warnings** — stale pages, status inconsistency, empty sections — decide with user: fix / defer / ignore
 6. **Review the open review flags** — the `=== Review flags ===` section lists open `review_flags` (content findings from `semantic-wiki-review`). These do **not** fail the exit code, but they **gate drafting** (see `drafting-manuscript`): decide with the user per flag — fix the underlying issue and set `state: resolved`, or leave it open and let drafting log an override. Do not clear a flag by deleting it.
-7. **Handle orphans** — pages with no incoming wikilinks: decide link-in, delete, or mark as root
-8. **Re-run lint** until exit 0 on errors
-9. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred, N open flags)
-10. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
+7. **Check authority-ID coverage** — the `=== Authority-ID coverage (entities) ===` section reports how many entities carry a `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` and lists the untagged (`--verbose`). Advisory only. For persons and places, resolve and add the ID (via `dao-paper-search` `resolve_author` / `resolve_site`) — it is the join key for cross-project linkage (`wiki-global-graph.py overlap`); datasets / methods / software may legitimately have none. Work the untagged list rather than letting it accumulate.
+8. **Handle orphans** — pages with no incoming wikilinks: decide link-in, delete, or mark as root
+9. **Re-run lint** until exit 0 on errors
+10. **Log** the run in `knowledge/_meta/log.md` with summary (N errors fixed, N warnings deferred, N open flags)
+11. **Dispatch `wiki-linter` subagent** (optional) for large wikis — see `agents/wiki-linter.md`
 
 **See also:** `scripts/wiki-to-graph.py` is the sibling tool for *structure analysis* (not validation) — it exports the wiki as a graph (`graph.json` / `graph.graphml`) and reports god_nodes (most-connected pages) and bridges (entities joining otherwise-unconnected sources). Useful after a lint pass to spot hubs and weak links; it reads the same `relations` frontmatter the linter validates.
 
