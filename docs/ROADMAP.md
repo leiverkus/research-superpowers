@@ -317,24 +317,44 @@ collide (`tel-megiddo.md` twice) and drift (`entity-tel-megiddo` vs
 output dir, the CI-Pages publish (no single project's CI can publish a
 cross-project artefact), and the single-project MCP.
 
-**The robust join key already exists** in the frontmatter: `gnd_id` (persons),
-`idai_gazetteer_id` (places), `wikidata_qid`, and `bibkey` (sources). The whole
-track is built on exact authority-ID matching — **no fuzzy title matching**,
-which would invent false links. Concepts (no authority ID) are the known blind
-spot and are reported as such, never guessed.
+**The robust join key already exists** in the frontmatter — matched *exactly*,
+never by fuzzy title (which would invent false links): `orcid` (living
+researchers — the key that actually covers working scientists, where GND /
+Wikidata frequently do not), `gnd_id` (persons), `idai_gazetteer_id` (places),
+`wikidata_qid` (also used for shared software), and `bibkey` (sources). Concepts
+have no authority ID — the known blind spot, reported as such, never guessed;
+see *Concept vocabulary* below for the lever that would close it.
 
-**Honest trigger.** Build the later steps only once you actually have ≥2 mature
-projects with *overlapping, authority-ID-tagged* entities. Step 1 (below) is the
-cheap way to check that empirically before investing.
+**Three relationships, not one path.** Field-testing on a real portfolio (see
+*Evidentia field-test* below) showed the original linear `overlap → merge →
+serve` picture is only one of three ways projects relate. Pick by one question:
 
-## Step 1 — `authority-overlap` report  ·  small  ·  dependency-free  ·  ✅ shipped
+> **Will these wikis become *one* published artefact?**
+> - **No — separate works that occasionally overlap** → *federate*: draw
+>   `same_as` edges, keep the projects separate (Branch A).
+> - **Yes, but they were fragmented by accident** → *consolidate*: merge into
+>   one wiki, a one-time migration (Branch B).
+> - **Yes, as a synthesis on top of many** (a book / portfolio grant drawing
+>   from module wikis) → *portfolio synthesis*: a super-project that references
+>   the leaves without merging them (Branch C).
 
-> **Status: done (v0.20.0), verified end-to-end.**
+**Honest trigger.** Build the branch you need only once you have the data for it:
+≥2 projects with *overlapping, authority-ID-tagged* entities. Step 1 (the shared
+foundation) is the cheap way to check that empirically first — and its companion,
+the `wiki-lint` authority-coverage report (v0.20.1), keeps the tagging honest (a
+real audit found 0 of 135 entities tagged — no tissue to connect until that gap
+is worked).
+
+## Shared foundation — `authority-overlap` report  ·  small  ·  dependency-free  ·  ✅ shipped
+
+> **Status: done (v0.20.0; `orcid` join key added v0.21.0), verified end-to-end
+> and on a real portfolio.**
 > `scripts/wiki-global-graph.py overlap <root> <root> …` reports which
-> `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` / `bibkey` occur in ≥2
-> projects — the exact set of `same_as` edges a global graph would draw — and
+> `orcid` / `gnd_id` / `idai_gazetteer_id` / `wikidata_qid` / `bibkey` occur in
+> ≥2 projects — the exact set of `same_as` edges a global graph would draw — and
 > states the concept/entity-without-ID blind spot. Deterministic, `--json`,
-> stdlib+PyYAML. Tests in `tests/test_global_graph.py`.
+> stdlib+PyYAML. It is the **detection layer under all three branches** below.
+> Tests in `tests/test_global_graph.py`.
 
 **Acceptance (met).** Given N project roots, lists every shared authority id
 with the projects and pages it appears in; ids in only one project, or with
@@ -352,23 +372,93 @@ report the two projects' differing `bibkey`s — confirming the entity-level
 cross-project link (the "same person/place in two works" case) fires while
 distinct sources stay separate. Deterministic across re-runs.
 
-## Step 2 — `merge`  ·  medium  ·  dependency-free
+## Branch A — Federate (keep separate, cross-reference)
 
-**Approach.** Reuse `wiki-to-graph.py`'s per-project graph, namespace every node
-by project (`projA::slug`), and add a `same_as` edge for each overlap-report
-match. Emit a combined `graph.json` / `graph.html` to a location outside any
-single project (a chosen output dir or a small `~/.research-projects` registry).
-Keep nodes separate + linked (not merged) to preserve per-project provenance.
+For peer projects that stay separate. Two steps on top of the shared foundation.
 
+### `merge`  ·  medium  ·  dependency-free
+Reuse `wiki-to-graph.py`'s per-project graph, namespace every node by project
+(`projA::slug`), and add a `same_as` edge for each overlap-report match. Emit a
+combined `graph.json` / `graph.html` outside any single project (a chosen output
+dir or a small `~/.research-projects` registry). Keep nodes separate + linked
+(not merged) to preserve per-project provenance.
 **Acceptance.** A merged `graph.html` where shared entities visibly bridge two
 projects' sub-graphs; every `same_as` edge traces back to a shared authority id;
-no fuzzy matches; deterministic output.
+no fuzzy matches; deterministic.
 
-## Step 3 — `serve`  ·  medium  ·  dependency-free
+### `serve`  ·  medium  ·  dependency-free
+A cross-project variant of `graph_mcp.py` so `neighbors` / `path` span projects
+("where else have I used Finkelstein?"). Optional; only worth it once `merge`
+is in real use.
 
-**Approach.** A cross-project variant of `graph_mcp.py` so `neighbors` / `path`
-can span projects ("where else have I used Finkelstein?"). Optional; only worth
-it once Step 2 is in real use.
+## Branch B — Consolidate (fragments → one wiki)  ·  large  ·  LLM-assisted skill
 
-**Acceptance.** MCP tools answer cross-project queries against the merged graph,
-same live-recompute model as the single-project server.
+For a *single* work accidentally split into per-chapter wikis. **Not** the
+Evidentia case (its modules are genuinely separate works). Distinct from
+federate: you want *one* canonical page per entity, not two linked by `same_as`.
+It is a **skill, not a script** — content merge and conflict resolution need
+judgment — built on the shared foundation as its deterministic detection layer:
+
+- dedup by authority id / bibkey (definite) or slug/title (propose, human confirms);
+- **generative, not destructive** — emit a *new* unified project, leave the
+  chapter wikis intact (a one-way migration: after it, work in the unified wiki);
+- surface genuine content conflicts as `review_flags: open-question` for a human,
+  never silently pick a side;
+- rewrite wikilinks / `sources:` / `relations:` to the canonical slug; union BibTeX;
+- **concepts never auto-merged** (no authority id) — always proposed.
+
+**Acceptance.** N chapter wikis → one `knowledge/` + an `output/book/` skeleton;
+every merge traceable to an authority id or a logged human decision; conflicts
+surfaced not resolved; source wikis untouched.
+
+## Branch C — Portfolio / synthesis (leaves → a book)  ·  large  ·  the Evidentia case
+
+For a book or portfolio grant that *synthesises across* many leaf projects
+without merging them (Evidentia's ~25 module wikis → one book; grants for parts
+or the whole). The super-project holds cross-cutting syntheses and **references**
+the leaves; `drafting-manuscript` and `grant-finder` would need to **source
+across multiple project wikis** — a cross-project *read*, not a merge. The shared
+foundation's overlap is the connective tissue that suggests the synthesis
+structure. The hard part: a portfolio's deepest connections are usually
+*concepts / methods* shared across leaves — the authority-ID blind spot — so this
+branch leans on the concept-vocabulary lever below and on human synthesis, with
+tooling helping only at the entity / source layer.
+
+**Acceptance.** A super-project whose drafts pull cited content from named leaf
+wikis; overlap-derived shared entities form the spine of the synthesis; nothing
+in the leaves is merged or mutated.
+
+## Concept vocabulary — closing the blind spot  ·  medium
+
+Concepts carry no authority ID, so cross-project *concept* overlap is invisible —
+yet a methods portfolio's deepest links are conceptual (point process,
+visibility, least-cost path recurring across modules). The platform-clean fix: a
+shared concept vocabulary / glossary (e.g. in a docs repo) that module concept
+pages reference by a stable id, giving concepts a project-internal join key — no
+fuzzy matching. This is the lever that would make Branch C's synthesis mechanical
+rather than purely manual.
+
+## Evidentia field-test (2026-07) — what a real portfolio taught
+
+Run on a real ~25-module computational-archaeology platform (10 wikis, 668 pages).
+These findings drove the reframing above and shipped `orcid` (v0.21.0):
+
+- **The tissue is people + software, not sites / DOIs.** The theology framing at
+  the top (Tel Megiddo, a shared DOI) did not hold: the genuinely shared entities
+  were *working researchers* (Crema, Bevan, Lake, Verhagen, spanning the temporal
+  / visibility / connectivity modules) and *shared software* (GRASS GIS) — under
+  drifted slugs (`enrico-crema` vs `crema`), which is exactly why the match must
+  be on the authority id, not the slug.
+- **Resolver coverage is the bottleneck, not the tool.** `dao-paper-search`'s
+  `resolve_author` (GND / Wikidata) returned nothing for those working
+  researchers; the iDAI gazetteer missed real sites (Tel Qasile). Automated
+  tagging covers well-known sites + famous scholars; the rest is a manual tail.
+  This drove **`orcid`** — the key that *does* cover living researchers — and
+  shared software → `wikidata_qid`.
+- **Authority-ID coverage is a data-discipline gate.** An audit found **0 of 135
+  entities tagged** across the ten wikis — the connective tissue simply wasn't in
+  the data. The `wiki-lint` authority-coverage report (v0.20.1) makes that gap
+  visible and doubles as the tagging worklist.
+- **Payoff, once tagged.** With 5 shared entities tagged (4 ORCID + 1 Wikidata),
+  `overlap` surfaced 5 real cross-module `same_as` edges across drifted slugs —
+  the first mechanical view of the portfolio's actual connections.
