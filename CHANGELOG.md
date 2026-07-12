@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.21.0] — 2026-07-12
+
 ### Added
 
 - **`orcid` as an authority field — the join key that actually covers living researchers.** A real portfolio audit exposed the limit of the existing authority IDs: across ten computational-archaeology module wikis, the genuinely shared entities were *working researchers and software tools* (the same scholar underpinning a temporal-analysis and a visibility module), recurring under drifted slugs (`enrico-crema` vs `crema`) — but `resolve_author` returned neither GND nor Wikidata for them, so `wiki-global-graph.py overlap` matched nothing. ORCID is the identifier that covers exactly those people. Added to the frontmatter schema (`orcid`, pattern-validated, on `type=entity`, 3-way mirrored), made a first-class join key in `wiki-global-graph.py overlap` (**listed first** — preferred for researchers) and in `lint-wiki.py`'s authority-coverage section, and mapped to the `person` subtype in `wiki-to-graph.py`. `ingest-source` now prefers `orcid` for living researchers (from `resolve_author`'s `orcid` field or orcid.org, never guessed). Overlap now fires on a shared ORCID *across different slugs* — the first mechanism that surfaces the real cross-module tissue of a methods portfolio. Conformance + overlap tests added.
