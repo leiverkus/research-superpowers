@@ -348,6 +348,10 @@ exports to `knowledge/_meta/graph/`:
   neighbourhood. Covers everyday exploration without Gephi/yEd.
 - **`graph.json`** — for scripting/queries.
 - **`graph.graphml`** — for Gephi/yEd (heavy layout, community detection).
+- **`GRAPH_REPORT.md`** — a deterministic prose summary (overview, god_nodes,
+  bridges, labelled communities, asserted relations, suggested questions); the
+  static, git-diffable sibling of `graph.html`, byte-identical on an unchanged
+  wiki.
 
 All carry derived **god_nodes** (most-connected pages) and **bridges** (entities
 joining otherwise-unconnected sources). Edges come from wikilinks plus the
@@ -361,7 +365,8 @@ python scripts/wiki-to-graph.py neighbors <slug> --depth 2   # what connects to 
 python scripts/wiki-to-graph.py path <a> <b>                 # how two pages connect
 python scripts/wiki-to-graph.py god-nodes --top-n 10         # most-connected pages
 python scripts/wiki-to-graph.py bridges                      # load-bearing entities
-python scripts/wiki-to-graph.py communities                  # thematic clusters (auto-detected)
+python scripts/wiki-to-graph.py communities                  # thematic clusters (auto-detected, labelled)
+python scripts/wiki-to-graph.py report                       # GRAPH_REPORT.md to stdout
 python scripts/wiki-to-graph.py relations --type contradicts # typed edges by type/confidence
 python scripts/wiki-to-graph.py search <term>                # find a node
 python scripts/wiki-to-graph.py stats                        # counts + inference-rate

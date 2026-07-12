@@ -98,8 +98,13 @@ TOOLS = {
     },
     "graph_communities": {
         "cmd": "communities", "pos": [], "opt": [("min_size", "--min-size")],
-        "description": "Detected thematic clusters (greedy-modularity communities), each with its node types and members.",
+        "description": "Detected thematic clusters (greedy-modularity communities), each with a deterministic label, its node types and members.",
         "schema": {"type": "object", "properties": {"min_size": {"type": "integer", "description": "Hide communities smaller than this."}}},
+    },
+    "graph_report": {
+        "cmd": "report", "pos": [], "opt": [("top_n", "--top-n")],
+        "description": "A deterministic Markdown overview of the whole graph — god nodes, bridges, labelled communities, asserted relations, and suggested questions. Returns prose, not JSON.",
+        "schema": {"type": "object", "properties": {"top_n": {"type": "integer", "description": "How many god nodes to include (default 15)."}}},
     },
 }
 
