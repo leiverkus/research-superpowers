@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.21.1] — 2026-07-12
+
 ### Fixed
 
 - **`wiki-lint` mis-resolved aliased / anchored wikilinks and let self-links hide orphans.** `lint_wikilinks` compared the *raw* wikilink target against page slugs, so a valid `[[b|alias]]` or `[[b#heading]]` was wrongly reported as a BROKEN link and its target `b` wrongly reported as an orphan; conversely a page linking only to itself (`[[a]]` in `a.md`) counted as its own incoming link and hid as non-orphan. Lint now normalises the target to the bare slug (reusing `_relation_target`, the same reduction the graph builder already applied) and ignores self-links — matching `wiki-to-graph.py`. Tests in `tests/test_wiki_tools.py`.
