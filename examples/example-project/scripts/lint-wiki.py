@@ -859,9 +859,22 @@ def _own_sections(text: str) -> str:
     return "\n".join(out)
 
 
+# A page anchor that FOLLOWS a reference to another source belongs to that source.
+# Real: "…converges on the finding independently reached by [[source-bilotti-2024-point]]
+# (pp. 10–11)." Those are Bilotti's pages; the ingested source is printed on 626–638.
+# Cross-source comparisons live in the body, not only under ## Connections — so the
+# section filter alone is not enough. Look back a short way for a source wikilink or a
+# @citekey; an entity or concept link ("uses [[entity-spatstat]] (p. 6)") is NOT one,
+# because an entity has no pages of its own.
+FOREIGN_REF = re.compile(r"(\[\[source-[^\]]+\]\]|\[\[[^\]]*-\d{4}[a-z]?[^\]]*\]\]|@[a-z][\w-]*)"
+                         r"[^.!?\[]{0,60}$", re.S)
+
+
 def _cited_pages(text: str) -> set[int]:
     out: set[int] = set()
     for m in PAGE_ANCHOR.finditer(text):
+        if FOREIGN_REF.search(text[max(0, m.start() - 90):m.start()]):
+            continue                      # this page belongs to the other work
         for part in re.split(r",", m.group(1)):
             part = part.strip()
             r = re.match(r"^(\d+)\s*[–—-]\s*(\d+)$", part)

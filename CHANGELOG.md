@@ -6,6 +6,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.29.1] — 2026-07-14
+
+### Fixed
+
+- **Check 10 fired on a page number that belonged to a *different* source.** Found within
+  the hour, on the corpus, by the ingest it was meant to protect:
+
+  > …converges exactly on the finding independently reached by
+  > `[[source-bilotti-2024-point]]` **(pp. 10–11)**.
+
+  Those are *Bilotti's* pages. The ingested source (Riris) is printed on 626–638, so the
+  check called a correct citation a fabrication.
+
+  Excluding `## Connections` was not enough: **cross-source comparisons live in the body**,
+  which is exactly where a review wiki does its most interesting work. A page anchor that
+  follows a reference to another source — a `[[source-…]]` wikilink or an `@citekey` —
+  now belongs to that source and is skipped.
+
+  An **entity** link does not suppress an anchor: "uses `[[entity-spatstat]]` (p. 6)" is
+  page 6 *of this source*, because an entity has no pages of its own. Suppressing those
+  would have gutted the check on precisely the pages that use it most.
+
+  Re-verified across the corpus: the false positive is gone and **all 24 real violations
+  in 9 projects still fire.**
+
 ## [0.29.0] — 2026-07-14
 
 The release that catches a fabricated citation.
