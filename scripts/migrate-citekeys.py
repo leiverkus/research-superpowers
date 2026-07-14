@@ -124,12 +124,31 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 # Key generation
 # --------------------------------------------------------------------------
 
+# Letters that NFKD does NOT decompose, because they are distinct letters and not
+# "base + combining diacritic". Without an explicit mapping the [^a-z] filter drops
+# them silently, mangling the surname: Turkish "Sırmaçek" → "srmacek", Polish
+# "Trybała" → "trybaa". Both happened.
+_UNDECOMPOSABLE = {
+    "ı": "i", "İ": "I",          # Turkish dotless / dotted i
+    "ł": "l", "Ł": "L",          # Polish stroked l
+    "đ": "d", "Đ": "D",          # Croatian / Vietnamese stroked d
+    "ħ": "h", "Ħ": "H",          # Maltese
+    "ŧ": "t", "ø": "o", "Ø": "O",
+    "æ": "ae", "Æ": "Ae", "œ": "oe", "Œ": "Oe",
+    "ß": "ss", "þ": "th", "Þ": "Th", "ð": "d", "Ð": "D",
+    "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue",
+}
+
+
 def deascii(s: str) -> str:
-    """Fold to ASCII the way the PDF-filename rule does (ä→ae, ß→ss, é→e)."""
-    s = (s.replace("ß", "ss").replace("Ä", "Ae").replace("Ö", "Oe")
-          .replace("Ü", "Ue").replace("ä", "ae").replace("ö", "oe")
-          .replace("ü", "ue").replace("æ", "ae").replace("ø", "o")
-          .replace("Ø", "O").replace("ð", "d").replace("þ", "th"))
+    """Fold to ASCII the way the PDF-filename rule does (ä→ae, ß→ss, é→e).
+
+    The explicit table above must come FIRST: NFKD only splits base+diacritic, so a
+    letter like ı or ł survives it untouched and is then dropped by the [^a-z]
+    filter — silently shortening the surname and minting a key nobody can guess.
+    """
+    for src, dst in _UNDECOMPOSABLE.items():
+        s = s.replace(src, dst)
     s = unicodedata.normalize("NFKD", s)
     return "".join(c for c in s if not unicodedata.combining(c))
 

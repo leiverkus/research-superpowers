@@ -61,6 +61,20 @@ class KeyGeneration(unittest.TestCase):
         key, _ = mc.make_key(_bib("x", author="Müller, Jörg", title="Über Räume"))
         self.assertEqual(key, "mueller-2016-ueber")
 
+    def test_undecomposable_letters_are_not_dropped(self):
+        # NFKD only splits base+diacritic. A letter that IS a letter — Turkish
+        # dotless ı, Polish stroked ł — survives NFKD untouched and is then dropped
+        # by the [^a-z] filter, silently shortening the surname and minting a key
+        # nobody could guess. Both of these were produced for real:
+        #   Sırmaçek → srmacek        Trybała → trybaa
+        for author, want in [
+            ("Sırmaçek, Beril", "sirmacek-2016-software"),
+            ("Trybała, Paweł", "trybala-2016-software"),
+            ("Đurić, Ivan", "duric-2016-software"),
+        ]:
+            key, _ = mc.make_key(_bib("x", author=author))
+            self.assertEqual(key, want, author)
+
     def test_editor_is_the_fallback_for_author(self):
         body = "  editor = {Porten, Bezalel and Yardeni, Ada},\n  title = {Textbook of Aramaic Ostraca},\n  year = {2020}\n"
         key, _ = mc.make_key(body)
@@ -305,6 +319,88 @@ class EndToEnd(unittest.TestCase):
             with self.assertRaises(SystemExit) as cm:
                 mc.load_map(mapfile)
             self.assertIn("citekey pattern", str(cm.exception))
+
+
+rn = _load("rename_source_pdfs", ROOT / "scripts" / "rename-source-pdfs.py")
+
+
+class PdfRename(unittest.TestCase):
+    """`bibkey == PDF filename stem` — ingest-source HARD-STOPS without it, and
+    drafting-manuscript needs it to reach back into the PDF at the cited pages.
+
+    A PDF renamed onto the WRONG bibkey is worse than one left alone, and
+    input/bibliography/*.pdf is gitignored, so there is no git undo.
+    """
+
+    def _project(self, d, pdfs, bib):
+        root = pathlib.Path(d)
+        (root / "input" / "bibliography").mkdir(parents=True)
+        (root / "output" / "bibtex").mkdir(parents=True)
+        (root / "output" / "bibtex" / "references.bib").write_text(bib, encoding="utf-8")
+        for name in pdfs:
+            p = root / "input" / "bibliography" / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"%PDF-1.4\n")
+        return root
+
+    BIB = ("@article{afifi-2024-tinto,\n  author = {Afifi, A},\n"
+           "  title = {Tinto and the river},\n  year = {2024}\n}\n")
+
+    def test_case_only_rename_survives_a_case_insensitive_filesystem(self):
+        # macOS and Windows: `Afifi-2024-Tinto.pdf` and `afifi-2024-tinto.pdf` ARE
+        # the same file, so a naive dst.exists() check reads its own target as a
+        # foreign file and refuses. One repo (117 CamelCase PDFs) went untouched.
+        with tempfile.TemporaryDirectory() as d:
+            root = self._project(d, ["Afifi-2024-Tinto.pdf"], self.BIB)
+            mapfile = pathlib.Path(d) / "m.json"
+            self.assertEqual(rn.cmd_plan(root, mapfile, None, use_pdf=False), 0)
+            self.assertEqual(rn.cmd_apply(root, mapfile, write=True), 0)
+            names = {p.name for p in (root / "input" / "bibliography").glob("*.pdf")}
+            self.assertEqual(names, {"afifi-2024-tinto.pdf"})
+
+    def test_conflict_blocks_only_itself(self):
+        # Two PDFs claiming one key are NOT always duplicates: in one repo they were
+        # two DIFFERENT Danielson 2020 papers and the bib had an entry for only one,
+        # so the second would have been renamed onto the wrong work. The conflict
+        # must be skipped — and must not stop the rest of the repo.
+        bib = self.BIB + ("@article{danielson-2020-history,\n  author = {Danielson, A},\n"
+                          "  title = {History of Qws},\n  year = {2020}\n}\n")
+        with tempfile.TemporaryDirectory() as d:
+            root = self._project(d, ["Afifi-2024-Tinto.pdf",
+                                     "Danielson 2020 - History of Qws.pdf",
+                                     "Danielson, 2020, Edom in Judah.pdf"], bib)
+            mapfile = pathlib.Path(d) / "m.json"
+            rn.cmd_plan(root, mapfile, None, use_pdf=False)
+            data = json.loads(mapfile.read_text(encoding="utf-8"))
+            sig = {pathlib.PurePosixPath(r["pdf"]).name: r["signal"] for r in data["renames"]}
+            self.assertEqual(sig["Danielson 2020 - History of Qws.pdf"], "conflict")
+            self.assertEqual(sig["Danielson, 2020, Edom in Judah.pdf"], "conflict")
+
+            self.assertEqual(rn.cmd_apply(root, mapfile, write=True), 0)
+            names = {p.name for p in (root / "input" / "bibliography").glob("*.pdf")}
+            # the unrelated PDF was renamed; both conflicting ones were left alone
+            self.assertIn("afifi-2024-tinto.pdf", names)
+            self.assertIn("Danielson 2020 - History of Qws.pdf", names)
+            self.assertIn("Danielson, 2020, Edom in Judah.pdf", names)
+
+    def test_nested_layout_is_flattened(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = self._project(d, ["afifi-2024/Afifi-2024-Tinto.pdf"], self.BIB)
+            mapfile = pathlib.Path(d) / "m.json"
+            rn.cmd_plan(root, mapfile, None, use_pdf=False)
+            rn.cmd_apply(root, mapfile, write=True)
+            self.assertTrue((root / "input" / "bibliography" / "afifi-2024-tinto.pdf").is_file())
+            self.assertFalse((root / "input" / "bibliography" / "afifi-2024").exists())
+
+    def test_never_renames_onto_a_key_that_is_in_no_bib(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = self._project(d, ["x.pdf"], self.BIB)
+            mapfile = pathlib.Path(d) / "m.json"
+            mapfile.write_text(json.dumps({"renames": [
+                {"pdf": "input/bibliography/x.pdf", "bibkey": "ghost-2020-nothing",
+                 "signal": "author-year"}]}), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                rn.cmd_apply(root, mapfile, write=True)
 
 
 if __name__ == "__main__":
