@@ -296,7 +296,12 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
     moves, skipped = [], 0
     for r in data["renames"]:
         key = r.get("bibkey")
-        if not key or r["signal"] == "already-ok":
+        # A conflict blocks ONLY itself, never the rest of the repo. Two PDFs
+        # claiming one key are not always duplicates: in one repo they were two
+        # DIFFERENT Danielson 2020 papers, and the bib had an entry for only one —
+        # so the second would have been renamed onto the wrong work. That is exactly
+        # the mistake this tool exists to avoid, and a human has to settle it.
+        if not key or r["signal"] in ("already-ok", "conflict", "ambiguous", "unresolved"):
             skipped += 1
             continue
         if key not in bib:
@@ -306,7 +311,15 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
         if not src.exists():
             print(f"  ⚠ missing on disk, skipped: {r['pdf']}")
             continue
-        if dst.exists() and dst != src:
+        if src == dst:
+            skipped += 1
+            continue
+        # macOS and Windows are case-INSENSITIVE: `Afifi-2024-Tinto.pdf` and
+        # `afifi-2024-tinto.pdf` are the same file, so dst.exists() is True even
+        # though this is only a case change. samefile() sees through that; without
+        # it the tool refuses its own rename and a whole repo (117 CamelCase PDFs)
+        # goes untouched.
+        if dst.exists() and not (dst.is_file() and src.samefile(dst)):
             raise SystemExit(f"  ✗ target exists: {dst.relative_to(root)} — refusing to overwrite")
         moves.append((src, dst))
 
@@ -326,7 +339,14 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
 
     for src, dst in moves:
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(src), str(dst))
+        if dst.exists() and src.samefile(dst):
+            # Case-only rename on a case-insensitive filesystem: a direct move is a
+            # no-op (or clobbers), so go via a temporary name.
+            tmp = dst.with_name(dst.name + ".case-tmp")
+            shutil.move(str(src), str(tmp))
+            shutil.move(str(tmp), str(dst))
+        else:
+            shutil.move(str(src), str(dst))
     # drop the now-empty per-source subfolders of the older nested layout
     for d in sorted((root / "input" / "bibliography").rglob("*"), reverse=True):
         if d.is_dir() and not any(d.iterdir()):

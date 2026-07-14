@@ -27,7 +27,9 @@ not a redesign.
   instead of renaming on a hunch. The written map is the undo. Nested PDFs from the
   older `<slug>/<slug>.pdf` layout are flattened.
 
-  On the first repo the DOI signal alone resolved 30 of 36 PDFs.
+  On the first repo the DOI signal alone resolved 30 of 36 PDFs. Across 17 wikis it
+  lifted conformance from **2 of 733 to 548 of 733**; what it could not settle is a
+  worklist, not a guess.
 
 ### Fixed
 
