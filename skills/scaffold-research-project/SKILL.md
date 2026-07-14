@@ -25,8 +25,12 @@ outputs:
   - path: <parent_directory>/<project_name>/schema/knowledge-frontmatter.schema.json
     kind: created
   - path: <parent_directory>/<project_name>/scripts/library.py
-scripts/bib-subset.py
-scripts/lint-wiki.py
+    kind: created
+  - path: <parent_directory>/<project_name>/scripts/bib-subset.py
+    kind: created
+  - path: <parent_directory>/<project_name>/scripts/lint-wiki.py
+    kind: created
+  - path: <parent_directory>/<project_name>/.research-library
     kind: created
   - path: <parent_directory>/<project_name>/.git/
     kind: created
@@ -81,6 +85,8 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `.gitignore`
    - `.gitlab-ci.yml`
    - `schema/knowledge-frontmatter.schema.json`
+   - `scripts/library.py` — resolves the shared source library. **Without it nothing can find a PDF.**
+   - `scripts/bib-subset.py` — writes `output/bibtex/references.bib` as the cited subset of the library
    - `scripts/lint-wiki.py`
    - `scripts/wiki-to-graph.py`
    - `scripts/graph_mcp.py` — stdlib MCP server exposing the graph queries
@@ -100,7 +106,12 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    ```
    Use the Edit tool with the original placeholder block as `old_string`.
 
-10. **Optionally init git.** If the Bash tool is available, ask: "Initialise a git repository here? (recommended; lets you track changes and roll back.)" If yes, run:
+10. **Point the project at the shared library.** Source PDFs do not live in the project — they live in one shared folder (`<library>/pdf/<bibkey>.pdf`), so the same paper exists once across every project. Write its path into `.research-library` (one line, no trailing slash). **Without this the project has no sources: `ingest-source` will hard-stop on the very first ingest.**
+    - If `~/.config/research-superpowers/library` already exists, offer its contents as the default — most users have one library for everything.
+    - Otherwise ask: "Where is your shared source library? (e.g. `~/UOLcloud/Bibliothek`). Leave blank to set it later."
+    - The file is **gitignored** — the path is machine-local and differs between machines, so committing it would break every other checkout.
+
+11. **Optionally init git.** If the Bash tool is available, ask: "Initialise a git repository here? (recommended; lets you track changes and roll back.)" If yes, run:
     ```bash
     cd <parent_directory>/<project_name>
     git init -b main
@@ -109,7 +120,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
     ```
     If Bash is not available or the user declines, skip — note that git can be initialised later.
 
-11. **Confirm completion.** Tell the user:
+12. **Confirm completion.** Tell the user:
     > "Project created at `<parent_directory>/<project_name>/`.
     > Next steps:
     > - Open `CLAUDE.md` to see the project's conventions

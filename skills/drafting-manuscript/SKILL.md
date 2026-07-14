@@ -18,7 +18,7 @@ inputs:
     description: Paths to knowledge/sources/*.md whose bibkeys are allowed for citation
     required: true
   - name: source_pdfs
-    description: Paths to the original PDFs for the cited sources (resolve with library.py: <library>/pdf/<bibkey>.pdf), for reaching back to examples/context when a page is too thin. Optional but strongly recommended; acquire-sources places these in the library.
+    description: Paths to the original PDFs for the cited sources — resolve them with scripts/library.py (they live at <library>/pdf/<bibkey>.pdf) — for reaching back to examples/context when a page is too thin. Optional but strongly recommended; acquire-sources places these in the library.
     required: false
   - name: target_language
     description: de or en
