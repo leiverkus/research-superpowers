@@ -143,7 +143,7 @@ ingest and referenced in the wiki pages.
 
 - **File naming convention:**
   `<citekey>-<description>.<ext>`, e.g.
-  `finkelstein2003-stratigraphy-megiddo.png`
+  `finkelstein-2003-low-chronology-stratigraphy-megiddo.png`
 - **What gets extracted:** maps, stratigraphies, diagrams, find photos,
   tables as image — anything visually relevant for understanding the
   source or the research question.
@@ -152,14 +152,14 @@ ingest and referenced in the wiki pages.
 - **Embedding in wiki pages** uses plain Markdown image syntax (renders in
   Foam/Obsidian/GitLab without a build):
   ```markdown
-  ![Stratigraphy of Megiddo](../assets/finkelstein2003-stratigraphy-megiddo.png)
+  ![Stratigraphy of Megiddo](../assets/finkelstein-2003-low-chronology-stratigraphy-megiddo.png)
   ```
   The Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for
   publication pages under `output/`.
 - **Source attribution:** every figure must state its origin in the
   caption, e.g.:
   ```markdown
-  ![Stratigraphy of Megiddo (after @finkelstein2003, Fig. 3)](../assets/finkelstein2003-stratigraphy-megiddo.png){#fig-megiddo-strat}
+  ![Stratigraphy of Megiddo (after @finkelstein-2003-low-chronology, Fig. 3)](../assets/finkelstein-2003-low-chronology-stratigraphy-megiddo.png){#fig-megiddo-strat}
   ```
 - **Mind copyright:** figures from published works may be used in the
   internal wiki (scholarly work), but not carried over into the
@@ -210,7 +210,7 @@ created: 2026-04-15
 updated: 2026-04-15
 status: review
 author: llm
-bibkey: lastname-year
+bibkey: lastname-year-shorttitle
 ---
 ```
 
@@ -432,7 +432,7 @@ Append-only. Every entry starts with a consistent prefix:
 - Source page created: [[source-finkelstein-2003]]
 - Entity updated: [[entity-tel-megiddo]]
 - Concept newly created: [[concept-low-chronology]]
-- BibTeX appended: finkelstein2003
+- BibTeX appended: finkelstein-2003-low-chronology
 
 ## [2026-04-15] query | Chronology debate
 - Synthesis created: [[synthesis-chronologie-debatte]]

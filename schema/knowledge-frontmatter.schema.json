@@ -4,7 +4,14 @@
   "title": "Research Wiki Frontmatter",
   "description": "Frontmatter schema for knowledge/**/*.md pages in research projects using the research-superpowers plugin. Single source of truth — consumed by scripts/lint-wiki.py and VS Code yaml.schemas, referenced by skills.",
   "type": "object",
-  "required": ["title", "type", "created", "updated", "status", "author"],
+  "required": [
+    "title",
+    "type",
+    "created",
+    "updated",
+    "status",
+    "author"
+  ],
   "additionalProperties": true,
   "properties": {
     "title": {
@@ -14,7 +21,12 @@
     },
     "type": {
       "type": "string",
-      "enum": ["entity", "concept", "source", "synthesis"],
+      "enum": [
+        "entity",
+        "concept",
+        "source",
+        "synthesis"
+      ],
       "description": "Page type. entity = person/place/artefact/institution; concept = theory/method/term; source = cited work; synthesis = cross-source argument."
     },
     "created": {
@@ -29,31 +41,49 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "stable"],
+      "enum": [
+        "draft",
+        "review",
+        "stable"
+      ],
       "description": "draft = being written; review = structurally complete, awaits human check; stable = human-reviewed, citable. Only the user sets stable — agents must not self-promote."
     },
     "author": {
       "type": "string",
-      "enum": ["human", "llm", "mixed"],
+      "enum": [
+        "human",
+        "llm",
+        "mixed"
+      ],
       "description": "Who produced the content. human = user; llm = unreviewed LLM; mixed = LLM draft + human edits."
     },
     "tags": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Topical tags. Free vocabulary."
     },
     "sources": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Wikilinks to source pages, e.g. \"[[finkelstein-2003]]\"."
     },
     "bibkey": {
       "type": "string",
-      "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib."
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{4}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib. Shape: surname-year-shorttitle (e.g. finkelstein-2003-low-chronology), all lowercase ASCII. This is a cross-project JOIN KEY — wiki-global-graph.py matches sources across projects on it — so it must be a deterministic function of the work's own metadata, not a per-project choice: the same work must yield the same key everywhere. It is also the PDF filename stem in input/bibliography/, so bibkey == PDF stem is a checkable invariant. Add a disambiguation letter after the year for same-author-same-year clashes (finkelstein-2003b-...)."
     },
     "based_on": {
       "type": "string",
-      "enum": ["original", "review", "preprint", "prior-version"],
+      "enum": [
+        "original",
+        "review",
+        "preprint",
+        "prior-version"
+      ],
       "default": "original",
       "description": "Provenance of the ingested text for type=source. original = the cited work itself (default; field may be omitted); review/preprint/prior-version = a user-approved substitute ingested because the original could not be acquired. Replace with original on re-ingest of the original. Set by ingest-source; see its 'Provenance of substitutes' section."
     },
@@ -67,7 +97,11 @@
     },
     "methodology": {
       "type": "string",
-      "enum": ["hermeneutic", "quantitative", "mixed"],
+      "enum": [
+        "hermeneutic",
+        "quantitative",
+        "mixed"
+      ],
       "description": "Optional override for project-level methodology. Drives whether pre-registration gates apply. Defaults to the project-level setting in the root CLAUDE.md frontmatter."
     },
     "wikidata_qid": {
@@ -100,7 +134,11 @@
       "description": "Optional structured, confidence-tagged relations to other wiki pages. Complements free-text wikilinks and makes relation type and confidence machine-readable; consumed by scripts/wiki-to-graph.py and validated by scripts/lint-wiki.py. Pages without this field remain valid.",
       "items": {
         "type": "object",
-        "required": ["target", "type", "confidence"],
+        "required": [
+          "target",
+          "type",
+          "confidence"
+        ],
         "additionalProperties": false,
         "properties": {
           "target": {
@@ -113,7 +151,11 @@
           },
           "confidence": {
             "type": "string",
-            "enum": ["extracted", "inferred", "ambiguous"],
+            "enum": [
+              "extracted",
+              "inferred",
+              "ambiguous"
+            ],
             "description": "extracted = explicitly supported by the source (e.g. verbatim quote with page); inferred = added by the model; ambiguous = relation unclear. The inferred+ambiguous share is reported as the inference-rate by lint-wiki.py."
           },
           "because": {
@@ -128,12 +170,23 @@
       "description": "Optional single-page content-review findings, raised by the semantic-wiki-review skill (or a human reviewer). A DISTINCT axis from `status` and from `relations`: `status` is human-owned maturity (draft/review/stable) and is never touched by a review; `relations: contradicts` records a conflict BETWEEN two pages; `review_flags` records a concern about THIS page's own content (an overstatement, a weakly-supported claim, a stale assertion). A page can be `status: stable` AND carry an open flag — that is the important case (a blessed page a newer source now undercuts). An `open` flag gates drafting: `drafting-manuscript` will not draft from the page without a logged override, and `wiki-lint` surfaces open flags (it does not fail CI on them). Cleared/kept for audit via `state: resolved`, not by deletion. Pages without this field remain valid.",
       "items": {
         "type": "object",
-        "required": ["kind", "state", "raised_by", "detected"],
+        "required": [
+          "kind",
+          "state",
+          "raised_by",
+          "detected"
+        ],
         "additionalProperties": false,
         "properties": {
           "kind": {
             "type": "string",
-            "enum": ["overstatement", "weak-support", "stale", "missing-citation", "open-question"],
+            "enum": [
+              "overstatement",
+              "weak-support",
+              "stale",
+              "missing-citation",
+              "open-question"
+            ],
             "description": "The class of concern. overstatement = epistemic overreach (claim stronger than the source supports); weak-support = assertion without a resolving [[source]] / @citekey; stale = superseded or complicated by a newer ingest; missing-citation = a claim that needs a citation it lacks; open-question = an unresolved point flagged for the author."
           },
           "detail": {
@@ -151,7 +204,10 @@
           },
           "state": {
             "type": "string",
-            "enum": ["open", "resolved"],
+            "enum": [
+              "open",
+              "resolved"
+            ],
             "description": "open = unresolved; gates drafting and is surfaced by lint. resolved = addressed; kept as an audit trail rather than deleted."
           },
           "resolved": {
@@ -165,8 +221,21 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "type": { "const": "source" } }, "required": ["type"] },
-      "then": { "required": ["bibkey"] }
+      "if": {
+        "properties": {
+          "type": {
+            "const": "source"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "bibkey"
+        ]
+      }
     }
   ]
 }

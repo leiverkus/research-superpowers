@@ -4,7 +4,7 @@ type: source
 created: 2026-05-28
 updated: 2026-05-28
 tags: [chronology, iron-age, radiocarbon, tel-rehov]
-bibkey: regev-et-al-2020
+bibkey: regev-2020-radiocarbon
 status: review
 author: llm
 relations:

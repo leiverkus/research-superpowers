@@ -34,7 +34,7 @@ created: 2026-04-15
 updated: 2026-04-15
 status: review
 author: llm
-bibkey: lastname-2026
+bibkey: lastname-2026-title
 tags: [chronology, levant]
 ---
 Body text.
@@ -71,7 +71,7 @@ class FrontmatterValidation(unittest.TestCase):
             self.assertTrue(any("TYPE" in i and "tags" in i for i in issues), issues)
 
     def test_bad_pattern_flagged(self):
-        bad = VALID.replace("type: source", "type: entity").replace("bibkey: lastname-2026", "wikidata_qid: NOPE")
+        bad = VALID.replace("type: source", "type: entity").replace("bibkey: lastname-2026-title", "wikidata_qid: NOPE")
         with tempfile.TemporaryDirectory() as d:
             p = _write(d, "a.md", bad)
             issues = lw.validate_frontmatter(lw.parse_frontmatter(p), SCHEMA, p)

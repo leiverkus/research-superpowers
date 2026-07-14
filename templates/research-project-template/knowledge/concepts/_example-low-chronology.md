@@ -42,4 +42,4 @@ Main criticisms of the *Low Chronology*:
 
 ## Sources
 
-- @finkelstein2003 — foundational formulation of the model
+- @finkelstein-2003-low-chronology — foundational formulation of the model

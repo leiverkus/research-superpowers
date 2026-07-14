@@ -4,7 +4,7 @@ type: source
 created: 2026-05-28
 updated: 2026-05-28
 tags: [chronology, iron-age, modified-conventional, levant]
-bibkey: mazar-2011
+bibkey: mazar-2011-iron
 status: review
 author: llm
 relations:

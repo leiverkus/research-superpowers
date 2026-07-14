@@ -28,7 +28,7 @@ The debate falls into three main positions:
    to the 10th c. BCE (Solomon).
 2. **Low Chronology** ([[concept-low-chronology]]) — dates the same
    strata roughly 50–75 years later and attributes them to the Omride
-   dynasty [@finkelstein2003].
+   dynasty [@finkelstein-2003-low-chronology].
 3. **Modified Conventional Chronology** — a compromise position that
    accepts individual corrections but retains the basic framework of
    the conventional chronology.

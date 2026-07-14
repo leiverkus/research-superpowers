@@ -34,7 +34,7 @@ def _page(d, project, rel, typ, title, **ids):
           "created: 2026-07-12", "updated: 2026-07-12",
           "status: review", "author: llm"]
     if typ == "source":
-        fm.append('bibkey: "x-2026"')
+        fm.append('bibkey: "x-2026-title"')
     for k, v in ids.items():
         fm.append(f'{k}: "{v}"')
     fm.append("---")
@@ -50,11 +50,11 @@ class AuthorityOverlap(unittest.TestCase):
         # different gazetteer ids.
         _page(d, "proj-a", "entities/finkelstein.md", "entity", "Israel Finkelstein", gnd_id="118533533")
         _page(d, "proj-a", "entities/megiddo.md", "entity", "Tel Megiddo", idai_gazetteer_id="2048473")
-        _page(d, "proj-a", "sources/toffolo-2014.md", "source", "Toffolo 2014", bibkey="toffolo-2014")
+        _page(d, "proj-a", "sources/toffolo-2014.md", "source", "Toffolo 2014", bibkey="toffolo-2014-radiocarbon")
         _page(d, "proj-a", "concepts/low-chronology.md", "concept", "Low Chronology")
         _page(d, "proj-b", "entities/i-finkelstein.md", "entity", "I. Finkelstein", gnd_id="118533533")
         _page(d, "proj-b", "entities/tel-rehov.md", "entity", "Tel Rehov", idai_gazetteer_id="9999")
-        _page(d, "proj-b", "sources/toffolo-2014.md", "source", "Toffolo 2014", bibkey="toffolo-2014")
+        _page(d, "proj-b", "sources/toffolo-2014.md", "source", "Toffolo 2014", bibkey="toffolo-2014-radiocarbon")
         return [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
 
     def test_shared_gnd_and_bibkey_are_reported(self):
@@ -63,7 +63,7 @@ class AuthorityOverlap(unittest.TestCase):
             overlap, projects = gg.build_overlap(roots)
             found = {(o["field"], o["value"]) for o in overlap}
             self.assertIn(("gnd_id", "118533533"), found)
-            self.assertIn(("bibkey", "toffolo-2014"), found)
+            self.assertIn(("bibkey", "toffolo-2014-radiocarbon"), found)
             # both projects listed for the shared GND
             gnd = next(o for o in overlap if o["field"] == "gnd_id")
             self.assertEqual({x["project"] for x in gnd["occurrences"]}, {"proj-a", "proj-b"})

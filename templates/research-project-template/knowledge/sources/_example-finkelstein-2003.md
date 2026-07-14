@@ -8,7 +8,7 @@ sources: []
 status: review
 author: llm
 bibliography: ../../output/bibtex/references.bib
-bibkey: finkelstein-2003
+bibkey: finkelstein-2003-low-chronology
 ---
 
 # Finkelstein 2003 — Low Chronology Revisited {#sec-source-finkelstein-2003}
@@ -17,7 +17,7 @@ bibkey: finkelstein-2003
 
 Finkelstein, I. (2003). The Low Chronology and the Problem of the Archaeology of Iron Age Palestine. *Tel Aviv* 30(2), 149–174. DOI: [10.1179/tav.2003.2003.2.149](https://doi.org/10.1179/tav.2003.2003.2.149).
 
-BibTeX key: `@finkelstein-2003`.
+BibTeX key: `@finkelstein-2003-low-chronology`.
 
 ## Focus: the Low Chronology argument for Iron IIA in the southern Levant — 2026-04-17
 

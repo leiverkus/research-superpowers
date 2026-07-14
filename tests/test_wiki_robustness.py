@@ -34,7 +34,7 @@ def _page(title="P", typ="source", body="", **extra):
     fm = {"title": title, "type": typ, "created": "2026-04-15",
           "updated": "2026-04-15", "status": "review", "author": "llm"}
     if typ == "source":
-        fm.setdefault("bibkey", "x-2026")
+        fm.setdefault("bibkey", "x-2026-title")
     fm.update(extra)
     lines = ["---"]
     for k, v in fm.items():
@@ -119,8 +119,8 @@ class Bridges(unittest.TestCase):
         # unconnected source clusters. This is the "bridges fill in" case a
         # single-source wiki cannot produce (one source → no bridges).
         with tempfile.TemporaryDirectory() as d:
-            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[entity-a]]", bibkey="a-2026"))
-            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[entity-b]]", bibkey="b-2026"))
+            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[entity-a]]", bibkey="a-2026-alpha"))
+            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[entity-b]]", bibkey="b-2026-beta"))
             _write(d, "entities/shared-site.md", _page("Shared site", typ="entity"))
             _write(d, "entities/entity-a.md", _page("Entity A", typ="entity"))
             _write(d, "entities/entity-b.md", _page("Entity B", typ="entity"))
@@ -135,8 +135,8 @@ class Bridges(unittest.TestCase):
         # Control against false positives: if the two sources also share a
         # SECOND entity, they collapse into one cluster and nothing bridges.
         with tempfile.TemporaryDirectory() as d:
-            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[also-shared]]", bibkey="a-2026"))
-            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[also-shared]]", bibkey="b-2026"))
+            _write(d, "sources/source-a.md", _page("A", body="[[shared-site]] [[also-shared]]", bibkey="a-2026-alpha"))
+            _write(d, "sources/source-b.md", _page("B", body="[[shared-site]] [[also-shared]]", bibkey="b-2026-beta"))
             _write(d, "entities/shared-site.md", _page("Shared site", typ="entity"))
             _write(d, "entities/also-shared.md", _page("Also shared", typ="entity"))
             _, nodes, edges, _ = _graph(d)
