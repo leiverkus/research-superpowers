@@ -372,7 +372,7 @@ class PdfRename(unittest.TestCase):
             mapfile = pathlib.Path(d) / "m.json"
             rn.cmd_plan(root, mapfile, None, use_pdf=False)
             data = json.loads(mapfile.read_text(encoding="utf-8"))
-            sig = {r["pdf"].split("/")[-1]: r["signal"] for r in data["renames"]}
+            sig = {pathlib.PurePosixPath(r["pdf"]).name: r["signal"] for r in data["renames"]}
             self.assertEqual(sig["Danielson 2020 - History of Qws.pdf"], "conflict")
             self.assertEqual(sig["Danielson, 2020, Edom in Judah.pdf"], "conflict")
 

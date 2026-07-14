@@ -257,11 +257,11 @@ def cmd_plan(root: Path, map_out: Path, old_map: Path | None, use_pdf: bool) -> 
     rows, taken = [], {}
     for p in pdfs:
         key, signal, note = resolve(p, root, bib, old2new, by_ay, by_doi, use_pdf)
-        rows.append({"pdf": str(p.relative_to(root)), "bibkey": key,
+        rows.append({"pdf": p.relative_to(root).as_posix(), "bibkey": key,
                      "signal": signal, "note": note,
                      "target": f"input/bibliography/{key}.pdf" if key else None})
         if key:
-            taken.setdefault(key, []).append(str(p.relative_to(root)))
+            taken.setdefault(key, []).append(p.relative_to(root).as_posix())
 
     # two PDFs claiming the same bibkey is a conflict a human must settle
     for r in rows:
@@ -311,7 +311,10 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
         if not src.exists():
             print(f"  ⚠ missing on disk, skipped: {r['pdf']}")
             continue
-        if src == dst:
+        # NOT `src == dst`: Path.__eq__ is case-INSENSITIVE on Windows, so that
+        # comparison swallows exactly the case-only rename it is meant to let
+        # through. Compare the strings.
+        if str(src) == str(dst):
             skipped += 1
             continue
         # macOS and Windows are case-INSENSITIVE: `Afifi-2024-Tinto.pdf` and
