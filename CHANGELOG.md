@@ -6,6 +6,49 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.27.0] — 2026-07-14
+
+Full-text search across the shared library — the last piece the library was missing.
+
+### Added
+
+- **`scripts/bib-search.py`** — SQLite FTS5 over every PDF in the library, **one row
+  per page**. A document-level hit ("this paper mentions copper smelting") still
+  leaves you hunting through 40 pages; a page-level hit composes with the rest of the
+  workflow:
+
+  ```bash
+  python scripts/bib-search.py index               # incremental
+  python scripts/bib-search.py "copper smelting arabah"
+    → benyosef-2019-ancient · p. 2 · … «copper» producing regions in the Wadi «Arabah» …
+  ```
+
+  Measured on the real library: 505 documents / 20 422 pages indexed in **11 seconds**,
+  116 MB index; the next run, nothing changed, 0 s. Indexing is cheap enough to run
+  after every acquisition.
+
+  - The page reported is the **physical** PDF page — right for *opening* the file,
+    wrong for *citing*. The printed page number must be read off the page itself.
+  - The index is a **local cache** (`~/.cache/research-superpowers/`), never in the
+    synced folder: SQLite and file-sync corrupt each other, the same failure class as
+    a git repo inside Nextcloud. It is derived — if it is lost, rebuild it.
+  - **PDFs with no text layer are reported, not swallowed.** Indexing a scan silently
+    as "empty" would make the library look complete when it is not. The real library
+    has 4 such files.
+  - Punctuation a researcher types without thinking (`ben-yosef`, `14C-dating`, an
+    unbalanced quote) is not read as FTS5 operators.
+
+- **`drafting-manuscript`: the reach-back ladder gained a rung.** Step 2 assumed the
+  wiki page carries a page anchor. When it does not, the only options were reading the
+  PDF end to end or bullet-reflowing. Now: `bib-search.py "…" --key <bibkey>` finds the
+  page.
+
+### Changed
+
+- `scaffold-research-project` ships `scripts/bib-search.py` into new projects;
+  `using-research-powers` now names the library scripts (`library.py`, `bib-subset.py`,
+  `bib-search.py`) instead of listing only the lint and graph tools.
+
 ## [0.26.1] — 2026-07-14
 
 Two corrections found by migrating the 17 live projects onto the library.

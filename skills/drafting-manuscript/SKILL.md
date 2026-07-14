@@ -171,7 +171,14 @@ A single terse wiki bullet typically becomes a **developed passage**, not a sing
 
 1. The source page's `### Direct quotes` and `### Examples & illustrations` sections — the cheapest, already-extracted depth.
 2. If still too thin: open the **original PDF** at `<library>/pdf/<bibkey>.pdf` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
-3. Cite whatever you use. If the source genuinely lacks the needed depth, say so plainly or narrow the claim — do **not** fill the gap from memory.
+3. If the source page gives **no usable page anchor**, do not read the PDF end to end — find the passage:
+
+   ```bash
+   python scripts/bib-search.py "copper smelting" --key benyosef-2019-copper
+   ```
+
+   It returns the **physical** PDF page — right for opening the file, wrong for citing. Take the printed page number from the page itself.
+4. Cite whatever you use. If the source genuinely lacks the needed depth, say so plainly or narrow the claim — do **not** fill the gap from memory.
 
 > **Per-project house style.** Density, example-richness, and target register are tunable per project in the root `CLAUDE.md` ("Manuscript style"). Read it before drafting; it overrides the defaults here.
 

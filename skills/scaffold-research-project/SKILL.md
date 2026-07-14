@@ -28,6 +28,8 @@ outputs:
     kind: created
   - path: <parent_directory>/<project_name>/scripts/bib-subset.py
     kind: created
+  - path: <parent_directory>/<project_name>/scripts/bib-search.py
+    kind: created
   - path: <parent_directory>/<project_name>/scripts/lint-wiki.py
     kind: created
   - path: <parent_directory>/<project_name>/.research-library
@@ -87,6 +89,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `schema/knowledge-frontmatter.schema.json`
    - `scripts/library.py` — resolves the shared source library. **Without it nothing can find a PDF.**
    - `scripts/bib-subset.py` — writes `output/bibtex/references.bib` as the cited subset of the library
+   - `scripts/bib-search.py` — page-level full-text search across the library (SQLite FTS5; the index is a local cache, never in the synced folder)
    - `scripts/lint-wiki.py`
    - `scripts/wiki-to-graph.py`
    - `scripts/graph_mcp.py` — stdlib MCP server exposing the graph queries
