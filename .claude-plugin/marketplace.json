@@ -10,7 +10,7 @@
       "name": "research-superpowers",
       "source": "./",
       "description": "Skill-driven research workflow: idea → literature → ingest → draft → peer review → publication. Methodology-aware (hermeneutic / quantitative / mixed), with SOFT-GATE audit trails and optional MCP integration for verified citations. Focus-driven source ingest: pages capture project-specific extraction, not generic summaries. Works in Claude Code and Cowork — no terminal required for the core workflow.",
-      "version": "0.23.0",
+      "version": "0.23.1",
       "category": "research",
       "tags": [
         "research",

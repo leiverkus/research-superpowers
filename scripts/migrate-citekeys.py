@@ -98,9 +98,17 @@ QUARTO_XREF_RE = re.compile(
     r"^(?:sec|fig|tbl|lst|eq|thm|lem|cor|prp|cnj|def|exm|exr|sol|rem|tip|nte|wrn|imp|cau)-"
 )
 
-# Characters pandoc allows to *continue* a citekey. Used as the right boundary so
-# `@smith2016` never eats `@smith2016b` (a different work).
-CITEKEY_CONT = r"[A-Za-z0-9_:.#$%&+?<>~/-]"
+# Right boundary. It must reject exactly what could extend the match into a
+# DIFFERENT key — alphanumerics, underscore, hyphen (the alphabet our keys are
+# built from), so `@smith2016` never eats `@smith2016b`, a different work.
+#
+# It must NOT reject sentence punctuation. Pandoc allows `.` *inside* a citekey,
+# but a TRAILING period ends the sentence and is not part of the key. An earlier
+# cut used pandoc's full continuation set here and therefore skipped every
+# citation that happened to end a sentence — `[@dereu2013dh.` stayed behind while
+# the .bib entry was renamed. A partial migration is worse than none: the key
+# resolves nowhere and Quarto renders ??? while exiting 0.
+CITEKEY_CONT = r"[A-Za-z0-9_-]"
 
 STOPWORDS = {
     "the", "a", "an", "of", "and", "in", "on", "for", "to", "from", "with", "at",

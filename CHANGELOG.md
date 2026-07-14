@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.23.1] — 2026-07-14
+
+### Fixed
+
+- **`migrate-citekeys.py` silently skipped every citation that ended a sentence.**
+  The right boundary was built from pandoc's citekey *continuation* set, which
+  includes `.` — so `@dereu2013dh.` was read as the key `dereu2013dh.` and left
+  alone, while the `.bib` entry WAS renamed. The key then resolved nowhere and
+  Quarto rendered `???` while exiting 0 — a partial migration, which is worse than
+  none. Pandoc allows `.` *inside* a key; a trailing period ends the sentence.
+  The boundary now rejects only what could extend the match into a *different* key
+  (alphanumerics, `_`, `-`), so `@smith2016` still cannot eat `@smith2016b`.
+  Caught on the first real repo: 7 citations left behind, every one of them
+  sentence-final.
+
 ## [0.23.0] — 2026-07-14
 
 The `bibkey` is not just a citation key — it is the **cross-project join key**
