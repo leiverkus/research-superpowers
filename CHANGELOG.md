@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.23.2] — 2026-07-14
+
+### Fixed
+
+- **`wiki-global-graph.py bibkeys` reported collisions that did not exist.** Two
+  bugs in the work fingerprint, both found by running it across 17 real wikis:
+  - **LaTeX transcription.** The same paper appears as `{\c{C}}atalh{\"o}y{\"u}k`,
+    `{Çatalhöyük}` and `Çatalhöyük` in three different bibs, and as `{I}ron {A}ge`
+    vs `{Iron} {Age}`. Tokenising on `[a-z0-9]+` without de-LaTeX-ing and folding to
+    ASCII shattered these into different words — one work, three fingerprints, a
+    collision that isn't. Titles are now de-LaTeX'd and ASCII-folded first.
+  - **A shared DOI now settles identity.** A DOI identifies a work uniquely, so two
+    records agreeing on one are the same work even when their titles disagree — and
+    they do: the same Berlejung 2025 book is titled "YHWH's Diversity: A Lot of
+    Names and No Iconography?" in one project and "YHWH's Diversity and the One God"
+    in another. Conversely a DOI on only ONE side proves nothing, and a differing
+    DOI does not prove difference (the same book is routinely recorded once under
+    its monograph DOI and once under a chapter DOI), so the title fingerprint still
+    decides those.
+
+  With both fixed, the 17-wiki portfolio reports **0 collisions and 0 splits** —
+  down from 3 and 53 before the citekey migration.
+
 ## [0.23.1] — 2026-07-14
 
 ### Fixed

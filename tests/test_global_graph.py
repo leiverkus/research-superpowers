@@ -199,6 +199,42 @@ class BibkeyHealth(unittest.TestCase):
             collisions, _, _ = gg.build_bibkey_report(roots)
             self.assertEqual([c["key"] for c in collisions], ["maeir-2021"])
 
+    def test_latex_transcription_is_not_a_collision(self):
+        # The SAME paper is transcribed three ways across three real bibs:
+        #   {\c{C}}atalh{\"o}y{\"u}k   ·   {Çatalhöyük}   ·   Çatalhöyük
+        # and {I}ron {A}ge vs {Iron} {Age}. A fingerprint that tokenises on
+        # [a-z0-9]+ without de-LaTeX-ing and folding to ASCII shatters these into
+        # different words and reports a collision that does not exist.
+        with tempfile.TemporaryDirectory() as d:
+            for p in ("proj-a", "proj-b", "proj-c"):
+                _page(d, p, "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("forte-2012-archaeology",
+                                      r"{3D} Archaeology at {\c{C}}atalh{\"o}y{\"u}k", "2012")])
+            _bib(d, "proj-b", [_entry("forte-2012-archaeology",
+                                      "{3D} Archaeology at {Çatalhöyük}", "2012")])
+            _bib(d, "proj-c", [_entry("forte-2012-archaeology",
+                                      "3D Archaeology at Çatalhöyük", "2012")])
+            roots = [pathlib.Path(d) / p for p in ("proj-a", "proj-b", "proj-c")]
+            collisions, _, _ = gg.build_bibkey_report(roots)
+            self.assertEqual(collisions, [], f"LaTeX/accent transcription flagged: {collisions}")
+
+    def test_shared_doi_beats_a_differing_title(self):
+        # A DOI identifies a work uniquely. The same Berlejung 2025 book is recorded
+        # as "YHWH's Diversity: A Lot of Names…" in one project and "YHWH's Diversity
+        # and the One God" in another — same DOI, same publisher. One work.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            doi = "10.1628/978-3-16-164306-4"
+            _bib(d, "proj-a", [_entry("berlejung-2025-yhwh",
+                                      "YHWH's Diversity: A Lot of Names and No Iconography?",
+                                      "2025", doi)])
+            _bib(d, "proj-b", [_entry("berlejung-2025-yhwh",
+                                      "{YHWH}'s Diversity and the One God", "2025", doi)])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, _, _ = gg.build_bibkey_report(roots)
+            self.assertEqual(collisions, [], "an agreeing DOI must settle identity")
+
     def test_split_one_work_two_keys(self):
         # The missed join: same paper, different key. `overlap` never links them.
         with tempfile.TemporaryDirectory() as d:
