@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.28.1] — 2026-07-14
+
+### Fixed
+
+- **`.gitignore` ignored `__pycache__/` only under `output/`.** The rules were
+  path-specific (`output/data-analysis/__pycache__/`, `output/code/__pycache__/`), but
+  the scripts in `scripts/` import each other by path — `bib-subset.py` loads
+  `library.py` and `lint-wiki.py` — so running any of them writes
+  `scripts/__pycache__/`. That directory showed up as untracked noise in **all 17 live
+  projects**, and in one of them a compiled `lint-wiki.cpython-314.pyc` had already been
+  committed.
+
+  Now generic: `__pycache__/`, `*.py[cod]`, `.ipynb_checkpoints/` — anywhere in the tree.
+
 ## [0.28.0] — 2026-07-14
 
 ### Added

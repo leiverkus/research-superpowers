@@ -59,9 +59,14 @@ output/presentation/*.vrb
 # CI/CD
 public/
 
-output/data-analysis/__pycache__/
-output/data-analysis/.ipynb_checkpoints/
-output/code/__pycache__/
+# Python build artifacts — anywhere, not just under output/. The scripts in
+# scripts/ import each other by path (bib-subset.py loads library.py, lint-wiki.py),
+# so running any of them writes scripts/__pycache__/ — which showed up as untracked
+# noise in all 17 live projects because the old rules were path-specific.
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
 output/code/venv/
 output/code/node_modules/
 
