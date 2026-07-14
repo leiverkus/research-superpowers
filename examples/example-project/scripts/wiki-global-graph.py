@@ -370,15 +370,24 @@ def build_bibkey_report(roots: list[Path]):
     for key, occ in sorted(key_to.items()):
         if len({p for p, _ in occ}) < 2:
             continue
-        # The title fingerprint decides, not the DOI. A DOI difference alone does
-        # NOT prove two works: the same book is routinely recorded once under its
-        # monograph DOI and once under a chapter DOI. Titles get transcribed at
-        # different lengths for one work ("The Religion of Idumea" vs "…and Its
-        # Relationship to Early Judaism"), so a prefix relation counts as identity
-        # — otherwise every truncated title reads as a collision and the signal
-        # drowns.
-        works = [e["work"] for _, e in occ if e["work"] != "|"]
-        differ = bool(works) and not all(_same_work(works[0], w) for w in works[1:])
+        dois = [e["doi"] for _, e in occ if e["doi"]]
+        if len(dois) >= 2 and len(set(dois)) == 1:
+            # Two or more independent records agree on the DOI. A DOI identifies a
+            # work uniquely, so this is decisive SAMENESS — even when the titles
+            # disagree, which they do: the same Berlejung 2025 book is recorded as
+            # "YHWH's Diversity: A Lot of Names and No Iconography?" in one project
+            # and "YHWH's Diversity and the One God" in another. Same DOI, same
+            # publisher, same series. One work, two transcriptions.
+            differ = False
+        else:
+            # No agreeing DOI (or only one record has one — which proves nothing).
+            # Fall back to the title fingerprint. Titles get transcribed at
+            # different lengths for one work ("The Religion of Idumea" vs "…and Its
+            # Relationship to Early Judaism"), so a prefix relation counts as
+            # identity — otherwise every truncated title reads as a collision and
+            # the signal drowns.
+            works = [e["work"] for _, e in occ if e["work"] != "|"]
+            differ = bool(works) and not all(_same_work(works[0], w) for w in works[1:])
         if differ:
             collisions.append({"key": key,
                                "occurrences": [{"project": p, "title": e["title"]}
