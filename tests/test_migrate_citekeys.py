@@ -61,6 +61,20 @@ class KeyGeneration(unittest.TestCase):
         key, _ = mc.make_key(_bib("x", author="Müller, Jörg", title="Über Räume"))
         self.assertEqual(key, "mueller-2016-ueber")
 
+    def test_undecomposable_letters_are_not_dropped(self):
+        # NFKD only splits base+diacritic. A letter that IS a letter — Turkish
+        # dotless ı, Polish stroked ł — survives NFKD untouched and is then dropped
+        # by the [^a-z] filter, silently shortening the surname and minting a key
+        # nobody could guess. Both of these were produced for real:
+        #   Sırmaçek → srmacek        Trybała → trybaa
+        for author, want in [
+            ("Sırmaçek, Beril", "sirmacek-2016-software"),
+            ("Trybała, Paweł", "trybala-2016-software"),
+            ("Đurić, Ivan", "duric-2016-software"),
+        ]:
+            key, _ = mc.make_key(_bib("x", author=author))
+            self.assertEqual(key, want, author)
+
     def test_editor_is_the_fallback_for_author(self):
         body = "  editor = {Porten, Bezalel and Yardeni, Ada},\n  title = {Textbook of Aramaic Ostraca},\n  year = {2020}\n"
         key, _ = mc.make_key(body)

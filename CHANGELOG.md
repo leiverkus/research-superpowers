@@ -6,6 +6,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.24.0] — 2026-07-14
+
+Restores the second half of the convention. The template has always mandated
+`autor-jahr-kurztitel.pdf` for source PDFs — `ingest-source` HARD-STOPS without it,
+and `drafting-manuscript` needs it to reach back into the PDF at the cited pages.
+An audit found **2 of 733 PDFs** conform. After the citekey migration the two
+conventions are the same string, so `bibkey == PDF filename stem` is now a rename,
+not a redesign.
+
+### Added
+
+- **`scripts/rename-source-pdfs.py`** — restores `bibkey == PDF filename stem`. A
+  PDF renamed onto the WRONG bibkey is worse than one left alone (`ingest-source`
+  would silently read the wrong source), and `input/bibliography/*.pdf` is
+  gitignored, so there is **no git undo**. The tool therefore never guesses: it
+  resolves each PDF through ranked signals — the bib's own `file =` field, a
+  pre-migration bibkey as the stem, a DOI found inside the PDF, surname+year in the
+  filename, title overlap — and puts anything it cannot settle on a worklist
+  instead of renaming on a hunch. The written map is the undo. Nested PDFs from the
+  older `<slug>/<slug>.pdf` layout are flattened.
+
+  On the first repo the DOI signal alone resolved 30 of 36 PDFs.
+
+### Fixed
+
+- **Surnames with undecomposable letters were mangled into unguessable keys.** NFKD
+  only splits base+diacritic, so a letter that IS a letter — Turkish dotless `ı`,
+  Polish stroked `ł` — survived it untouched and was then dropped by the `[^a-z]`
+  filter. Real keys produced: `Sırmaçek` → `srmacek`, `Trybała` → `trybaa`. Both
+  tools now fold names through an explicit table first — and they must stay in
+  step, or the PDF and the bibkey they exist to unify can never meet.
+
 ## [0.23.3] — 2026-07-14
 
 Supersedes 0.23.2, whose release job failed on the script-mirror check (the
