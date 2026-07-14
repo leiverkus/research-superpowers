@@ -51,6 +51,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import yaml
@@ -291,8 +292,24 @@ def _iter_bib_entries(text: str):
 
 def _work_id(title: str, year: str) -> str:
     """A conservative fingerprint of the work, for spotting the same paper under
-    two keys. Title words + year — never fuzzy, just normalised."""
-    words = [w for w in re.findall(r"[a-z0-9]+", title.lower())
+    two keys. Title words + year — never fuzzy, just normalised.
+
+    Titles must be de-LaTeX'd and folded to ASCII BEFORE tokenising, or one work
+    yields several fingerprints and is reported as a collision that isn't. Both of
+    these bit in practice:
+
+      * brace protection — ``{I}ron {A}ge {J}erusalem`` vs ``{Iron} {Age}
+        {Jerusalem}``: tokenising on ``[a-z0-9]+`` without stripping braces splits
+        the first into ``i, ron, a, ge`` and the second into ``iron, age``.
+      * accents — the SAME paper appears as ``{\\c{C}}atalh{\\"o}y{\\"u}k``,
+        ``{Çatalhöyük}`` and ``Çatalhöyük`` in three bibs. Non-ASCII characters are
+        not in ``[a-z0-9]``, so ``çatalhöyük`` shatters into ``atalh, y, k``.
+    """
+    text = re.sub(r"\\[a-zA-Z]+", " ", title)        # LaTeX commands: \c, \"o, \'a
+    text = re.sub(r"[{}$\\\"'`^~]", "", text)         # brace protection + accent marks
+    text = unicodedata.normalize("NFKD", text.lower())
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    words = [w for w in re.findall(r"[a-z0-9]+", text)
              if w not in _STOP and len(w) > 2]
     return " ".join(words[:8]) + "|" + year
 
@@ -353,18 +370,15 @@ def build_bibkey_report(roots: list[Path]):
     for key, occ in sorted(key_to.items()):
         if len({p for p, _ in occ}) < 2:
             continue
-        dois = {e["doi"] for _, e in occ if e["doi"]}
-        if len(dois) > 1:
-            differ = True                       # two DOIs — decisive
-        else:
-            # A DOI on only ONE side proves nothing about difference, so fall back
-            # to the title fingerprint. But titles get transcribed at different
-            # lengths for the same work ("The Religion of Idumea" vs "The Religion
-            # of Idumea and Its Relationship to Early Judaism"), so treat a prefix
-            # relation as the same work — otherwise every truncated title would be
-            # reported as a collision and the signal would drown.
-            works = [e["work"] for _, e in occ if e["work"] != "|"]
-            differ = bool(works) and not all(_same_work(works[0], w) for w in works[1:])
+        # The title fingerprint decides, not the DOI. A DOI difference alone does
+        # NOT prove two works: the same book is routinely recorded once under its
+        # monograph DOI and once under a chapter DOI. Titles get transcribed at
+        # different lengths for one work ("The Religion of Idumea" vs "…and Its
+        # Relationship to Early Judaism"), so a prefix relation counts as identity
+        # — otherwise every truncated title reads as a collision and the signal
+        # drowns.
+        works = [e["work"] for _, e in occ if e["work"] != "|"]
+        differ = bool(works) and not all(_same_work(works[0], w) for w in works[1:])
         if differ:
             collisions.append({"key": key,
                                "occurrences": [{"project": p, "title": e["title"]}
