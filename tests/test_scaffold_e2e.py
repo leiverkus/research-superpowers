@@ -45,6 +45,15 @@ class ScaffoldEndToEnd(unittest.TestCase):
             _page("Source A", "source", "Discussed in [[hub]].", bibkey="a-2026-alpha"), encoding="utf-8")
         (k / "entities" / "ent-b.md").write_text(
             _page("Entity B", "entity", "Appears in [[hub]]."), encoding="utf-8")
+        # A source page whose bibkey resolves to nothing is a real defect (the
+        # citation would render as ???), and lint_citekeys now fails on it. So the
+        # fixture must be coherent: give the source page its BibTeX entry.
+        (cls.proj / "output" / "bibtex" / "references.bib").write_text(
+            "@article{a-2026-alpha,\n"
+            "  author = {Alpha, Ada},\n"
+            "  title  = {Alpha and the Scaffold},\n"
+            "  year   = {2026}\n"
+            "}\n", encoding="utf-8")
 
     @classmethod
     def tearDownClass(cls):

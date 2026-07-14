@@ -7,6 +7,7 @@ gate-override count, and that bad YAML never crashes the parsers.
 Run: python -m unittest discover -s tests
 """
 import importlib.util
+import os
 import json
 import pathlib
 import tempfile
@@ -229,6 +230,139 @@ class AuthorityCoverage(unittest.TestCase):
             kn = pathlib.Path(d) / "knowledge"
             _write(d, "knowledge/_meta/log.md", CONCEPT)   # meta file typed as concept
             self.assertEqual(lw.report_concept_coverage(lw.collect_pages(kn)), ["  No concept pages."])
+
+
+SOURCE_PAGE = """---
+title: "A source"
+type: source
+created: 2026-04-15
+updated: 2026-04-15
+status: review
+author: llm
+bibkey: {key}
+---
+{body}
+"""
+
+
+class CitekeyIntegrity(unittest.TestCase):
+    """`bibkey` is the cross-project JOIN KEY (wiki-global-graph.py matches sources
+    on it). An audit of 17 wikis found the convention honoured by only 40% of 511
+    keys — 17 missed joins, 2 false positives — because nothing checked it.
+    """
+
+    def _run(self, d, bibs: dict, pages: dict, qmds: dict = None):
+        """Build a project in `d`, chdir into it, run lint_citekeys."""
+        root = pathlib.Path(d)
+        for rel, text in bibs.items():
+            p = root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8")
+        for rel, text in pages.items():
+            p = root / "knowledge" / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8")
+        for rel, text in (qmds or {}).items():
+            p = root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8")
+        cwd = os.getcwd()
+        try:
+            os.chdir(root)
+            collected = lw.collect_pages(pathlib.Path("knowledge"))
+            return lw.lint_citekeys(collected, SCHEMA)
+        finally:
+            os.chdir(cwd)
+
+    BIB = "@article{smith-2016-software,\n  author = {Smith, J},\n  title = {Software}, \n  year = {2016}\n}\n"
+
+    def test_clean_project_has_no_issues(self):
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="See [@smith-2016-software].")})
+            self.assertEqual(hard, [])
+
+    def test_offshape_bib_key_is_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib":
+                                    self.BIB.replace("smith-2016-software", "Smith2016")},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="x")})
+            self.assertTrue(any("CITEKEY" in h and "Smith2016" in h for h in hard), hard)
+
+    def test_duplicate_key_in_one_bib(self):
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB + self.BIB},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="x")})
+            self.assertTrue(any("DUPLICATE-KEY" in h for h in hard), hard)
+
+    def test_unresolved_frontmatter_bibkey(self):
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="ghost-2020-nothing", body="x")})
+            self.assertTrue(any("UNRESOLVED-BIBKEY" in h for h in hard), hard)
+
+    def test_broken_citation_in_the_wiki_body(self):
+        # The time bomb: nothing rendered it, so nothing caught it — until
+        # drafting-manuscript lifts the dead key into the manuscript weeks later.
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="See [@dye-2015-ghost].")})
+            self.assertTrue(any("BROKEN-CITATION" in h and "dye-2015-ghost" in h for h in hard), hard)
+
+    def test_dead_bibliography_path(self):
+        # Quarto resolves a missing bibliography SILENTLY, renders every citation
+        # as ???, and exits 0. Nothing else catches this.
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(
+                d, {"output/bibtex/references.bib": self.BIB},
+                {"sources/a.md": SOURCE_PAGE.format(key="smith-2016-software", body="x")},
+                {"output/article/main.qmd": "---\nbibliography: ../bibtex/gone.bib\n---\nx\n"})
+            self.assertTrue(any("DEAD-BIBLIOGRAPHY" in h for h in hard), hard)
+
+    def test_key_divergence_across_two_bibs(self):
+        with tempfile.TemporaryDirectory() as d:
+            other = self.BIB.replace("{Software}", "{A completely different work}")
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB,
+                                    "output/article/references.bib": other},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="x")})
+            self.assertTrue(any("KEY-DIVERGENCE" in h for h in hard), hard)
+
+    def test_single_line_bib_entries_are_parsed(self):
+        # Real bibs mix shapes; a '\n}'-anchored parser hid 98 of 122 entries in
+        # one project. A key it cannot see is a key it reports as broken.
+        one_liner = "@inproceedings{kirillov-2023-segment, title={Segment Anything}, author={Kirillov, A}, year={2023} }\n"
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": one_liner},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="kirillov-2023-segment",
+                                    body="See [@kirillov-2023-segment].")})
+            self.assertEqual(hard, [])
+
+    def test_no_false_positives(self):
+        """Quarto cross-refs, escaped @, code, _meta and _example- are NOT citations.
+
+        Each of these produced real noise against the 17 live wikis. A linter that
+        cries wolf gets switched off.
+        """
+        body = ("See @sec-methods and @fig-map.\n"           # Quarto cross-references
+                "Metric written AP\\@IoU0.5 here.\n"          # escaped at-sign
+                "Inline `@ghost-2020-code` and:\n"
+                "```\n@ghost-2020-fence\n```\n"
+                "Mail: foo@ghost-2020-mail\n")                # e-mail
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(
+                d, {"output/bibtex/references.bib": self.BIB},
+                {"sources/a.md": SOURCE_PAGE.format(key="smith-2016-software", body=body),
+                 "_meta/log.md": "durchgehend mit @citekeys belegt\n",
+                 "concepts/_example-x.md": SOURCE_PAGE.format(
+                     key="smith-2016-software", body="[@finkelstein2003]")})
+            self.assertEqual(hard, [], f"false positives: {hard}")
 
 
 class WikilinkResolution(unittest.TestCase):
