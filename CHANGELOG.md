@@ -6,6 +6,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.30.0] — 2026-07-14
+
+### Added
+
+- **A duplicate key in the shared library is now caught — at both ends.**
+
+  Check 2 has always caught a key defined twice in a *project* `.bib`. Nothing checked the
+  **library**, and a duplicate there is strictly worse: `bib-subset.py` copies the winning
+  entry into every project that cites the key, so one bad merge poisons all of them at once.
+
+  BibTeX takes the **last** definition and drops the rest. Silently. Fields and all.
+
+  Found on the live library: `rabunal-2023-unraveling` existed twice. The older entry had
+  **four** authors; the newer had three — and the newer won. Javier Fernández-López de Pablo
+  would have vanished from every manuscript citing that work, and nothing in the pipeline
+  would have said a word. Two R-package manuals each carried a **DOI in the losing copy only**.
+
+  - `lint-wiki.py` **check 11** reports it (hard; skipped where no library is configured, so
+    CI stays green).
+  - `bib-subset.py` **refuses to run**. That is the exact point of propagation, and merging
+    two records is a judgement about which fields are right — not something a script should
+    decide silently.
+
+### Why it was found
+
+Not by a check. By acquiring two PDFs: the entries only came under scrutiny because a human
+went looking for the works they describe. That is the argument for the check.
+
 ## [0.29.1] — 2026-07-14
 
 ### Fixed
