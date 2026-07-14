@@ -6,6 +6,55 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.25.0] — 2026-07-14
+
+Zotero can be the upstream for bibliographic metadata, PDFs and annotations — but
+**not for the citekey**. A pilot on a 36-source project settled that, and this
+release ships the tool the pilot produced.
+
+### Added
+
+- **`scripts/zotero-to-bib.py`** — generates `references.bib` from a Zotero
+  collection, taking the key from the item's `Extra` field (where
+  `zotero_add_by_bibtex` preserves it on import) and **never** from Zotero's
+  native `citationKey` (which holds whatever Better BibTeX invented). Output is
+  sorted by key, so a re-run is byte-identical and `git diff` shows only real
+  changes. `--check` makes it a CI gate.
+
+  Round-trip on the pilot: 36/36 keys identical, **zero** field-value differences
+  across title/doi/year/pages/volume/issue/type/author, `lint-wiki.py` green, the
+  knowledge graph byte-identical.
+
+### Why not Better BibTeX
+
+BBX auto-export is the obvious design. It does not work.
+
+Configured with `auth.lower + '-' + year + '-' + shorttitle(1,1).lower` — the
+closest its formula language comes to our convention — BBX still diverged on **8
+of 36** entries:
+
+    ours                                BBX
+    ardissone-2013-information          ardissone-2013-3d
+    dereu-2013-towards                  dereu-2013-threedimensional
+    marinbuzon-2021-photogrammetry-sfm  marin-buzon-2021-photogrammetry
+    massonmaclean-2021-digitally        masson-maclean-2021-digitally
+
+Three independent causes, all inside BBX's `shorttitle`/`auth` implementations and
+none reachable by configuration: it keeps two-character title words (`3D`) where we
+drop them; it keeps hyphens in surnames where we fold them; its stopword list
+differs. And `marin-buzon-2021-photogrammetry` is what it produces for **both**
+Marín-Buzón 2021 papers — it re-creates exactly the collision the citekey migration
+removed. `bibkey` is a cross-project JOIN KEY.
+
+Pinning does not save it: an item pinned **both** ways — `Citation Key:` in Extra
+*and* Zotero's native `citationKey` field — was still exported under BBX's own
+generated key. BBX owns key generation. Its auto-export also never fires on
+sync-originated changes, which is how every write from an API client arrives.
+
+So: **we own the key, Zotero owns everything else.** Same rule the whole citekey
+migration rests on — enforce an invariant with a tool; do not hope a third party
+honours a convention.
+
 ## [0.24.0] — 2026-07-14
 
 Restores the second half of the convention. The template has always mandated
