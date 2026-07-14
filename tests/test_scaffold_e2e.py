@@ -24,7 +24,7 @@ def _page(title, typ, body, **extra):
     fm = {"title": title, "type": typ, "created": "2026-04-15",
           "updated": "2026-04-15", "status": "review", "author": "llm"}
     if typ == "source":
-        fm.setdefault("bibkey", "x-2026")
+        fm.setdefault("bibkey", "x-2026-title")
     fm.update(extra)
     head = "\n".join(f'{k}: "{v}"' if isinstance(v, str) else f"{k}: {json.dumps(v)}"
                      for k, v in fm.items())
@@ -42,9 +42,18 @@ class ScaffoldEndToEnd(unittest.TestCase):
         (k / "synthesis" / "hub.md").write_text(
             _page("Hub", "synthesis", "Connects [[src-a]] and [[ent-b]]."), encoding="utf-8")
         (k / "sources" / "src-a.md").write_text(
-            _page("Source A", "source", "Discussed in [[hub]].", bibkey="a-2026"), encoding="utf-8")
+            _page("Source A", "source", "Discussed in [[hub]].", bibkey="a-2026-alpha"), encoding="utf-8")
         (k / "entities" / "ent-b.md").write_text(
             _page("Entity B", "entity", "Appears in [[hub]]."), encoding="utf-8")
+        # A source page whose bibkey resolves to nothing is a real defect (the
+        # citation would render as ???), and lint_citekeys now fails on it. So the
+        # fixture must be coherent: give the source page its BibTeX entry.
+        (cls.proj / "output" / "bibtex" / "references.bib").write_text(
+            "@article{a-2026-alpha,\n"
+            "  author = {Alpha, Ada},\n"
+            "  title  = {Alpha and the Scaffold},\n"
+            "  year   = {2026}\n"
+            "}\n", encoding="utf-8")
 
     @classmethod
     def tearDownClass(cls):

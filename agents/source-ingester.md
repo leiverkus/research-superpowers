@@ -35,7 +35,11 @@ frontmatter.
   entities relevant to that focus, plus a brief paragraph for the "Other
   content in this source" section.
 - Frontmatter `status` is always `review` on first ingest; never set `stable`
-- If a bibkey collides, append a letter suffix and rename the source page
+- `bibkey` is the whole PDF filename stem (`finkelstein-2003-low-chronology`),
+  never the `autor-jahr` prefix. It is a cross-project join key — the same work
+  must yield the same key in every project.
+- If a bibkey still collides (same author, same year, same first title word),
+  append the letter suffix **after the year** (`mazar-2011b-iron-age`)
 - Min. 1 verbatim quote per focus block, with page number, max ~5
 - Min. 1–5 claims per focus block, each one sentence with page reference
 - **Typed relations:** for every stance-bearing connection (confirms /

@@ -78,6 +78,6 @@ created: 2026-04-15
 updated: 2026-04-15
 status: review
 author: llm
-bibkey: finkelstein-2003
+bibkey: finkelstein-2003-low-chronology
 ---
 ```

@@ -6,6 +6,68 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.23.0] — 2026-07-14
+
+The `bibkey` is not just a citation key — it is the **cross-project join key**
+(`wiki-global-graph.py` matches sources across projects on it). An audit of 17
+live wikis found the documented `autor-jahr` convention honoured by only **40% of
+511 keys**. Nothing had ever checked it. The cost:
+
+- **17 cross-project joins silently missed** — the same work under different keys
+  (`Smith2016` vs `smith2016`, a join lost to capitalisation).
+- **3 keys each denoting two different papers** — so the graph asserted a shared
+  source where none existed (`hensel-2024`, `tebes-2023`, `maeir-2021`).
+
+This release makes the convention machine-enforced instead of merely documented,
+and ships the tool to migrate existing wikis onto it.
+
+### Added
+
+- **`scripts/migrate-citekeys.py`** — one-time re-key to `surname-year-shorttitle`,
+  a deterministic function of the work's own metadata, so the same work yields the
+  same key in every project. Two phases (`plan` → human reviews the map → `apply`),
+  dry-run by default. Safety asserts: bijection, no chaining, single-pass
+  substitution with a right boundary (so `@smith2016` cannot eat `@smith2016b` — a
+  *different* work), and a proof that `[[wikilinks]]` and Quarto cross-references
+  are untouched. Refuses to write untracked/gitignored files without
+  `--backup-dir`, never runs git, and is idempotent.
+- **`lint_citekeys()` in `lint-wiki.py`** — hard-fails on: off-shape entry keys,
+  a key defined twice in one `.bib` (pandoc silently takes the last), a
+  frontmatter `bibkey` that is in no `.bib`, a `[@key]` that resolves nowhere (in
+  the **wiki** as well as the manuscript), a `bibliography:` path that does not
+  exist, and one key meaning different works in two `.bib` files.
+- **`wiki-global-graph.py bibkeys`** — portfolio audit of the join key itself.
+  `overlap` compares key *strings*, so it reports a shared key as a win and cannot
+  see a collision. `bibkeys` reads the `.bib` — the *work* behind the key — and
+  reports **COLLISION** (one key, two works) and **SPLIT** (one work, two keys).
+- `bibkey` `pattern` in `knowledge-frontmatter.schema.json` (all three mirrors).
+  `lint-wiki.py` already enforces `pattern`, so this is a hard failure with no new
+  code. It checks **shape, not derivability** — deliberately, so author-less
+  reference works (`rgg-1998-samaria`) need no special case and human overrides
+  are never fought.
+
+### Fixed
+
+- **`references.bib` must be committed.** The Zotero section claimed it was "not
+  synced via Git". That is wrong — CI needs it on disk to render, and an ignored
+  bib has no git undo. The false claim had already propagated into four projects'
+  `.gitignore`, leaving their bibliographies unrecoverable.
+- **The Better BibTeX citekey recommendation was `auth.lower + year`** — a key with
+  no title, which collides for two same-author-same-year papers. Now
+  `auth.lower + "-" + year + "-" + veryshorttitle.lower`, which reproduces the
+  project convention exactly.
+- **`bibkey` is the whole PDF filename stem, not its `autor-jahr` prefix.** The PDF
+  schema (`autor-jahr-kurztitel.pdf`) was always right; only the derivation was
+  wrong. `bibkey == PDF filename stem` is now a checkable invariant.
+- **The wiki slug is not the bibkey** and never had to be — documented explicitly,
+  because it was already true in most projects and the migration relies on it.
+- `wiki-global-graph.py` labelled nested projects `paper#1 … paper#9` (every
+  Evidentia wiki lives in `<Module>/paper/`), which told the reader nothing about
+  which project a finding belonged to. Labels now disambiguate by walking up the
+  path (`Aoristos/paper`).
+- The `wiki-global-graph.py` docstring claimed bibkeys were "stable via Better
+  BibTeX". They never were.
+
 ## [0.22.2] — 2026-07-12
 
 ### Fixed

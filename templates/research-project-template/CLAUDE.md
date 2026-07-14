@@ -100,8 +100,19 @@ project-root/
   three significant title words, hyphen-joined, stopwords dropped. Example:
   `finkelstein-2003-low-chronology.pdf`. `acquire-sources` writes downloads
   straight to this name; manually fetched PDFs are renamed to it before ingest.
-  The wiki slug / bibkey is the `autor-jahr` prefix (filename minus
-  `-kurztitel`).
+- **`bibkey` == the PDF filename stem** — the *whole* stem, not a prefix:
+  `finkelstein-2003-low-chronology.pdf` → `bibkey: finkelstein-2003-low-chronology`.
+  This is a **cross-project join key**: `scripts/wiki-global-graph.py` matches
+  sources across projects on it, so it must be a deterministic function of the
+  work's own metadata — the same work must yield the same key in *every* project.
+  A per-project choice breaks the join silently. (An audit of 17 wikis found the
+  old `autor-jahr` rule honoured by only 40% of 511 keys: 17 cross-project joins
+  were lost, and 3 keys each denoted *two different papers*.) `lint-wiki.py`
+  enforces the shape; `wiki-global-graph.py bibkeys` audits it across projects.
+- **The wiki slug is NOT the bibkey.** The slug is a human-readable page name
+  (`sources/hensel-2024.md`, `sources/source-hensel-2024.md` — either is fine);
+  the `bibkey` is the citation key. They need not be identical, and in most
+  projects they are not. Nothing joins on the slug.
 - **Acquisition before ingest.** After `literature-review`, run
   `acquire-sources`: it auto-downloads the Open-Access PDFs for the A+B set into
   `input/bibliography/` and writes `acquisition-todo.md` — a worklist of
@@ -143,7 +154,7 @@ ingest and referenced in the wiki pages.
 
 - **File naming convention:**
   `<citekey>-<description>.<ext>`, e.g.
-  `finkelstein2003-stratigraphy-megiddo.png`
+  `finkelstein-2003-low-chronology-stratigraphy-megiddo.png`
 - **What gets extracted:** maps, stratigraphies, diagrams, find photos,
   tables as image — anything visually relevant for understanding the
   source or the research question.
@@ -152,14 +163,14 @@ ingest and referenced in the wiki pages.
 - **Embedding in wiki pages** uses plain Markdown image syntax (renders in
   Foam/Obsidian/GitLab without a build):
   ```markdown
-  ![Stratigraphy of Megiddo](../assets/finkelstein2003-stratigraphy-megiddo.png)
+  ![Stratigraphy of Megiddo](../assets/finkelstein-2003-low-chronology-stratigraphy-megiddo.png)
   ```
   The Quarto cross-reference form (`{#fig-…}` + `@fig-…`) is reserved for
   publication pages under `output/`.
 - **Source attribution:** every figure must state its origin in the
   caption, e.g.:
   ```markdown
-  ![Stratigraphy of Megiddo (after @finkelstein2003, Fig. 3)](../assets/finkelstein2003-stratigraphy-megiddo.png){#fig-megiddo-strat}
+  ![Stratigraphy of Megiddo (after @finkelstein-2003-low-chronology, Fig. 3)](../assets/finkelstein-2003-low-chronology-stratigraphy-megiddo.png){#fig-megiddo-strat}
   ```
 - **Mind copyright:** figures from published works may be used in the
   internal wiki (scholarly work), but not carried over into the
@@ -210,7 +221,7 @@ created: 2026-04-15
 updated: 2026-04-15
 status: review
 author: llm
-bibkey: lastname-year
+bibkey: lastname-year-shorttitle
 ---
 ```
 
@@ -403,6 +414,23 @@ would draw) and states the concept/no-ID blind spot. This is step 1 of the
 cross-project graph; the merged-graph steps are on the roadmap (see the plugin's
 `docs/ROADMAP.md`).
 
+**Audit the `bibkey` join key itself:**
+
+```bash
+python scripts/wiki-global-graph.py bibkeys ../proj-a ../proj-b .
+```
+
+`overlap` compares bibkey *strings*, so it reports a shared key as a win and is
+structurally blind to the two ways that can be wrong. `bibkeys` reads the `.bib`
+— the *work* behind the key — and reports both:
+
+- **COLLISION** — one key, two different works. `overlap` asserts a shared source
+  where none exists. Exit code 1.
+- **SPLIT** — one work, two different keys. The join is silently missed.
+
+Run it whenever you add a project. It cannot be a CI gate: no single repo's CI
+can see the others.
+
 ## Meta files
 
 ### `knowledge/_meta/index.md`
@@ -432,7 +460,7 @@ Append-only. Every entry starts with a consistent prefix:
 - Source page created: [[source-finkelstein-2003]]
 - Entity updated: [[entity-tel-megiddo]]
 - Concept newly created: [[concept-low-chronology]]
-- BibTeX appended: finkelstein2003
+- BibTeX appended: finkelstein-2003-low-chronology
 
 ## [2026-04-15] query | Chronology debate
 - Synthesis created: [[synthesis-chronologie-debatte]]
@@ -575,16 +603,30 @@ libraries and group libraries.
 3. Invite all team members.
 4. **Install Better BibTeX** (zotero.org/support/better-bibtex).
 5. **Configure Better BibTeX**:
-   - Preferences → Better BibTeX → Citation Keys: set format
-     (recommendation: `auth.lower + year`, e.g. `finkelstein2003`)
+   - Preferences → Better BibTeX → Citation Keys → format:
+     ```
+     auth.lower + "-" + year + "-" + veryshorttitle.lower
+     ```
+     This reproduces the project convention exactly:
+     `finkelstein-2003-low-chronology`. **Do not leave it at the default**
+     (`auth.lower + year` → `finkelstein2003`): that key carries no title, so two
+     papers by the same author in the same year collide onto one key — and it is a
+     cross-project join key. A 17-wiki audit found exactly that happening three
+     times, each silently asserting that two unrelated papers were the same source.
 6. **Configure auto-export**: group library → right-click → Export
    Library → Better BibLaTeX → target: `output/bibtex/references.bib`
    → enable "Keep updated".
 
 `references.bib` is updated locally and automatically whenever the
-Zotero group changes. Every team member exports locally; the file is
-not synced via Git (see `.gitignore`) because the citekeys are
-identical but Zotero adds local metadata.
+Zotero group changes.
+
+> **`references.bib` IS committed to Git.** Do not gitignore it. The CI needs it
+> on disk to render the article and book with Quarto — without it, every citation
+> renders as `???` and the build is not reproducible. An ignored bib also has no
+> git undo. An earlier version of this document claimed the opposite; that claim
+> propagated into four projects' `.gitignore` and left their bibliographies
+> unrecoverable. Only the **PDFs** in `input/bibliography/` stay ignored (large
+> and copyright-bound).
 
 #### Adding PDFs to the group
 

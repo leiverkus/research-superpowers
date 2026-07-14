@@ -14,7 +14,7 @@ format:
 
 <!-- TARGET: ~800 words. SOFT-GATE: synthesis [[chronology-debate]] status ≥ review. -->
 
-The debate over the chronology of *Iron Age II* in the southern Levant has been, since its reformulation by Finkelstein, one of the methodologically most intensive controversies in Palestinian archaeology of the past twenty-five years [@finkelstein-piasetzky-2003, p. 283]. The dispute is not primarily about 14C measurements — those are now largely shared between the disputants — but about the framework in which the measurements are read. The central question for this article is not "who is right" in the general sense, but how the debate plays out when narrowed to a specific regional case: the dating of the central Negev fortresses (Cohen 1979, *ingest pending*).
+The debate over the chronology of *Iron Age II* in the southern Levant has been, since its reformulation by Finkelstein, one of the methodologically most intensive controversies in Palestinian archaeology of the past twenty-five years [@finkelstein-2003-wrong, p. 283]. The dispute is not primarily about 14C measurements — those are now largely shared between the disputants — but about the framework in which the measurements are read. The central question for this article is not "who is right" in the general sense, but how the debate plays out when narrowed to a specific regional case: the dating of the central Negev fortresses (Cohen 1979, *ingest pending*).
 
 This is a hermeneutic close reading, not a quantitative re-analysis. The aim is to make explicit the argumentative structure of a debate whose internal logic is often obscured by the volume of its 14C statistics.
 
@@ -35,15 +35,15 @@ The disagreement operates on four levels — data selection, calibration, phase 
 
 ## Level 1 — Data selection
 
-[@finkelstein-piasetzky-2003] argues for restricting the diagnostic corpus to short-lived samples from clear stratigraphic contexts; [@mazar-2011] extends the corpus to longer-lived samples and contests several stratigraphic phase assignments.
+[@finkelstein-2003-wrong] argues for restricting the diagnostic corpus to short-lived samples from clear stratigraphic contexts; [@mazar-2011-iron] extends the corpus to longer-lived samples and contests several stratigraphic phase assignments.
 
 ## Level 2 — Calibration
 
-The original Low Chronology was calibrated with IntCal98; recalibration under IntCal20 [@regev-et-al-2020] tightens HPDs by ~10 years but does not change the direction of inference.
+The original Low Chronology was calibrated with IntCal98; recalibration under IntCal20 [@regev-2020-radiocarbon] tightens HPDs by ~10 years but does not change the direction of inference.
 
 ## Level 3 — Phase modelling
 
-Finkelstein & Piasetzky use uniform priors on phase boundaries; Mazar's Modified Conventional Chronology uses informative priors derived from stratigraphic seriation. This is a non-trivial methodological choice [@mazar-2011, p. 110; @regev-et-al-2020, pp. 433–435].
+Finkelstein & Piasetzky use uniform priors on phase boundaries; Mazar's Modified Conventional Chronology uses informative priors derived from stratigraphic seriation. This is a non-trivial methodological choice [@mazar-2011-iron, p. 110; @regev-2020-radiocarbon, pp. 433–435].
 
 ## Level 4 — Framework choice (what counts as evidence)
 
@@ -73,7 +73,7 @@ This article does not re-analyse the 14C measurements; it trusts the published H
 
 <!-- TARGET: ~500 words. -->
 
-The Iron IIA chronology debate, applied to the central Negev fortresses, is primarily a Level-4 disagreement — what evidence has priority — disguised as a Level-1 disagreement about which 14C measurements count. The contribution of this article is to make that explicit, and to argue that under a regional-variation reading the two positions are partially compatible. The Cohen 1979 evidence is still on the table; the Modified Conventional / Low gap of ~25–35 years for the *Iron IIA* onset [@mazar-2011, p. 111] is wide enough to accommodate either side of the Negev sub-question.
+The Iron IIA chronology debate, applied to the central Negev fortresses, is primarily a Level-4 disagreement — what evidence has priority — disguised as a Level-1 disagreement about which 14C measurements count. The contribution of this article is to make that explicit, and to argue that under a regional-variation reading the two positions are partially compatible. The Cohen 1979 evidence is still on the table; the Modified Conventional / Low gap of ~25–35 years for the *Iron IIA* onset [@mazar-2011-iron, p. 111] is wide enough to accommodate either side of the Negev sub-question.
 
 # References {.unnumbered}
 

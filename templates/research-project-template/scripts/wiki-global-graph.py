@@ -15,7 +15,12 @@ the authority IDs the frontmatter already carries:
     key for methods / concepts), or ``wikidata_qid`` / ``gnd_id`` where AAT has
     no matching term. This is what makes concept-level cross-project links —
     the deepest tissue of a methods portfolio — mechanically visible.
-  * ``type=source`` : ``bibkey`` (BibTeX key; stable via Better BibTeX)
+  * ``type=source`` : ``bibkey`` (BibTeX key; stable via the surname-year-shorttitle
+    convention, which ``lint-wiki.py`` enforces. This docstring used to claim the
+    keys were "stable via Better BibTeX" — they never were. An audit of 17 wikis
+    found the convention honoured by only 40% of 511 keys, which cost 17 missed
+    joins and produced 2 false positives. The ``bibkeys`` sub-command below exists
+    to make exactly that failure visible.)
 
 This tool is the first, high-precision step. It does **not** build the merged
 graph yet — it reports which authority IDs occur in MORE THAN ONE project, i.e.
@@ -113,17 +118,22 @@ def read_project(root: Path) -> list[dict] | None:
 
 
 def _labels(roots: list[Path]) -> list[str]:
-    """Display label per root = its directory name, disambiguated on collision
-    so two projects that happen to share a basename stay distinct."""
-    names = [root.resolve().name or str(root) for root in roots]
-    out, seen = [], {}
-    for name in names:
-        if names.count(name) > 1:
-            seen[name] = seen.get(name, 0) + 1
-            out.append(f"{name}#{seen[name]}")
-        else:
-            out.append(name)
-    return out
+    """Display label per root = its directory name, disambiguated on collision by
+    walking UP the path, not by appending a counter.
+
+    A nested layout — `<Module>/paper/` per module — makes every basename `paper`.
+    A counter would label them `paper#1 … paper#9`, which tells the reader nothing
+    about which project a finding belongs to and makes the whole report useless.
+    Prepending the parent yields `Aoristos/paper`, `Signa/paper`.
+    """
+    resolved = [root.resolve() for root in roots]
+    depth = 1
+    while depth < 5:
+        labels = ["/".join(p.parts[-depth:]) or str(p) for p in resolved]
+        if len(set(labels)) == len(labels):
+            return labels
+        depth += 1
+    return [str(p) for p in resolved]
 
 
 def build_overlap(roots: list[Path]):
@@ -214,6 +224,201 @@ def _print_report(overlap, projects) -> None:
           f"wikidata_qid / gnd_id) and {ent_without_id} entity page(s) without an authority id.")
 
 
+# ---------------------------------------------------------------------------
+# bibkeys — the check that `overlap` structurally cannot perform
+# ---------------------------------------------------------------------------
+#
+# `overlap` compares bibkey STRINGS. It therefore reports a shared key as a win —
+# a same_as edge — and is blind to the two ways that can be wrong:
+#
+#   COLLISION  one key, two different works. `overlap` asserts a shared source
+#              where none exists. (Real: `hensel-2024` meant "Reconsidering
+#              Yahwism…" in one project and "Transjordan and Judah…" in another.)
+#   SPLIT      one work, two different keys. `overlap` never sees the link.
+#              (Real: `Smith2016` vs `smith2016` — a join lost to capitalisation.)
+#
+# Neither is visible from a single wiki, so this cannot be a CI gate: no one
+# repo's CI can see the others. It is a portfolio command, run by hand.
+#
+# It needs the .bib (the work behind the key), which `overlap` never reads.
+
+BUILD_DIRS = ("_output", "_files", ".quarto", "node_modules")
+_STOP = {"the", "a", "an", "of", "and", "in", "on", "for", "to", "from", "der",
+         "die", "das", "und", "von", "im", "zur", "zum", "des", "ein", "eine"}
+
+
+def _bib_field(body: str, name: str) -> str:
+    """One BibTeX field, brace-balanced, case-insensitive."""
+    for m in re.finditer(rf"(?:^|[,{{\s]){name}\s*=\s*", body, re.I):
+        i = m.end()
+        if i >= len(body):
+            continue
+        if body[i] == "{":
+            depth = 0
+            for j in range(i, len(body)):
+                if body[j] == "{":
+                    depth += 1
+                elif body[j] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return body[i + 1:j].strip()
+        elif body[i] == '"':
+            j = body.find('"', i + 1)
+            if j > 0:
+                return body[i + 1:j].strip()
+        else:
+            mm = re.match(r"[^,\s}]+", body[i:])
+            if mm:
+                return mm.group(0).strip()
+    return ""
+
+
+def _iter_bib_entries(text: str):
+    """(key, body) per entry, brace-balanced — real bibs mix multi-line and
+    single-line entries, and a '\\n}' anchor silently drops the latter."""
+    for m in re.finditer(r"@([a-zA-Z]+)\s*\{\s*([^,\s{}]+)\s*,", text):
+        opened = text.find("{", m.start())
+        depth = 0
+        for j in range(opened, len(text)):
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    yield m.group(2), text[m.end():j]
+                    break
+
+
+def _work_id(title: str, year: str) -> str:
+    """A conservative fingerprint of the work, for spotting the same paper under
+    two keys. Title words + year — never fuzzy, just normalised."""
+    words = [w for w in re.findall(r"[a-z0-9]+", title.lower())
+             if w not in _STOP and len(w) > 2]
+    return " ".join(words[:8]) + "|" + year
+
+
+def _same_work(a: str, b: str) -> bool:
+    """Do two title fingerprints denote the same work?
+
+    Same year, and one title is a prefix of the other — which is what a truncated
+    vs. full transcription of the same paper looks like. Anything else counts as
+    different. Deliberately conservative: never fuzzy-match, only tolerate
+    truncation.
+    """
+    ta, _, ya = a.partition("|")
+    tb, _, yb = b.partition("|")
+    if ya and yb and ya != yb:
+        return False
+    return ta.startswith(tb) or tb.startswith(ta)
+
+
+def read_bibs(root: Path) -> dict[str, dict]:
+    """{key: {title, year, doi, work}} across every .bib under root/output/."""
+    out: dict[str, dict] = {}
+    outdir = root / "output"
+    if not outdir.is_dir():
+        return out
+    for bib in sorted(outdir.glob("**/*.bib")):
+        if any(d in bib.parts for d in BUILD_DIRS):
+            continue
+        text = bib.read_text(encoding="utf-8", errors="replace")
+        for key, body in _iter_bib_entries(text):
+            title = _bib_field(body, "title")
+            year = _bib_field(body, "year")
+            m = re.search(r"(1[0-9]{3}|20[0-9]{2})", year)
+            year = m.group(1) if m else ""
+            out[key] = {"title": title, "year": year,
+                        "doi": _bib_field(body, "doi").lower(),
+                        "work": _work_id(title, year)}
+    return out
+
+
+def build_bibkey_report(roots: list[Path]):
+    """(collisions, splits) across N projects."""
+    labels = _labels(roots)
+    per: dict[str, dict[str, dict]] = {}
+    for label, root in zip(labels, roots):
+        per[label] = read_bibs(root)
+
+    key_to: dict[str, list[tuple[str, dict]]] = {}
+    work_to: dict[str, list[tuple[str, str]]] = {}     # work/doi -> [(project, key)]
+    for label, entries in per.items():
+        for key, e in entries.items():
+            key_to.setdefault(key, []).append((label, e))
+            ident = e["doi"] or e["work"]
+            if ident and ident != "|":
+                work_to.setdefault(ident, []).append((label, key))
+
+    collisions = []
+    for key, occ in sorted(key_to.items()):
+        if len({p for p, _ in occ}) < 2:
+            continue
+        dois = {e["doi"] for _, e in occ if e["doi"]}
+        if len(dois) > 1:
+            differ = True                       # two DOIs — decisive
+        else:
+            # A DOI on only ONE side proves nothing about difference, so fall back
+            # to the title fingerprint. But titles get transcribed at different
+            # lengths for the same work ("The Religion of Idumea" vs "The Religion
+            # of Idumea and Its Relationship to Early Judaism"), so treat a prefix
+            # relation as the same work — otherwise every truncated title would be
+            # reported as a collision and the signal would drown.
+            works = [e["work"] for _, e in occ if e["work"] != "|"]
+            differ = bool(works) and not all(_same_work(works[0], w) for w in works[1:])
+        if differ:
+            collisions.append({"key": key,
+                               "occurrences": [{"project": p, "title": e["title"]}
+                                               for p, e in sorted(occ)]})
+
+    splits = []
+    for ident, occ in sorted(work_to.items()):
+        projects = {p for p, _ in occ}
+        keys = {k for _, k in occ}
+        if len(projects) > 1 and len(keys) > 1:
+            title = next(per[p][k]["title"] for p, k in occ)
+            splits.append({"work": title, "occurrences":
+                           [{"project": p, "key": k} for p, k in sorted(occ)]})
+
+    return collisions, splits, per
+
+
+def cmd_bibkeys(args) -> int:
+    roots = [Path(r).resolve() for r in args.roots]
+    if len(roots) < 2:
+        print("  Need at least two project roots.", file=sys.stderr)
+        return 1
+    collisions, splits, per = build_bibkey_report(roots)
+
+    if args.json:
+        print(json.dumps({"collisions": collisions, "splits": splits},
+                         indent=2, ensure_ascii=False, sort_keys=True))
+        return 1 if collisions else 0
+
+    print("# Cross-project bibkey health\n")
+    for label, entries in sorted(per.items()):
+        print(f"  - {label}: {len(entries)} bib entries")
+
+    print(f"\n## COLLISION — one key, DIFFERENT works ({len(collisions)})")
+    print("   These make `overlap` assert a shared source where none exists.")
+    if not collisions:
+        print("   None. ✓")
+    for c in collisions:
+        print(f"\n   {c['key']}")
+        for o in c["occurrences"]:
+            print(f"      {o['project']:<24} {o['title'][:58]}")
+
+    print(f"\n## SPLIT — one work, DIFFERENT keys ({len(splits)})")
+    print("   These are cross-project joins `overlap` silently misses.")
+    if not splits:
+        print("   None. ✓")
+    for s in splits:
+        print(f"\n   \"{s['work'][:62]}\"")
+        for o in s["occurrences"]:
+            print(f"      {o['project']:<24} {o['key']}")
+
+    return 1 if collisions else 0
+
+
 def cmd_overlap(args) -> int:
     if len(args.roots) < 2:
         print("Need at least two project roots to find overlap.")
@@ -236,11 +441,21 @@ def main() -> int:
     sp.add_argument("roots", nargs="+", type=Path,
                     help="Project root directories (each containing knowledge/)")
     sp.add_argument("--json", action="store_true", help="Emit JSON instead of text")
+
+    bk = sub.add_parser("bibkeys",
+                        help="Audit the bibkey join key: COLLISION (one key, two "
+                             "works) and SPLIT (one work, two keys)")
+    bk.add_argument("roots", nargs="+", type=Path,
+                    help="Project root directories (each containing knowledge/)")
+    bk.add_argument("--json", action="store_true", help="Emit JSON instead of text")
+
     args = parser.parse_args()
-    if args.cmd != "overlap":
-        parser.print_help()
-        return 1
-    return cmd_overlap(args)
+    if args.cmd == "overlap":
+        return cmd_overlap(args)
+    if args.cmd == "bibkeys":
+        return cmd_bibkeys(args)
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":

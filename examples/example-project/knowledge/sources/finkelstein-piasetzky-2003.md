@@ -4,7 +4,7 @@ type: source
 created: 2026-04-19
 updated: 2026-04-19
 tags: [chronology, iron-age, radiocarbon, levant]
-bibkey: finkelstein-piasetzky-2003
+bibkey: finkelstein-2003-wrong
 status: review
 author: llm
 relations:

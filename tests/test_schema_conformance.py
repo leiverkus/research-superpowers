@@ -40,7 +40,7 @@ lw = _load("lint_wiki", SCRIPTS / "lint-wiki.py")
 VALID = {
     "title": "A page", "type": "source",
     "created": "2026-04-15", "updated": "2026-04-15",
-    "status": "review", "author": "llm", "bibkey": "x-2026",
+    "status": "review", "author": "llm", "bibkey": "x-2026-title",
 }
 
 
@@ -69,6 +69,18 @@ CASES = [
     ("orcid-bad-pattern", _variant(type="entity", bibkey=_DELETE, orcid="0000-0002-1825"), False),
     ("getty-aat-valid", _variant(type="concept", bibkey=_DELETE, getty_aat_id="300054327"), True),
     ("getty-aat-bad-pattern", _variant(type="concept", bibkey=_DELETE, getty_aat_id="54327"), False),
+    # bibkey shape: surname-year-shorttitle. It is a cross-project JOIN KEY, so the
+    # schema pins it — an audit found the old convention was honoured by only 40% of
+    # 511 keys, which cost 17 missed joins and 2 false positives.
+    ("bibkey-valid", _variant(bibkey="finkelstein-2003-low-chronology"), True),
+    ("bibkey-valid-multipart-surname", _variant(bibkey="regev-et-al-2020-radiocarbon"), True),
+    ("bibkey-valid-disambiguator", _variant(bibkey="finkelstein-2003b-low-chronology"), True),
+    ("bibkey-valid-authorless-siglum", _variant(bibkey="rgg-1998-samaria"), True),
+    # the three drift families the audit actually found, each must be rejected:
+    ("bibkey-bad-no-shorttitle", _variant(bibkey="hensel-2024"), False),          # autor-jahr
+    ("bibkey-bad-no-hyphens", _variant(bibkey="smith2016"), False),               # BBX bare
+    ("bibkey-bad-camelcase", _variant(bibkey="Hensel2024Yahwism"), False),        # BBX CamelCase
+    ("bibkey-bad-underscores", _variant(bibkey="brennen_kreiss_2016_digitalization"), False),
     ("wrong-type", _variant(title=42), False),
     ("source-missing-bibkey", _variant(bibkey=_DELETE), False),
     ("array-item-type", _variant(tags=[1, 2]), False),

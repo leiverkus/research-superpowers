@@ -2,10 +2,26 @@
 """
 Wiki lint: structural checks on the research wiki.
 
-Three deterministic, CI-friendly checks:
+Deterministic, CI-friendly checks:
   1. Frontmatter against schema/knowledge-frontmatter.schema.json
   2. Wikilinks (broken targets, orphan pages)
-  3. Status distribution
+  3. Citekey / bibliography integrity (see below)
+  4. Status distribution
+
+The citekey checks exist because `bibkey` is not merely a citation key: it is the
+cross-project JOIN KEY that scripts/wiki-global-graph.py matches sources on. An
+audit of 17 wikis found the documented convention honoured by only 40% of 511
+keys — costing 17 missed joins and producing 2 false positives (one key denoting
+two different papers). Nothing checked it. Now something does:
+
+  * every .bib entry key matches the schema's bibkey pattern
+  * no key defined twice in one .bib (pandoc silently takes the last)
+  * every frontmatter `bibkey:` resolves to a real entry
+  * every `[@key]` — in the wiki AND the manuscript — resolves
+  * every `bibliography:` path a manuscript declares exists on disk. Quarto
+    resolves a missing bibliography SILENTLY, renders every citation as ???, and
+    exits 0. Nothing else catches this.
+  * the same key never means different works in two .bib files
 
 Content checks (contradictions between pages, stale claims) do NOT belong
 here — use the semantic-wiki-review skill for those. This script only
@@ -527,6 +543,197 @@ def report_concept_coverage(pages: dict[str, Path], verbose: bool = False) -> li
     return report
 
 
+# ---------------------------------------------------------------------------
+# Citekey / bibliography integrity
+# ---------------------------------------------------------------------------
+
+BUILD_DIRS = ("_output", "_files", ".quarto", "node_modules")
+BIBLIOGRAPHY_RE = re.compile(r"^\s*bibliography:\s*(.+?)\s*$", re.M)
+
+# Quarto cross-references share the `@name` syntax with pandoc citations but are
+# NOT citations. Flagging them produces ~150 false errors portfolio-wide, which
+# is exactly how a linter gets switched off.
+QUARTO_XREF = re.compile(
+    r"^(?:sec|fig|tbl|lst|eq|thm|lem|cor|prp|cnj|def|exm|exr|sol|rem|tip|nte|wrn|imp|cau)-")
+# A citation: `@key`, `[@key]`, `-@key`. NOT an email (`foo@bar`), NOT a word-
+# internal @, and NOT an escaped `\@` — the backslash is precisely how an author
+# says "this at-sign is literal", as in the metric notation `AP\@IoU0.5`.
+CITE_RE = re.compile(r"(?<![A-Za-z0-9_`@.\\])@([A-Za-z][A-Za-z0-9_:.+/-]*[A-Za-z0-9])")
+
+
+def _not_build(path: Path) -> bool:
+    return not any(d in path.parts for d in BUILD_DIRS)
+
+
+def _strip_code(text: str) -> str:
+    """Blank out fenced and inline code — a citation shown as an example is not
+    a citation. (Blank, not delete, so nothing shifts.)"""
+    text = re.sub(r"```.*?```", lambda m: " " * len(m.group(0)), text, flags=re.S)
+    return re.sub(r"`[^`\n]*`", lambda m: " " * len(m.group(0)), text)
+
+
+def _bib_field(body: str, name: str) -> str:
+    """One BibTeX field, brace-balanced, case-insensitive."""
+    for m in re.finditer(rf"(?:^|[,{{\s]){name}\s*=\s*", body, re.I):
+        i = m.end()
+        if i >= len(body):
+            continue
+        if body[i] == "{":
+            depth = 0
+            for j in range(i, len(body)):
+                if body[j] == "{":
+                    depth += 1
+                elif body[j] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return body[i + 1:j].strip()
+        elif body[i] == '"':
+            j = body.find('"', i + 1)
+            if j > 0:
+                return body[i + 1:j].strip()
+        else:
+            mm = re.match(r"[^,\s}]+", body[i:])
+            if mm:
+                return mm.group(0).strip()
+    return ""
+
+
+def iter_bib_entries(text: str):
+    """Yield (key, body) per entry, walking braces to find the real end.
+
+    Anchoring on '\\n}' (the obvious regex) silently drops every single-line
+    entry — and real bibs mix both shapes freely. In one project that would have
+    hidden 98 of 122 entries.
+    """
+    for m in re.finditer(r"@([a-zA-Z]+)\s*\{\s*([^,\s{}]+)\s*,", text):
+        opened = text.find("{", m.start())
+        depth = 0
+        for j in range(opened, len(text)):
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    yield m.group(2), text[m.end():j]
+                    break
+
+
+def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list[str]]:
+    """Citekey + bibliography integrity. Returns (hard_issues, advisory_lines).
+
+    `bibkey` is the cross-project JOIN KEY (scripts/wiki-global-graph.py matches
+    sources across projects on it). An audit of 17 wikis found the convention was
+    honoured by only 40% of 511 keys, which cost 17 missed joins and produced 2
+    false positives (one key denoting two different papers). Nothing checked it —
+    hence this.
+    """
+    hard: list[str] = []
+    advisory: list[str] = []
+
+    pattern = schema.get("properties", {}).get("bibkey", {}).get("pattern")
+    key_re = re.compile(pattern) if pattern else None
+
+    bibs = sorted(p for p in Path("output").glob("**/*.bib") if _not_build(p)) \
+        if Path("output").is_dir() else []
+    if not bibs:
+        advisory.append("  No .bib under output/ — citekey checks skipped.")
+        return hard, advisory
+
+    # ---- 1 + 2: every entry key well-shaped; no key defined twice in one file
+    defined: dict[str, tuple[Path, str, str]] = {}      # key -> (bib, title, doi)
+    for bib in bibs:
+        text = bib.read_text(encoding="utf-8", errors="replace")
+        seen: set[str] = set()
+        for key, body in iter_bib_entries(text):
+            if key_re and not key_re.match(key):
+                hard.append(f"  CITEKEY: {bib} → '{key}' does not match the "
+                            f"surname-year-shorttitle convention")
+            if key in seen:
+                # pandoc silently takes the last one
+                hard.append(f"  DUPLICATE-KEY: {bib} defines '{key}' more than once")
+            seen.add(key)
+            title = _bib_field(body, "title").lower()
+            doi = _bib_field(body, "doi").lower()
+            # ---- 6: same key in two bibs, but a DIFFERENT work behind it
+            if key in defined:
+                prev_bib, prev_title, prev_doi = defined[key]
+                differs = (doi and prev_doi and doi != prev_doi) or \
+                          (not (doi and prev_doi) and title and prev_title and title != prev_title)
+                if differs:
+                    hard.append(f"  KEY-DIVERGENCE: '{key}' means different works in "
+                                f"{prev_bib} and {bib}")
+            defined[key] = (bib, title, doi)
+
+    # ---- 5: every bibliography: path a manuscript declares must exist
+    for f in sorted(list(Path("output").glob("**/*.qmd"))
+                    + list(Path("output").glob("**/_quarto.yml"))):
+        if not _not_build(f):
+            continue
+        for m in BIBLIOGRAPHY_RE.finditer(f.read_text(encoding="utf-8", errors="replace")):
+            raw = m.group(1).strip().strip("\"'")
+            for cand in [c.strip().strip("\"'") for c in raw.strip("[]").split(",")]:
+                if cand and not (f.parent / cand).exists():
+                    # Quarto resolves a missing bibliography silently and renders
+                    # EVERY citation as ???, exiting 0. Nothing else catches this.
+                    hard.append(f"  DEAD-BIBLIOGRAPHY: {f} → '{cand}' does not exist")
+
+    # ---- 3: every frontmatter bibkey resolves to a real entry
+    for slug, path in sorted(pages.items()):
+        fm = parse_frontmatter(path)
+        key = fm.get("bibkey") if isinstance(fm, dict) else None
+        if key and str(key) not in defined:
+            hard.append(f"  UNRESOLVED-BIBKEY: {path} → '{key}' is in no .bib")
+
+    # ---- 4: every citation in the wiki AND the manuscript resolves.
+    # knowledge/_meta/ is excluded: log.md, index.md and literaturguide.md are
+    # bookkeeping and provenance, not manuscript-bound prose. They contain German
+    # sentences like "durchgehend mit @citekeys belegt" — flagging those is the
+    # kind of noise that gets a linter switched off.
+    cited: set[str] = set()
+    sources = [p for p in Path(".").glob("knowledge/**/*.md")
+               if _not_build(p) and "_meta" not in p.parts
+               and not p.name.startswith(("_beispiel-", "_example-"))]
+    sources += [p for p in Path("output").glob("**/*.qmd") if _not_build(p)] \
+        if Path("output").is_dir() else []
+    for f in sorted(sources):
+        body = _strip_code(f.read_text(encoding="utf-8", errors="replace"))
+        body = re.sub(r"^---\n.*?\n---", "", body, count=1, flags=re.S)   # drop frontmatter
+        for m in CITE_RE.finditer(body):
+            key = m.group(1)
+            if QUARTO_XREF.match(key):
+                continue
+            cited.add(key)
+            if key not in defined:
+                hard.append(f"  BROKEN-CITATION: {f} → '@{key}' is in no .bib")
+
+    # ---- 7 (advisory): entries nobody cites and no source page describes
+    with_page = {str(parse_frontmatter(p).get("bibkey"))
+                 for p in pages.values() if isinstance(parse_frontmatter(p), dict)}
+    unused = sorted(set(defined) - cited - with_page)
+    if unused:
+        advisory.append(f"  Uncited, no source page ({len(unused)}): "
+                        + ", ".join(unused[:8]) + (" …" if len(unused) > 8 else ""))
+
+    # ---- 8 (advisory): bibkey should equal the PDF filename stem.
+    # ADVISORY ON PURPOSE: input/bibliography/*.pdf is gitignored, so in CI the
+    # folder is empty and a hard gate would fail every build.
+    pdf_dir = Path("input/bibliography")
+    if pdf_dir.is_dir():
+        stems = {p.stem for p in pdf_dir.glob("**/*.pdf")}
+        if stems:
+            missing = sorted(k for k in with_page if k and k != "None" and k not in stems)
+            if missing:
+                advisory.append(
+                    f"  bibkey with no matching PDF stem ({len(missing)} of {len(with_page)}): "
+                    + ", ".join(missing[:6]) + (" …" if len(missing) > 6 else ""))
+            else:
+                advisory.append(f"  All {len(with_page)} bibkeys match a PDF stem.")
+
+    if not hard and not advisory:
+        advisory.append(f"  {len(defined)} citekeys, all resolving.")
+    return hard, advisory
+
+
 def main():
     parser = argparse.ArgumentParser(description="Wiki lint for the research wiki")
     parser.add_argument(
@@ -563,6 +770,12 @@ def main():
     else:
         print("  No duplicate slugs.")
 
+    print("\n=== Citekey / bibliography integrity ===")
+    cite_issues, cite_advisory = lint_citekeys(pages, schema)
+    print("\n".join(cite_issues) if cite_issues else "  All citekeys well-formed and resolving.")
+    if cite_advisory:
+        print("\n".join(cite_advisory))
+
     print("\n=== Relations check ===")
     rel_issues = lint_relations(pages)
     print("\n".join(rel_issues) if rel_issues else "  No relation issues.")
@@ -586,7 +799,8 @@ def main():
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))
 
-    total_issues = len(fm_issues) + len(broken) + len(orphans) + len(rel_issues) + len(dups)
+    total_issues = (len(fm_issues) + len(broken) + len(orphans) + len(rel_issues)
+                    + len(dups) + len(cite_issues))
     print(f"\n{'=' * 40}")
     print(f"Total: {total_issues} issue(s) found")
 
