@@ -14,6 +14,11 @@ the library.
 
 The subset is *derived*, never hand-edited. Re-run it after every ingest.
 
+By default it KEEPS what the project already carried — a research bibliography is
+what you have collected, not merely what you have cited so far. Every entry is
+re-drawn from the master bib, so the library's verified metadata propagates into
+the project. ``--prune`` opts into the strict cited-only subset.
+
 WHAT COUNTS AS A CITATION
 -------------------------
 The same scanner ``lint-wiki.py`` uses, and for the same reason — it already knows
@@ -101,6 +106,10 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", type=Path, default=Path("."))
     ap.add_argument("--out", type=Path, default=Path("output/bibtex/references.bib"))
+    ap.add_argument("--prune", action="store_true",
+                    help="strict: keep ONLY what is cited. Default keeps what the "
+                         "project already carried (re-drawn from the library, so the "
+                         "library's verified metadata propagates).")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     root = args.root.resolve()
@@ -131,6 +140,35 @@ def main() -> int:
                     break
 
     wanted = cited_keys(root)
+
+    # By default, KEEP what the project already carried. A research bibliography is
+    # what you have collected, not merely what you have cited so far — most of these
+    # are acquired-but-not-yet-ingested sources, and `literaturguide.md` still lists
+    # them.
+    #
+    # The stronger reason: every entry is re-drawn from the MASTER bib, so the
+    # library's verified metadata propagates into the project. Dropping an entry and
+    # letting a later `ingest-source` re-derive it from the PDF would throw away that
+    # verification — and this migration alone fixed four real errors (a DOI that does
+    # not resolve, a wrong title, two wrong page ranges).
+    #
+    # --prune opts into the strict cited-only subset.
+    if out_existing := (root / args.out if not args.out.is_absolute() else args.out):
+        if not args.prune and out_existing.is_file():
+            had = set(re.findall(r"@[a-zA-Z]+\s*\{\s*([^,\s{}]+)\s*,",
+                                 out_existing.read_text(encoding="utf-8", errors="replace")))
+            kept = had & set(entries)
+            orphans = sorted(had - set(entries))
+            if orphans:
+                # In the project's bib but in NO library entry. Not droppable in
+                # silence: if anything cites one, the manuscript renders ??? .
+                print(f"  ⚠ {len(orphans)} entry(ies) are in this project's bib but in NO "
+                      f"library entry — they are NOT carried over:")
+                for k in orphans[:8]:
+                    print(f"      {k}")
+                print("    Add them to the library, or drop them from the project.")
+            wanted |= kept
+
     unknown = sorted(wanted - set(entries))
     if unknown:
         # Loud on purpose: a dropped entry becomes ??? in the rendered manuscript,
@@ -141,24 +179,7 @@ def main() -> int:
         print(f"\n    Add them to {master}, or fix the citation.", file=sys.stderr)
         return 1
 
-    # An entry the project used to carry but no longer cites is dropped from the
-    # project bib — it survives in the library. Say so out loud: a project silently
-    # "forgetting" a source it once acquired is exactly the kind of quiet loss this
-    # whole convention exists to prevent. (These are typically acquired-but-not-yet-
-    # ingested sources; `literaturguide.md` still lists them.)
     out = (root / args.out) if not args.out.is_absolute() else args.out
-    if out.is_file():
-        had = set(re.findall(r"@[a-zA-Z]+\s*\{\s*([^,\s{}]+)\s*,",
-                             out.read_text(encoding="utf-8", errors="replace")))
-        dropped = sorted(had - wanted)
-        if dropped:
-            print(f"  ⚠ {len(dropped)} entry(ies) dropped — not cited and no source page "
-                  f"(they remain in the library):")
-            for k in dropped[:8]:
-                print(f"      {k}")
-            if len(dropped) > 8:
-                print(f"      … +{len(dropped) - 8} more")
-
     body = "\n\n".join(entries[k] for k in sorted(wanted)) + "\n"
 
     if args.check:

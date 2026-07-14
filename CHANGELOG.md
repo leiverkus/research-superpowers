@@ -6,6 +6,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.26.1] — 2026-07-14
+
+Two corrections found by migrating the 17 live projects onto the library.
+
+### Changed
+
+- **`bib-subset.py` now KEEPS what the project already carried**; `--prune` opts into
+  the strict cited-only subset. The cited-only default would have dropped 47 of
+  Aoristos' 62 entries, 36 of Contexta's 51 — acquired-but-not-yet-ingested sources
+  that `literaturguide.md` still lists.
+
+  The stronger reason is metadata. Every entry is re-drawn from the master bib, so
+  the library's *verified* values propagate into every project. Dropping an entry and
+  letting a later `ingest-source` re-derive it from the PDF would throw that
+  verification away — and building the library alone fixed four real errors (a DOI
+  that does not resolve at all, a wrong title, two wrong page ranges).
+
+### Fixed
+
+- **`KEY-DIVERGENCE` fired on a truncated title.** The same work gets transcribed at
+  different lengths: an archived bib carries *"Yahwistic Diversity and the Hebrew
+  Bible"* where the current one carries the full *"…: State of the Field, Desiderata
+  and Research Perspectives…"*. A prefix relation now counts as the same work — the
+  same rule `wiki-global-graph.py bibkeys` already used. A linter that cries wolf
+  gets switched off.
+
 ## [0.26.0] — 2026-07-14
 
 Source PDFs move out of each project and into **one shared library**. Zotero is out

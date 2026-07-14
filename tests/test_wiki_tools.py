@@ -324,6 +324,20 @@ class CitekeyIntegrity(unittest.TestCase):
                 {"output/article/main.qmd": "---\nbibliography: ../bibtex/gone.bib\n---\nx\n"})
             self.assertTrue(any("DEAD-BIBLIOGRAPHY" in h for h in hard), hard)
 
+    def test_truncated_title_is_not_a_divergence(self):
+        # The SAME work gets transcribed at different lengths. An archived bib carries
+        # "Yahwistic Diversity and the Hebrew Bible" where the current one carries the
+        # full "…: State of the Field, Desiderata and Research Perspectives…". Flagging
+        # that as "different works" is a false positive — and a linter that cries wolf
+        # gets switched off.
+        full = self.BIB.replace("{Software}", "{Software Citation Principles: A Full Subtitle}")
+        with tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, {"output/bibtex/references.bib": self.BIB,
+                                    "output/bibtex/archive.bib": full},
+                                {"sources/a.md": SOURCE_PAGE.format(
+                                    key="smith-2016-software", body="x")})
+            self.assertEqual([h for h in hard if "KEY-DIVERGENCE" in h], [])
+
     def test_key_divergence_across_two_bibs(self):
         with tempfile.TemporaryDirectory() as d:
             other = self.BIB.replace("{Software}", "{A completely different work}")

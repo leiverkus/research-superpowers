@@ -677,8 +677,18 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
             # ---- 6: same key in two bibs, but a DIFFERENT work behind it
             if key in defined:
                 prev_bib, prev_title, prev_doi = defined[key]
-                differs = (doi and prev_doi and doi != prev_doi) or \
-                          (not (doi and prev_doi) and title and prev_title and title != prev_title)
+                if doi and prev_doi:
+                    differs = doi != prev_doi           # two DOIs — decisive
+                else:
+                    # A DOI on only ONE side proves nothing about difference, so fall
+                    # back to the title. But the SAME work gets transcribed at
+                    # different lengths — an archived bib carries "Yahwistic Diversity
+                    # and the Hebrew Bible" where the current one carries the full
+                    # "…: State of the Field, Desiderata and Research Perspectives…".
+                    # Treat a prefix relation as the same work, or every truncated
+                    # title reads as a divergence and the real signal drowns.
+                    differs = bool(title and prev_title) and not (
+                        title.startswith(prev_title) or prev_title.startswith(title))
                 if differs:
                     hard.append(f"  KEY-DIVERGENCE: '{key}' means different works in "
                                 f"{prev_bib} and {bib}")
