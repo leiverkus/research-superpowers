@@ -36,8 +36,8 @@ into one flat sentence produces dense, unreadable prose. Instead:
   case from the source) → significance (why it matters, expository/uncited).
 - **Reach back for depth when a page is thin.** First use the source page's
   `### Direct quotes` and `### Examples & illustrations` sections. If still
-  insufficient AND a source PDF path was supplied, open that PDF in
-  `input/bibliography/` at the page numbers the source page cites, draw out the
+  insufficient AND a source PDF path was supplied, open that PDF
+  (`<library>/pdf/<bibkey>.pdf`) at the page numbers the source page cites, draw out the
   example/explanation, and cite it. If no PDF was supplied and the page is too
   thin, flag it under "Flagged issues" — do NOT fill the gap from memory.
 - **Grounded elaboration only.** Examples and explanations must come from the

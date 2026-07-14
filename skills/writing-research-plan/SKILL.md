@@ -171,10 +171,10 @@ block frontmatter.
 ## Tasks
 
 ### Task 1: Acquire source PDFs
-**Files:** `input/bibliography/*.pdf`, `input/bibliography/acquisition-todo.md`
+**Files:** `<library>/pdf/*.pdf`, `input/bibliography/acquisition-todo.md`
 
 - [ ] Run `acquire-sources` on the A+B set from `literaturguide.md` (auto-downloads Open-Access PDFs, writes the manual-download worklist)
-- [ ] Download any paywalled originals manually (university VPN / library proxy) into `input/bibliography/`, flat, under the exact `autor-jahr-kurztitel.pdf` filename
+- [ ] Download any paywalled originals manually (university VPN / library proxy) into `<library>/pdf/` under the exact `<bibkey>.pdf` filename
 - [ ] Re-run `acquire-sources` to reconcile until the required originals are present (or explicitly deferred)
 
 ### Task 2: Ingest foundational sources

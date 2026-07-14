@@ -27,7 +27,8 @@ the `grade_scope`. The contract is in that skill's frontmatter.
   never re-download them.
 - Route known publisher-paywall hosts (Elsevier/Springer/Wiley/T&F/SAGE/JSTOR/
   Brill, Cloudflare) straight to `manual` without a curl attempt.
-- Save downloaded files as `input/bibliography/<Lastname - Title - Year>.pdf`
+- Save downloaded files as `<library>/pdf/<bibkey>.pdf` — the bibkey IS the filename
+  (`finkelstein-2003-low-chronology.pdf`). Resolve the library with `scripts/library.py`
   (sanitise the title: strip `/ : * ? " < > |`, collapse whitespace).
 - Record a failure reason on every `manual`: `http_4xx | not_pdf_content_type |
   html_login_page | cloudflare_block | too_small | no_oa_url | curl_error`.

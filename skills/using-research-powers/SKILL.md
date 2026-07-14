@@ -39,7 +39,7 @@ writing-research-plan      → input/ideas/<slug>-plan.md
                               (SOFT-GATE: pre-registration only for methodology=quantitative/mixed;
                                           for hermeneutic, status=ready is enough)
 literature-review          → input/bibliography/*, output/bibtex/references.bib (search only — no downloads)
-acquire-sources            → input/bibliography/*.pdf, acquisition-todo.md
+acquire-sources            → <library>/pdf/*.pdf, input/bibliography/acquisition-todo.md
                               (auto-download OA; manual worklist for paywalled; re-run to reconcile)
 ingest-source (loop)       → knowledge/sources/*, knowledge/entities/*
                               (HARD-STOP on a missing original — no silent preprint/review substitution)

@@ -23,7 +23,7 @@ name: ingest-source
 description: ...
 inputs:
   - name: source_path
-    description: Absolute path to the source PDF or text in input/bibliography/
+    description: Absolute path to the source PDF or text in the shared library
     required: true
   - name: project_root
     description: Absolute path to the research project root

@@ -19,7 +19,8 @@ frontmatter.
 - Return everything in ONE message
 - **Original missing → do NOT substitute.** If the source path does not exist,
   return `### Blocked: original missing` pointing at
-  `input/bibliography/acquisition-todo.md` and stop — never read a preprint /
+  `input/bibliography/acquisition-todo.md` and stop (the PDF lives at
+  `<library>/pdf/<bibkey>.pdf`) — never read a preprint /
   prior version / review in its place. Proceed on a substitute ONLY if the
   parent passed `based_on` with a non-`original` value (user-approved); then
   write the provenance callout + `based_on:` frontmatter + the log marker (see

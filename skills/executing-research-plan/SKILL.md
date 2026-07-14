@@ -74,22 +74,22 @@ is dispatched — so you get one clean acquisition step instead of a wall of
 per-source hard-stops.
 
 1. **Collect required originals** — from every ingest task in the plan, derive the
-   expected flat path `input/bibliography/<autor-jahr-kurztitel>.pdf` (the naming
+   expected library path `<library>/pdf/<bibkey>.pdf` (the naming
    convention `acquire-sources` writes and `ingest-source` reads).
-2. **Scan disk** — `input/bibliography/*.pdf` (top level only — files are flat,
+2. **Scan the library** — `<library>/pdf/*.pdf` (resolve with `scripts/library.py`;
    never in subfolders). If every required original is present → skip the gate,
    go to routing.
 3. **Attempt acquisition** — run `acquire-sources` on the A+B set (dispatch the
    `source-acquirer` subagent for ≥ ~8 missing items). It auto-downloads the
-   Open-Access copies and (re)generates `input/bibliography/acquisition-todo.md`.
+   Open-Access copies into the library and (re)generates `input/bibliography/acquisition-todo.md`.
 4. **If `acquisition-todo.md` is non-empty** (originals still missing), enter the
    **interactive resume loop** — do NOT silently skip:
    - **a. Offer the list.** Present the missing sources from `acquisition-todo.md`
      plus the manual-download instruction (university VPN / library proxy; save
-     each **flat** in `input/bibliography/` under the exact `autor-jahr-kurztitel.pdf`
+     each into `<library>/pdf/` under the exact `<bibkey>.pdf`
      filename). Mark the dependent ingest TodoWrite items `blocked` and **pause** —
      do not dispatch those ingests.
-   - **b. On the user's resume signal**, re-scan `input/bibliography/` for the newly
+   - **b. On the user's resume signal**, re-scan `<library>/pdf/` for the newly
      added PDFs and **reconcile** — re-run `acquire-sources` in reconcile mode:
      resolved rows drop out of (are checked off) `acquisition-todo.md`.
    - **c. Ask the branch:** "Search for **alternatives** (open-access substitutes
@@ -118,7 +118,7 @@ digraph executing {
     "Pre-registered & signed?" [shape=diamond];
     "Back to writing-research-plan" [shape=box];
     "Create TodoWrite from plan" [shape=box];
-    "Acquisition gate: scan input/bibliography" [shape=box];
+    "Acquisition gate: scan the library" [shape=box];
     "All originals present?" [shape=diamond];
     "Run acquire-sources" [shape=box];
     "Worklist empty?" [shape=diamond];
@@ -146,8 +146,8 @@ digraph executing {
     "Load plan" -> "Pre-registered & signed?";
     "Pre-registered & signed?" -> "Back to writing-research-plan" [label="no"];
     "Pre-registered & signed?" -> "Create TodoWrite from plan" [label="yes"];
-    "Create TodoWrite from plan" -> "Acquisition gate: scan input/bibliography";
-    "Acquisition gate: scan input/bibliography" -> "All originals present?";
+    "Create TodoWrite from plan" -> "Acquisition gate: scan the library";
+    "Acquisition gate: scan the library" -> "All originals present?";
     "All originals present?" -> "Next task" [label="yes"];
     "All originals present?" -> "Run acquire-sources" [label="no"];
     "Run acquire-sources" -> "Worklist empty?";
@@ -186,7 +186,7 @@ digraph executing {
 
 | Plan keyword | Subagent / Skill | Output landing zone |
 |--------------|------------------|---------------------|
-| "Acquire / fetch PDFs / besorge Quellen" | `acquire-sources` skill (→ `source-acquirer` for ≥8) | `input/bibliography/*.pdf`, `input/bibliography/acquisition-todo.md` |
+| "Acquire / fetch PDFs / besorge Quellen" | `acquire-sources` skill (→ `source-acquirer` for ≥8) | `<library>/pdf/*.pdf`, `input/bibliography/acquisition-todo.md` |
 | "Ingest X" | `source-ingester` | `knowledge/sources/`, `knowledge/entities/`, `output/bibtex/` |
 | "Analyze / compute / run" | `analyst` | `output/data-analysis/`, `output/data-analysis/results/` |
 | "Synthesize / integrate / write synthesis" | inline (main conversation) | `knowledge/synthesis/` |
