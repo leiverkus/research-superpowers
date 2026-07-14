@@ -660,7 +660,7 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         return hard, advisory
 
     # ---- 1 + 2: every entry key well-shaped; no key defined twice in one file
-    defined: dict[str, tuple[Path, str, str]] = {}      # key -> (bib, title, doi)
+    defined: dict[str, tuple[Path, str, str, str]] = {}   # key -> (bib, title, doi, pages)
     for bib in bibs:
         text = bib.read_text(encoding="utf-8", errors="replace")
         seen: set[str] = set()
@@ -676,7 +676,7 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
             doi = _bib_field(body, "doi").lower()
             # ---- 6: same key in two bibs, but a DIFFERENT work behind it
             if key in defined:
-                prev_bib, prev_title, prev_doi = defined[key]
+                prev_bib, prev_title, prev_doi, _ = defined[key]
                 if doi and prev_doi:
                     differs = doi != prev_doi           # two DOIs — decisive
                 else:
@@ -692,7 +692,7 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
                 if differs:
                     hard.append(f"  KEY-DIVERGENCE: '{key}' means different works in "
                                 f"{prev_bib} and {bib}")
-            defined[key] = (bib, title, doi)
+            defined[key] = (bib, title, doi, _bib_field(body, "pages"))
 
     # ---- 5: every bibliography: path a manuscript declares must exist
     for f in sorted(list(Path("output").glob("**/*.qmd"))
@@ -786,9 +786,110 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         elif acquired:
             advisory.append(f"  All {len(acquired)} acquired sources are ingested.")
 
+    # ---- 10 (HARD): every page anchor must fall inside the work's printed page range.
+    #
+    # This is the check that catches a fabricated citation. `acquire-sources` downloads
+    # Open-Access PDFs, and a green-OA deposit is very often the author's ACCEPTED
+    # MANUSCRIPT, not the typeset article: no printed page numbers exist in it. An
+    # ingester reading it has nothing to anchor to — so it anchors to the physical PDF
+    # page and writes "(p. 3)". The result is a citation that is checkable and wrong,
+    # which is strictly worse than no citation at all: it survives review because it
+    # looks like evidence, and `drafting-manuscript` reaches back into the wrong page.
+    #
+    # Found on the live corpus: `crema-2010-probabilistic` cited at "(p. 2)", "(p. 9)"
+    # in two projects — the article is printed on pages 1118–1130. `lake-2003-visibility`
+    # cited at "(pp. 1–7)" — printed 689–707.
+    #
+    # HARD, not advisory. A page outside the printed range is not a worklist item, a
+    # rough edge, or a machine-specific gap. It is a false statement about a source.
+    #
+    # Only checked where the .bib gives a real page RANGE. Article-number journals
+    # (PLOS, Entangled Religions) print no range, and a book chapter may legitimately
+    # omit one — those are skipped, not guessed at.
+    for slug, path in sorted(pages.items()):
+        fm = parse_frontmatter(path)
+        key = str(fm.get("bibkey")) if isinstance(fm, dict) and fm.get("bibkey") else None
+        if not key or key not in defined:
+            continue
+        spans = _printed_spans(defined[key][3])
+        if not spans:
+            continue
+        text = _own_sections(_strip_code(path.read_text(encoding="utf-8", errors="replace")))
+        bad = sorted({n for n in _cited_pages(text)
+                      if not any(a <= n <= b for a, b in spans)})
+        if bad:
+            shown = ", ".join(str(n) for n in bad[:8]) + (" …" if len(bad) > 8 else "")
+            printed = ", ".join(f"{a}–{b}" for a, b in spans)
+            hard.append(
+                f"  PAGE-OUT-OF-RANGE: {path} → cites p. {shown}, but '{key}' is printed "
+                f"on {printed}. The PDF may be an author's manuscript, not the published "
+                f"article — check scripts/check-pdf-version.py.")
+
     if not hard and not advisory:
         advisory.append(f"  {len(defined)} citekeys, all resolving.")
     return hard, advisory
+
+
+# A page anchor as the ingest skill writes it: "(p. 12)", "(pp. 12–14)", "(pp. 12, 15)".
+# Deliberately narrow — a bare "12" in prose is not a citation, and "(fig. 3)" is not a page.
+PAGE_ANCHOR = re.compile(r"\(\s*pp?\.\s*([0-9][0-9,\s–—-]*)\)")
+
+# Sections where a page anchor refers to a DIFFERENT work, not the ingested one.
+# `## Connections` is the offender: "Cited by [[gillings-2009-affordance]] (p. 344)" is
+# Gillings' page 344, not Ogburn's — and Ogburn is printed on 405–413. Checking those
+# would fire on correct pages, and a hard check with false positives gets switched off.
+FOREIGN_SECTIONS = re.compile(
+    r"^##\s+(connections|mentioned entities|related|references|see also|"
+    r"verbindungen|erwähnte entitäten)\b", re.I | re.M)
+
+
+def _own_sections(text: str) -> str:
+    """Drop the sections that talk about OTHER works, keep the ones about this source.
+
+    The ingest template puts claims, quotes, examples and boundary — everything that
+    describes *this* source — before `## Connections`. Everything a page says about
+    other works lives at the end, and its page anchors belong to those works.
+    """
+    out, skipping = [], False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            skipping = bool(FOREIGN_SECTIONS.match(line))
+        if not skipping:
+            out.append(line)
+    return "\n".join(out)
+
+
+def _cited_pages(text: str) -> set[int]:
+    out: set[int] = set()
+    for m in PAGE_ANCHOR.finditer(text):
+        for part in re.split(r",", m.group(1)):
+            part = part.strip()
+            r = re.match(r"^(\d+)\s*[–—-]\s*(\d+)$", part)
+            if r:
+                a, b = int(r.group(1)), int(r.group(2))
+                if a <= b:
+                    out.update({a, b})       # endpoints suffice; the span between is implied
+            elif part.isdigit():
+                out.add(int(part))
+    return out
+
+
+def _printed_spans(pages_field: str) -> list[tuple[int, int]]:
+    """The printed page range(s) from a .bib `pages` field.
+
+    Multi-segment ranges are real and must not be flagged: a magazine article continues
+    at the back of the issue, and our own `burnett-2016-ammon` is printed on
+    `26--40, 66--67`. Treating that as a single 26–67 span would hide a real error;
+    treating it as one range 26–40 would invent one.
+    """
+    spans: list[tuple[int, int]] = []
+    for seg in re.split(r"[;,]", pages_field or ""):
+        m = re.search(r"(\d+)\s*-{1,3}\s*(\d+)", seg)
+        if m:
+            a, b = int(m.group(1)), int(m.group(2))
+            if a <= b:
+                spans.append((a, b))
+    return spans
 
 
 def main():

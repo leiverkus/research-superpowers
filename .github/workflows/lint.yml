@@ -118,6 +118,7 @@ jobs:
           for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
                      scripts/graph_mcp.py scripts/wiki-global-graph.py \
                      scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
+                     scripts/check-pdf-version.py \
                      scripts/vendor/cytoscape.min.js; do
             if ! diff -q "templates/research-project-template/$rel" \
                          "examples/example-project/$rel"; then

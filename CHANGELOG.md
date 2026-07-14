@@ -6,6 +6,57 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.29.0] — 2026-07-14
+
+The release that catches a fabricated citation.
+
+### Added
+
+- **`lint-wiki.py` check 10 (HARD): a page anchor outside the work's printed page range.**
+
+  `acquire-sources` downloads Open-Access PDFs — and a green-OA deposit is very often the
+  author's **accepted manuscript**, not the typeset article. No printed page numbers exist
+  in it. The ingester has nothing to anchor to, so it anchors to the *physical* PDF page and
+  writes `(p. 3)`.
+
+  That citation is **checkable and wrong**, which is strictly worse than no citation: it
+  survives review because it looks like evidence, and `drafting-manuscript` reaches back
+  into the wrong page.
+
+  ```
+  PAGE-OUT-OF-RANGE: knowledge/sources/crema2010pointprocess.md → cites p. 1, 2, 9, 10, 12,
+    but 'crema-2010-probabilistic' is printed on 1118–1130.
+  ```
+
+  Across 5 live projects it found **15** such pages. One had documented its own defect in
+  prose — *"page anchors are to the manuscript PDF (pp. 1–30)"* — while the article is
+  printed on 33–60. A prose disclaimer does not stop a drafter from citing `(p. 11)`.
+
+  - **HARD, not advisory.** A page outside the printed range is not a worklist item or a
+    machine-specific gap. It is a false statement about a source.
+  - **`## Connections` is excluded.** "Cited by `[[gillings-2009-affordance]]` (p. 344)" is
+    *Gillings'* page 344, not the ingested source's — and firing on that would have made the
+    check unusable. It was a real false positive on the live corpus before this fix.
+  - **Continued articles keep both spans.** `pages = {26--40, 66--67}` is real (our own
+    `burnett-2016-ammon`). Collapsing it to 26–67 would hide an error; taking only 26–40
+    would invent one.
+  - Skipped where the `.bib` prints no page range at all (PLOS, Entangled Religions …) —
+    guessing one would fire on every page.
+
+- **`scripts/check-pdf-version.py`** — screens the library for accepted manuscripts before
+  they are ever ingested. Signals: a cover sheet that says so; text naming figures while the
+  PDF embeds **zero** images; a Word producer where publishers use typesetters; physical
+  pages ≥ 1.5 × the printed range. Across 582 library PDFs: **11 manuscripts**.
+
+  Deliberately conservative. Line-numbering was demoted to corroborating evidence after it
+  flagged a genuine typeset article whose "line numbers" were a numbered reference list — a
+  false positive here sends the user hunting for a version of record they already have.
+
+### Why both
+
+The screen prevents the error; the lint check catches it when the screen was never run — as
+on every wiki written before today.
+
 ## [0.28.1] — 2026-07-14
 
 ### Fixed
