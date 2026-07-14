@@ -84,6 +84,22 @@ class Anchors(unittest.TestCase):
     def test_a_figure_or_a_bare_number_is_not_a_page(self):
         self.assertEqual(lw._cited_pages("see (fig. 3) and Table 12, n = 1605"), set())
 
+    def test_an_anchor_following_a_source_link_belongs_to_THAT_source(self):
+        # The false positive that fired on the live corpus the day this check shipped:
+        # "…converges on the finding reached by [[source-bilotti-2024-point]] (pp. 10–11)."
+        # Those are Bilotti's pages. The ingested source is printed on 626–638.
+        # Cross-source comparisons live in the BODY, so the section filter alone missed it.
+        text = "the finding reached by [[source-bilotti-2024-point]]\n(pp. 10–11)."
+        self.assertEqual(lw._cited_pages(text), set())
+
+    def test_an_entity_link_does_NOT_suppress_an_anchor(self):
+        # An entity has no pages of its own. "uses [[entity-spatstat]] (p. 6)" is page 6
+        # OF THIS SOURCE — suppressing it would gut the check on the pages that use it most.
+        self.assertEqual(lw._cited_pages("uses [[entity-spatstat]] (p. 6)"), {6})
+
+    def test_a_citekey_before_the_anchor_also_suppresses_it(self):
+        self.assertEqual(lw._cited_pages("as @kempf-2023-point shows (p. 4)"), set())
+
     def test_connections_are_dropped_before_the_check(self):
         # The false positive that would have got this check switched off:
         # "Cited by [[gillings-2009-affordance]] (p. 344)" is GILLINGS' page 344 —
