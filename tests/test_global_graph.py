@@ -138,5 +138,118 @@ class AuthorityOverlap(unittest.TestCase):
             self.assertEqual(r.returncode, 1)
 
 
+def _bib(d, project, entries):
+    """Write a .bib into <project>/output/bibtex/references.bib."""
+    p = pathlib.Path(d) / project / "output" / "bibtex" / "references.bib"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(entries), encoding="utf-8")
+
+
+def _entry(key, title, year="2024", doi=""):
+    body = f"@article{{{key},\n  author = {{X, Y}},\n  title = {{{title}}},\n  year = {{{year}}}"
+    if doi:
+        body += f",\n  doi = {{{doi}}}"
+    return body + "\n}\n"
+
+
+class BibkeyHealth(unittest.TestCase):
+    """`overlap` compares bibkey STRINGS, so it reports a shared key as a win and
+    is structurally blind to the two ways that can be wrong. `bibkeys` reads the
+    .bib — the work behind the key — and sees both.
+    """
+
+    def test_collision_one_key_two_works(self):
+        # The real case: `hensel-2024` denoted two different papers, so `overlap`
+        # asserted a shared source between two projects that share nothing.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("hensel-2024", "Reconsidering Yahwism in Idumea")])
+            _bib(d, "proj-b", [_entry("hensel-2024", "Transjordan and Judah")])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, splits, _ = gg.build_bibkey_report(roots)
+            self.assertEqual([c["key"] for c in collisions], ["hensel-2024"])
+            self.assertEqual(splits, [])
+
+    def test_truncated_title_is_not_a_collision(self):
+        # The same work transcribed at two lengths must NOT be flagged, or the
+        # signal drowns in noise. (Real: "The Religion of Idumea" vs "The Religion
+        # of Idumea and Its Relationship to Early Judaism".)
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("levin-2020", "The Religion of Idumea", "2020")])
+            _bib(d, "proj-b", [_entry("levin-2020",
+                                      "The Religion of Idumea and Its Relationship to Early Judaism",
+                                      "2020")])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, _, _ = gg.build_bibkey_report(roots)
+            self.assertEqual(collisions, [])
+
+    def test_collision_when_only_one_side_has_a_doi(self):
+        # A DOI on one side only proves nothing about difference. An earlier cut of
+        # this check required DOIs on BOTH sides and silently missed hensel-2024.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("maeir-2021", "Identity Creation Strategies",
+                                      "2021", "10.1086/714573")])
+            _bib(d, "proj-b", [_entry("maeir-2021", "On Defining Israel", "2021")])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, _, _ = gg.build_bibkey_report(roots)
+            self.assertEqual([c["key"] for c in collisions], ["maeir-2021"])
+
+    def test_split_one_work_two_keys(self):
+        # The missed join: same paper, different key. `overlap` never links them.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("Smith2016", "Software Citation Principles", "2016")])
+            _bib(d, "proj-b", [_entry("smith2016", "Software Citation Principles", "2016")])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, splits, _ = gg.build_bibkey_report(roots)
+            self.assertEqual(collisions, [])
+            self.assertEqual(len(splits), 1)
+            self.assertEqual({o["key"] for o in splits[0]["occurrences"]},
+                             {"Smith2016", "smith2016"})
+
+    def test_migrated_portfolio_is_clean(self):
+        # After the migration both projects derive the key from the work itself,
+        # so the collision is gone and the join is restored.
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("smith-2016-software", "Software Citation Principles", "2016")])
+            _bib(d, "proj-b", [_entry("smith-2016-software", "Software Citation Principles", "2016")])
+            roots = [pathlib.Path(d) / "proj-a", pathlib.Path(d) / "proj-b"]
+            collisions, splits, _ = gg.build_bibkey_report(roots)
+            self.assertEqual(collisions, [])
+            self.assertEqual(splits, [])
+
+    def test_labels_disambiguate_by_path_not_by_counter(self):
+        # Every Evidentia wiki lives in <Module>/paper/, so a counter would label
+        # them paper#1 … paper#9 — telling the reader nothing about which project
+        # a finding belongs to.
+        with tempfile.TemporaryDirectory() as d:
+            roots = [pathlib.Path(d) / "Aoristos" / "paper",
+                     pathlib.Path(d) / "Signa" / "paper"]
+            for r in roots:
+                r.mkdir(parents=True)
+            self.assertEqual(gg._labels(roots), ["Aoristos/paper", "Signa/paper"])
+
+    def test_cli_bibkeys_exits_nonzero_on_collision(self):
+        with tempfile.TemporaryDirectory() as d:
+            _page(d, "proj-a", "sources/x.md", "source", "X")
+            _page(d, "proj-b", "sources/x.md", "source", "X")
+            _bib(d, "proj-a", [_entry("k-2024", "Alpha work")])
+            _bib(d, "proj-b", [_entry("k-2024", "Completely other work")])
+            r = subprocess.run(
+                [sys.executable, str(GG), "bibkeys",
+                 str(pathlib.Path(d) / "proj-a"), str(pathlib.Path(d) / "proj-b"), "--json"],
+                capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 1, "a collision must fail the command")
+            self.assertEqual(len(json.loads(r.stdout)["collisions"]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

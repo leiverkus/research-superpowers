@@ -161,7 +161,7 @@ Mirrors the `audit-log-<date>.json` convention of `literature-review`:
   "totals": { "worklist": 18, "downloaded": 9, "already_present": 2, "manual": 6, "skipped": 1 },
   "items": [
     {
-      "bibkey": "finkelstein-2003", "grade": "A", "doi": "10.1179/…",
+      "bibkey": "finkelstein-2003-low-chronology", "grade": "A", "doi": "10.1179/…",
       "resolved_url": "https://…", "url_source": "unpaywall|oa_pdf|crossref|openalex|core|none",
       "outcome": "downloaded|already-present|manual|skipped",
       "reason": "html_login_page|not_pdf_content_type|cloudflare_block|too_small|no_oa_url|null",

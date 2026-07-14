@@ -66,7 +66,10 @@ Create TodoWrite tasks for each:
 1. **Determine focus** — read `input/description/*.md` if present; extract the project's research question (look for `## Research question` heading or first H2). Propose: "Default focus from project description: «<research question>». Use this for the ingest or refine? (e.g. 'focus on the stratigraphic argument for Megiddo IVA' is more useful than the whole research question)." If `input/description/` is absent, ask explicitly: "What's the focus for this ingest? One sentence — what aspect of this source serves your project?" **Do not proceed without an explicit confirmed focus string.**
 2. **Locate the acquired original** — expect the PDF **flat** in `input/bibliography/` (no subfolders) named `autor-jahr-kurztitel.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Tell the user the original is not on disk, point them to `input/bibliography/acquisition-todo.md`, and offer to run `acquire-sources`. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
 3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
-4. **Derive slug** — the `autor-jahr` prefix of the filename (filename minus `-kurztitel`), i.e. `<lowercase-first-author>-<year>` (e.g. `finkelstein-2003`, `mazar-2011b` for disambiguation)
+4. **Derive `bibkey` and slug — they are NOT the same thing.**
+   - **`bibkey` = the whole PDF filename stem**, `<autor>-<jahr>-<kurztitel>` (e.g. `finkelstein-2003-low-chronology`, `mazar-2011b-iron-age` when disambiguating). Never the `autor-jahr` prefix alone: `bibkey` is a **cross-project join key** (`wiki-global-graph.py` matches sources across projects on it), so it must be derivable from the work's own metadata and identical in every project that cites the work. A key without the title collides — an audit of 17 wikis found three keys each denoting *two different papers*, and 17 joins lost to keys that drifted apart.
+   - **slug** = the page filename, human-readable (`finkelstein-2003.md` or `source-finkelstein-2003.md` — follow whatever the project already does). It carries no cross-project meaning; nothing joins on it.
+   - `lint-wiki.py` hard-fails on an off-shape bibkey and on a `bibkey` that resolves to no `.bib` entry.
 5. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
 6. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
 7. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
@@ -185,7 +188,7 @@ created: 2026-04-15
 updated: 2026-04-15
 status: review
 author: llm
-bibkey: finkelstein-2003
+bibkey: finkelstein-2003-low-chronology
 tags: [iron-age, chronology, levant]
 relations:
   - target: low-chronology
