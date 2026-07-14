@@ -766,6 +766,26 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         elif with_page:
             advisory.append(f"  All {len(with_page)} bibkeys have a PDF in the library.")
 
+        # ---- 9 (advisory): the OTHER direction — a source that was acquired but never
+        # ingested. Check 8 asks "does every source page have a PDF?"; nothing asked
+        # "does every PDF have a source page?", so a source could sit in the library,
+        # paid for and downloaded, and simply be forgotten. Across 17 live wikis that
+        # was true of 146 sources — one project had 48 of its 55 PDFs un-ingested.
+        #
+        # NOT the same as check 7. Check 7 reports entries nobody CITES and no page
+        # describes; an entry cited in the manuscript but never ingested slips past it.
+        # This one is about the wiki's own coverage of what is on disk.
+        acquired = {k for k in defined if k in stems}
+        not_ingested = sorted(acquired - {k for k in with_page if k and k != "None"})
+        if not_ingested:
+            advisory.append(
+                f"  Acquired but NOT ingested ({len(not_ingested)} of {len(acquired)}): "
+                + ", ".join(not_ingested[:6]) + (" …" if len(not_ingested) > 6 else ""))
+            advisory.append("    → run ingest-source on these; the PDFs are already in "
+                            "the library.")
+        elif acquired:
+            advisory.append(f"  All {len(acquired)} acquired sources are ingested.")
+
     if not hard and not advisory:
         advisory.append(f"  {len(defined)} citekeys, all resolving.")
     return hard, advisory
