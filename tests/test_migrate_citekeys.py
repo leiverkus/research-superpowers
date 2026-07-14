@@ -159,6 +159,23 @@ class Substitution(unittest.TestCase):
         out = self._sub(mapping, "See [@smith2016] and [@smith2016b].")
         self.assertEqual(out, "See [@smith-2016-software] and [@smith-2016b-other].")
 
+    def test_citation_ending_a_sentence_is_rewritten(self):
+        # Pandoc allows `.` INSIDE a citekey, so a boundary built from pandoc's
+        # continuation set treats the sentence-final period as part of the key and
+        # skips the citation — while the .bib entry IS renamed. The key then
+        # resolves nowhere and Quarto renders ??? while exiting 0.
+        # Found on the canary repo: 7 citations left behind, every one of them at
+        # the end of a sentence.
+        mapping = {"dereu2013dh": "dereu-2013-orthophoto"}
+        for text, want in [
+            ("Cited in @dereu2013dh.", "Cited in @dereu-2013-orthophoto."),
+            ("See [@dereu2013dh].", "See [@dereu-2013-orthophoto]."),
+            ("Both @dereu2013dh, and others", "Both @dereu-2013-orthophoto, and others"),
+            ("Ends here @dereu2013dh; next", "Ends here @dereu-2013-orthophoto; next"),
+            ("(@dereu2013dh)", "(@dereu-2013-orthophoto)"),
+        ]:
+            self.assertEqual(self._sub(mapping, text), want, text)
+
     def test_wikilink_is_never_touched(self):
         # The killer case: slug == bibkey. [[hensel-2024]] is a page link,
         # [@hensel-2024] is a citation. Only the latter may change.
