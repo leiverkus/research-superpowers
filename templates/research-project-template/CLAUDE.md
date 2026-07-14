@@ -47,6 +47,7 @@ project-root/
 ├── scripts/
 │   ├── library.py         ← Resolves the shared library (env → dotfile → global)
 │   ├── bib-subset.py      ← output/bibtex/references.bib ← the cited subset
+│   ├── bib-search.py      ← page-level full-text search across the library (FTS5)
 │   ├── lint-wiki.py       ← Structural check of the wiki
 │   ├── wiki-to-graph.py   ← Knowledge-graph export + live queries
 │   ├── graph_mcp.py       ← MCP server exposing the graph queries
@@ -120,6 +121,25 @@ Git is already the sync — the cloud carries only what git cannot hold.
   is mixed-ownership — its PDFs are shared, but `literaturguide.md`,
   `acquisition-todo.md` and the audit logs are per-project and **tracked**.
 - **`input/bibliography/` therefore keeps its text artefacts and holds no PDFs.**
+- **Searching the library** — `scripts/bib-search.py` indexes every PDF in the
+  library with SQLite FTS5, **one row per page**, and answers with `bibkey · page ·
+  snippet`:
+
+  ```bash
+  python scripts/bib-search.py index               # build / update (incremental)
+  python scripts/bib-search.py "copper smelting"   # search every source, all projects
+  python scripts/bib-search.py "shasu" --key tebes-2021-archaeology   # inside one source
+  ```
+
+  The page it reports is the **physical** PDF page — exactly what you need to *open*
+  the file, and exactly what you must **not** cite. Read the printed page number off
+  the page itself.
+
+  The index is a **local cache** (`~/.cache/research-superpowers/`), never in the
+  synced folder: SQLite and file-sync corrupt each other, the same failure class as a
+  git repo inside Nextcloud. It is derived — if it is lost, rebuild it. PDFs with no
+  text layer (scans) are **reported**, not silently indexed as empty; run `ocrmypdf`
+  on those.
 - **PDF filename schema (canonical): `autor-jahr-kurztitel.pdf`** — all
   lowercase ASCII, hyphen-separated. `autor` = first author's surname (umlauts
   → `ae`/`oe`/`ue`, `ß` → `ss`; particles and spaces removed, e.g.

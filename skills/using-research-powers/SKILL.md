@@ -160,7 +160,17 @@ project-root/
 ├── input/       # human-authored: bibliography, data, notes, ideas (design & plan docs live here)
 ├── knowledge/   # LLM-generated wiki: entities, concepts, sources, synthesis
 ├── output/      # publishable artifacts: publication (Quarto), data-analysis, bibtex
-└── scripts/     # lint-wiki.py (structural check) + wiki-to-graph.py (knowledge-graph export)
+└── scripts/     # lint-wiki.py, wiki-to-graph.py, library.py, bib-subset.py, bib-search.py
 ```
 
 If the working directory is not yet a research project, the first skill invocation should offer to scaffold it from the template.
+
+**The source PDFs are not in the repo.** They live once, centrally, in the shared library — `<library>/pdf/<bibkey>.pdf`, where the filename *is* the citekey. The library path is machine-local: `scripts/library.py` resolves it (`RESEARCH_LIBRARY` → `.research-library` → `~/.config/research-superpowers/library`), so never hard-code it. Two scripts read it:
+
+```bash
+python scripts/bib-subset.py                        # output/bibtex/references.bib ← the library
+python scripts/bib-search.py index                  # build the full-text index (once, then incremental)
+python scripts/bib-search.py "copper smelting"      # → bibkey · physical PDF page · snippet
+```
+
+`bib-search` answers "*where* does anyone say this?" across every project's sources at once, and returns the page to open. It is the entry point for `drafting-manuscript`'s reach-back when a wiki page carries no page anchor.
