@@ -6,9 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-## [0.23.2] — 2026-07-14
+## [0.23.3] — 2026-07-14
+
+Supersedes 0.23.2, whose release job failed on the script-mirror check (the
+example copy of `wiki-global-graph.py` had not been re-synced) and therefore never
+published. The mirror check did its job: without it a scaffolded project would
+have shipped a `bibkeys` that still reported the Berlejung collision.
 
 ### Fixed
+
+- Re-synced the `wiki-global-graph.py` mirror between template and example.
 
 - **`wiki-global-graph.py bibkeys` reported collisions that did not exist.** Two
   bugs in the work fingerprint, both found by running it across 17 real wikis:
