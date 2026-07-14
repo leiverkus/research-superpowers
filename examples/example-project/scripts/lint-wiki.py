@@ -581,6 +581,21 @@ def _library_pdf_dir() -> Path | None:
         return None
 
 
+def _library_master_bib() -> Path | None:
+    """<library>/references.bib, or None if unconfigured. Same import dance as above."""
+    import importlib.util
+    mod_path = Path(__file__).resolve().parent / "library.py"
+    if not mod_path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("_rs_library_bib", mod_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.master_bib(required=False)
+    except Exception:                                  # pragma: no cover
+        return None
+
+
 def _not_build(path: Path) -> bool:
     return not any(d in path.parts for d in BUILD_DIRS)
 
@@ -751,6 +766,30 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
     # not exist in CI; a hard gate — or a raised LibraryNotConfigured — would fail
     # every build and every contributor who has not configured it yet. A missing PDF
     # is a worklist, not a broken repo.
+    # ---- 11 (HARD, when a library is configured): no duplicate key in the MASTER bib.
+    #
+    # Check 2 catches a key defined twice in a PROJECT .bib. Nothing checked the shared
+    # library — and a duplicate there is strictly worse: `bib-subset.py` copies the
+    # winning entry into every project that cites the key, so one bad merge poisons all
+    # of them at once. BibTeX takes the LAST definition and drops the rest, silently,
+    # fields and all.
+    #
+    # Found on the live library: `rabunal-2023-unraveling` existed twice. The older entry
+    # had FOUR authors, the newer three — and the newer won. Javier Fernández-López de
+    # Pablo would have disappeared from every manuscript citing that work. Two R-package
+    # manuals each carried a DOI only in the copy that was losing.
+    master = _library_master_bib()
+    if master is not None:
+        seen: dict[str, int] = {}
+        for key, _ in iter_bib_entries(master.read_text(encoding="utf-8", errors="replace")):
+            seen[key] = seen.get(key, 0) + 1
+        dupes = sorted(k for k, n in seen.items() if n > 1)
+        if dupes:
+            hard.append(
+                f"  DUPLICATE-KEY-IN-LIBRARY: {master} defines {len(dupes)} key(s) more "
+                f"than once — BibTeX silently keeps the LAST and drops the rest: "
+                + ", ".join(dupes[:6]) + (" …" if len(dupes) > 6 else ""))
+
     lib_pdfs = _library_pdf_dir()
     if lib_pdfs is None:
         if with_page:

@@ -277,3 +277,55 @@ class AcquiredButNotIngested(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DuplicateKeyInTheLibrary(unittest.TestCase):
+    """Check 11 — the same key defined twice in the SHARED library.
+
+    Check 2 catches a key defined twice in a project .bib. Nothing checked the library —
+    and a duplicate there is strictly worse, because `bib-subset.py` copies the winning
+    entry into every project that cites the key. One bad merge poisons all of them.
+
+    BibTeX takes the LAST definition and drops the rest. Silently. Fields and all.
+
+    Found on the live library: `rabunal-2023-unraveling` existed twice. The older entry had
+    FOUR authors; the newer had three. The newer won — and Javier Fernández-López de Pablo
+    would have vanished from every manuscript citing that work. Nothing in the pipeline
+    would have said a word.
+    """
+
+    _run = LintChecksTheLibrary._run
+
+    def _library_with_duplicate(self, d):
+        root = pathlib.Path(d) / "Bibliothek"
+        (root / "pdf").mkdir(parents=True)
+        (root / "pdf" / "smith-2016-software.pdf").write_bytes(b"%PDF-1.4\n")
+        (root / "references.bib").write_text(
+            # the real shape of the bug: same key, and the LAST one is the poorer record
+            '@article{smith-2016-software,\n  author = {Smith, A and Jones, B and Wu, C},\n'
+            '  title = {T},\n  year = {2016}\n}\n\n'
+            '@article{smith-2016-software,\n  author = {Smith, A},\n'
+            '  title = {T},\n  year = {2016}\n}\n', encoding="utf-8")
+        return root
+
+    def test_a_duplicate_key_in_the_library_is_a_HARD_error(self):
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            os.environ[lib.ENV_VAR] = str(self._library_with_duplicate(d))
+            hard, _ = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
+            joined = "\n".join(hard)
+            self.assertIn("DUPLICATE-KEY-IN-LIBRARY", joined)
+            self.assertIn("smith-2016-software", joined)
+            self.assertIn("LAST", joined)      # the message must say which one wins
+
+    def test_a_clean_library_is_silent(self):
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            root = _library(d, ["smith-2016-software"])
+            os.environ[lib.ENV_VAR] = str(root)
+            hard, _ = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
+            self.assertEqual([h for h in hard if "DUPLICATE-KEY-IN-LIBRARY" in h], [])
+
+    def test_an_unconfigured_machine_does_not_fail_the_build(self):
+        # CI has no library. This must not turn every build red.
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            hard, _ = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
+            self.assertEqual([h for h in hard if "DUPLICATE-KEY-IN-LIBRARY" in h], [])

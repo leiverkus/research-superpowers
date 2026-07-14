@@ -127,6 +127,7 @@ def main() -> int:
     zb = _load("_rs_zbib", HERE / "lint-wiki.py")
     text = master.read_text(encoding="utf-8")
     entries: dict[str, str] = {}
+    duplicates: dict[str, int] = {}
     for m in re.finditer(r"@([a-zA-Z]+)\s*\{\s*([^,\s{}]+)\s*,", text):
         opened = text.find("{", m.start())
         depth = 0
@@ -136,8 +137,33 @@ def main() -> int:
             elif text[j] == "}":
                 depth -= 1
                 if depth == 0:
-                    entries[m.group(2)] = text[m.start():j + 1]
+                    key = m.group(2)
+                    if key in entries:
+                        duplicates[key] = duplicates.get(key, 1) + 1
+                    entries[key] = text[m.start():j + 1]
                     break
+
+    # A duplicate key in the MASTER is worse than one in a project, and this is the
+    # exact point where it spreads: bib-subset copies the winning entry into every
+    # project that cites the key. Both BibTeX and the dict above take the LAST
+    # definition — silently. That is not a stylistic issue:
+    #
+    #   Found on the live library: `rabunal-2023-unraveling` existed twice. The older
+    #   entry had FOUR authors; the newer one had three. The newer won, and Javier
+    #   Fernández-López de Pablo would have vanished from every manuscript citing it.
+    #   Two more (R-package manuals) each had a DOI in the losing copy only.
+    #
+    # So: refuse. Merging is a judgement call about which fields are right, and this
+    # script has no business making it silently.
+    if duplicates:
+        print(f"  ✗ {master} defines {len(duplicates)} key(s) more than once. BibTeX takes "
+              f"the LAST definition and drops the rest — silently, fields and all:",
+              file=sys.stderr)
+        for k, n in sorted(duplicates.items()):
+            print(f"      {k}  ({n}×)", file=sys.stderr)
+        print("\n    Merge them by hand — decide which fields are right — then re-run.",
+              file=sys.stderr)
+        return 1
 
     wanted = cited_keys(root)
 
