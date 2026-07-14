@@ -6,6 +6,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.28.0] — 2026-07-14
+
+### Added
+
+- **`lint-wiki.py` check 9 — "acquired but NOT ingested".** Check 8 asks *does every
+  source page have a PDF?* Nothing asked the reverse, so a source could be searched
+  for, downloaded, and then simply forgotten: the wiki looks healthy, every check
+  passes, and `drafting-manuscript` has nothing to reach back into.
+
+  Run against the 17 live wikis, it found **146 such sources** — Aoristos had 48 of
+  its 55 PDFs never ingested, Choros 15 of 15, Punctum 27 of 42. Five projects were
+  clean.
+
+  ```
+    Acquired but NOT ingested (4 of 53): hensel-2022-about, lemaire-2015-levantine, …
+      → run ingest-source on these; the PDFs are already in the library.
+  ```
+
+  - **Not the same as check 7.** Check 7 reports entries nobody *cites* and no page
+    describes; an entry the manuscript already cites but nobody ever read into the
+    wiki slips straight past it. A test pins exactly that case.
+  - **An entry with no PDF is deliberately NOT reported here** — "not acquired" is
+    `acquire-sources`' business. Reporting it would make every un-downloaded entry
+    look like a forgotten ingest.
+  - Advisory, and skipped when no library is configured — same reasoning as check 8:
+    CI has no library, and a worklist is not a broken repo.
+
+### Changed
+
+- `wiki-lint` now documents the citekey and library checks, which it had never listed.
+
 ## [0.27.0] — 2026-07-14
 
 Full-text search across the shared library — the last piece the library was missing.

@@ -165,7 +165,7 @@ class LintChecksTheLibrary(unittest.TestCase):
     """Check 8 (bibkey ↔ PDF) had NO test for its non-empty branch — a regression
     there was invisible. It does now."""
 
-    def _run(self, d, keys, pages):
+    def _run(self, d, keys, pages, cited=()):
         root = pathlib.Path(d) / "proj"
         (root / "knowledge" / "sources").mkdir(parents=True)
         (root / "output" / "bibtex").mkdir(parents=True)
@@ -175,6 +175,10 @@ class LintChecksTheLibrary(unittest.TestCase):
         for i, k in enumerate(pages):
             (root / "knowledge" / "sources" / f"s{i}.md").write_text(
                 SOURCE.format(key=k, body="body"), encoding="utf-8")
+        if cited:
+            (root / "output" / "article").mkdir(parents=True)
+            (root / "output" / "article" / "a.qmd").write_text(
+                "# T\n\n" + " ".join(f"[@{k}]" for k in cited) + "\n", encoding="utf-8")
         cwd = os.getcwd()
         try:
             os.chdir(root)
@@ -206,6 +210,69 @@ class LintChecksTheLibrary(unittest.TestCase):
             hard, advisory = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
             self.assertEqual(hard, [])
             self.assertIn("No source library configured", "\n".join(advisory))
+
+
+class AcquiredButNotIngested(unittest.TestCase):
+    """Check 9 — the direction nobody was asking.
+
+    Check 8 asks "does every source page have a PDF?". Nothing asked the reverse, so a
+    source could be searched for, paid for, downloaded — and then simply forgotten.
+    Across the 17 live wikis that was true of 146 sources; one project had 48 of its 55
+    PDFs never ingested. The wiki looked healthy the whole time.
+    """
+
+    _run = LintChecksTheLibrary._run
+
+    def test_a_pdf_with_no_source_page_is_reported(self):
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            root = _library(d, ["smith-2016-software", "jones-2020-data"])
+            os.environ[lib.ENV_VAR] = str(root)
+            hard, advisory = self._run(d, ["smith-2016-software", "jones-2020-data"],
+                                       ["smith-2016-software"])          # jones: no page
+            self.assertEqual(hard, [])                                    # never hard
+            joined = "\n".join(advisory)
+            self.assertIn("Acquired but NOT ingested (1 of 2)", joined)
+            self.assertIn("jones-2020-data", joined)
+            self.assertIn("ingest-source", joined)
+
+    def test_a_CITED_but_never_ingested_source_slips_past_check_7(self):
+        # The case that motivated this check: the manuscript already cites the work, so
+        # check 7 ("uncited, no source page") stays silent — yet no one ever read it
+        # into the wiki, and drafting has nothing to reach back into.
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            root = _library(d, ["smith-2016-software", "jones-2020-data"])
+            os.environ[lib.ENV_VAR] = str(root)
+            _, advisory = self._run(d, ["smith-2016-software", "jones-2020-data"],
+                                    ["smith-2016-software"], cited=["jones-2020-data"])
+            joined = "\n".join(advisory)
+            self.assertNotIn("Uncited, no source page", joined)     # check 7 is quiet
+            self.assertIn("jones-2020-data", joined)                # check 9 is not
+            self.assertIn("Acquired but NOT ingested", joined)
+
+    def test_an_entry_with_no_pdf_is_NOT_reported_here(self):
+        # "Not acquired" is acquire-sources' business, not ingest's. Reporting it here
+        # would make every un-downloaded entry look like a forgotten ingest.
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            root = _library(d, ["smith-2016-software"])          # jones has NO pdf
+            os.environ[lib.ENV_VAR] = str(root)
+            _, advisory = self._run(d, ["smith-2016-software", "jones-2020-data"],
+                                    ["smith-2016-software"])
+            joined = "\n".join(advisory)
+            self.assertNotIn("Acquired but NOT ingested", joined)
+            self.assertIn("All 1 acquired sources are ingested.", joined)
+
+    def test_a_fully_ingested_project_says_so(self):
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            root = _library(d, ["smith-2016-software"])
+            os.environ[lib.ENV_VAR] = str(root)
+            _, advisory = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
+            self.assertIn("All 1 acquired sources are ingested.", "\n".join(advisory))
+
+    def test_unconfigured_machine_stays_silent(self):
+        with _Env(), tempfile.TemporaryDirectory() as d:
+            hard, advisory = self._run(d, ["smith-2016-software"], [])
+            self.assertEqual(hard, [])
+            self.assertNotIn("Acquired but NOT ingested", "\n".join(advisory))
 
 
 if __name__ == "__main__":

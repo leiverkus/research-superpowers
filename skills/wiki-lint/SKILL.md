@@ -139,6 +139,10 @@ digraph lint {
 - Orphan detection (pages with zero incoming wikilinks)
 - Structured `relations` blocks resolve + the inference-rate (share of `inferred`/`ambiguous` edges)
 - Open `review_flags` (content findings from `semantic-wiki-review`) — **surfaced only**: advisory, they gate `drafting-manuscript`, not the lint exit code
+- **Citekeys and bibliography** — every citekey matches the `surname-year-shorttitle` convention (it is a cross-project join key); no key defined twice; every `bibkey:` and every `@citation` resolves to a real entry; every `bibliography:` path a manuscript declares exists (Quarto renders a dead bibliography as `???` and still exits 0)
+- **The shared library, both directions** — advisory, and skipped when no library is configured (CI has none):
+  - every source page's `bibkey` has a PDF at `<library>/pdf/<bibkey>.pdf`
+  - **every acquired PDF has a source page** — "acquired but NOT ingested". A source that was searched for, downloaded and then forgotten is invisible to every other check: the wiki looks healthy, and drafting has nothing to reach back into. Across 17 live wikis this was true of 146 sources; one project had 48 of its 55 PDFs never ingested. The fix is `ingest-source` — the PDFs are already there.
 
 ## Common Fixes
 
