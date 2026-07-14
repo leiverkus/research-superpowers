@@ -42,14 +42,19 @@ project-root/
 ├── .gitlab-ci.yml         ← CI/CD (GitLab): lint wiki + render publication + graph → Pages
 ├── .github/workflows/     ← CI/CD (GitHub Actions): same pipeline, GitHub Pages
 ├── .mcp.json             ← Registers the wiki-graph MCP (Claude Code)
+├── .research-library      ← ONE LINE: path to the shared library. GITIGNORED —
+│                             it is machine-local and must never be committed.
 ├── scripts/
+│   ├── library.py         ← Resolves the shared library (env → dotfile → global)
+│   ├── bib-subset.py      ← output/bibtex/references.bib ← the cited subset
 │   ├── lint-wiki.py       ← Structural check of the wiki
 │   ├── wiki-to-graph.py   ← Knowledge-graph export + live queries
 │   ├── graph_mcp.py       ← MCP server exposing the graph queries
 │   └── vendor/            ← Bundled cytoscape.min.js (offline HTML viz)
 ├── input/                 ← Raw material (immutable)
 │   ├── description/       ← Project description and research question
-│   ├── bibliography/      ← PDFs, Zotero exports (.bib, .ris)
+│   ├── bibliography/      ← literaturguide.md, acquisition-todo.md, audit logs
+│   │                         (TEXT only — the PDFs live in the shared library)
 │   ├── data/              ← Research data (CSV, shapefiles, GeoJSON, DBs)
 │   ├── notes/             ← Own field notes, observations, memos
 │   └── ideas/             ← Loose thoughts, hypotheses, questions
@@ -72,26 +77,49 @@ project-root/
 └── .vscode/               ← VS Code workspace configuration
 ```
 
+**And, outside the repo — shared by every project:**
+
+```
+<library>/                 ← e.g. ~/UOLcloud/Bibliothek (Nextcloud, read-only for the group)
+├── references.bib         ← THE master bibliography
+└── pdf/<bibkey>.pdf       ← one PDF per source; the filename IS the citekey
+```
+
+The repos stay in **Git**; only the PDFs live in the cloud folder. A git repo inside
+a Nextcloud folder **corrupts**: Nextcloud syncs `.git/` file-by-file with no
+transactional guarantee and writes "conflicted copy" files *inside* `.git/objects`.
+Git is already the sync — the cloud carries only what git cannot hold.
+
 ## Core rules
 
 ### Input folder
 - **Immutable, with one exception.** The LLM treats `input/` as human-owned and
   never writes into it — **except `input/bibliography/`**, where the
-  `literature-review` and `acquire-sources` skills write their own artefacts
-  (`literaturguide.md`, `audit-log-*.json`, downloaded PDFs,
-  `acquisition-todo.md`, `acquisition-log-*.json`). The human still owns the
-  source PDFs dropped there.
+  `literature-review` and `acquire-sources` skills write their own **text**
+  artefacts (`literaturguide.md`, `audit-log-*.json`, `acquisition-todo.md`,
+  `acquisition-log-*.json`). Downloaded **PDFs** go to the shared library, not
+  here.
 - **`input/description/`** contains the project description and research
   question. The LLM reads this folder **at the start of every session** and
   uses its contents as orientation for ingest, query, synthesis and lint.
   Several files can live here (e.g. project description, exposé, proposal
   draft, methodological guidelines).
 - New sources are dropped here by the human (PDF, data, notes).
-- **All source PDFs live directly in `input/bibliography/` — flat, no
-  subfolders.** This one folder is the single source of truth that
-  `acquire-sources` reconciles against and `ingest-source` reads from. Skills
-  never create per-source subfolders here; if a PDF arrives nested, it is moved
-  up to the top level.
+- **Source PDFs do NOT live in this repo. They live in the shared library:**
+  `<library>/pdf/<bibkey>.pdf`. That folder is the single source of truth that
+  `acquire-sources` reconciles against and `ingest-source` reads from — and it is
+  shared across every project, so the same paper exists **once**, and a metadata
+  error is fixed **once**.
+- **Where the library is, is machine-local.** Resolve it — never hard-code it:
+  1. `RESEARCH_LIBRARY` (environment variable; this is what CI sets)
+  2. `.research-library` in the project root — one line, **gitignored**
+  3. `~/.config/research-superpowers/library`
+
+  `scripts/library.py` does the resolving (`from library import pdf_for`). No
+  symlink: symlinks need administrator rights on Windows, and `input/bibliography/`
+  is mixed-ownership — its PDFs are shared, but `literaturguide.md`,
+  `acquisition-todo.md` and the audit logs are per-project and **tracked**.
+- **`input/bibliography/` therefore keeps its text artefacts and holds no PDFs.**
 - **PDF filename schema (canonical): `autor-jahr-kurztitel.pdf`** — all
   lowercase ASCII, hyphen-separated. `autor` = first author's surname (umlauts
   → `ae`/`oe`/`ue`, `ß` → `ss`; particles and spaces removed, e.g.
@@ -115,10 +143,10 @@ project-root/
   projects they are not. Nothing joins on the slug.
 - **Acquisition before ingest.** After `literature-review`, run
   `acquire-sources`: it auto-downloads the Open-Access PDFs for the A+B set into
-  `input/bibliography/` and writes `acquisition-todo.md` — a worklist of
+  the shared library (`<library>/pdf/`) and writes `input/bibliography/acquisition-todo.md` — a worklist of
   sources it could not fetch (paywalled / bot-blocked). Download those manually
-  (e.g. via university VPN) and save them flat in `input/bibliography/` under the
-  exact `autor-jahr-kurztitel.pdf` filename the worklist gives, then re-run
+  (e.g. via university VPN) and save them in `<library>/pdf/` under the
+  exact `<bibkey>.pdf` filename the worklist gives, then re-run
   `acquire-sources` to reconcile (or ingest the ones
   already present). `ingest-source` **hard-stops** on a missing original rather
   than silently using a preprint or review — so acquire first. See
@@ -195,7 +223,7 @@ project's discipline and genre.** Defaults:
   one sentence per wiki bullet. Prose that just restates bullets is unfinished.
 - **Examples and explanations are required**, and they must come **from the
   sources** — the source pages' `### Direct quotes` / `### Examples &
-  illustrations`, or the original PDF in `input/bibliography/` at the cited
+  illustrations`, or the original PDF at `<library>/pdf/<bibkey>.pdf` at the cited
   pages. Reaching back to the source for depth is expected; inventing depth from
   memory is not.
 - **Grounded elaboration is cited; expository framing (transitions, restating an
@@ -253,7 +281,7 @@ critical perspectives → sources.
 Example: `_example-low-chronology.md`
 
 ### Source (`knowledge/sources/`)
-Summary of a single source from `input/bibliography/`.
+Summary of a single source from the shared library.
 Structure: bibliographic info → core theses → methodology → relevant
 results → own assessment → connections to other pages.
 Example: `_example-finkelstein-2003.md`
@@ -338,7 +366,7 @@ Steps:
    - For an article: in `output/article/`
 3. Where a wiki page is too thin to develop a point, the LLM reaches back to the
    source — its `### Direct quotes` / `### Examples & illustrations`, or the
-   original PDF in `input/bibliography/` at the cited pages — and cites what it uses.
+   original PDF at `<library>/pdf/<bibkey>.pdf` at the cited pages — and cites what it uses.
 4. The draft contains Quarto citations (`@citekey`) referring to
    `output/bibtex/references.bib`.
 5. Human revises the draft.
@@ -625,7 +653,7 @@ Zotero group changes.
 > renders as `???` and the build is not reproducible. An ignored bib also has no
 > git undo. An earlier version of this document claimed the opposite; that claim
 > propagated into four projects' `.gitignore` and left their bibliographies
-> unrecoverable. Only the **PDFs** in `input/bibliography/` stay ignored (large
+> unrecoverable. The **PDFs** live in the shared library, not in the repo (large
 > and copyright-bound).
 
 #### Adding PDFs to the group

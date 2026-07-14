@@ -49,7 +49,8 @@ Navigate to the project the scaffold created, then copy a PDF into `input/biblio
 
 ```bash
 cd ~/Documents/my-first-research-project   # adjust to your actual project path
-cp ~/Downloads/finkelstein-2003-low-chronology.pdf input/bibliography/
+# one line, gitignored — where the shared library lives on THIS machine
+echo '/path/to/Bibliothek' > .research-library
 ```
 
 The `ingest-source` skill handles PDFs and falls back to OCR for scanned pages.

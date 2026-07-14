@@ -74,7 +74,7 @@
     "bibkey": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{4}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$",
-      "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib. Shape: surname-year-shorttitle (e.g. finkelstein-2003-low-chronology), all lowercase ASCII. This is a cross-project JOIN KEY — wiki-global-graph.py matches sources across projects on it — so it must be a deterministic function of the work's own metadata, not a per-project choice: the same work must yield the same key everywhere. It is also the PDF filename stem in input/bibliography/, so bibkey == PDF stem is a checkable invariant. Add a disambiguation letter after the year for same-author-same-year clashes (finkelstein-2003b-...)."
+      "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib. Shape: surname-year-shorttitle (e.g. finkelstein-2003-low-chronology), all lowercase ASCII. This is a cross-project JOIN KEY — wiki-global-graph.py matches sources across projects on it — so it must be a deterministic function of the work's own metadata, not a per-project choice: the same work must yield the same key everywhere. It is also the PDF filename stem in the shared library (<library>/pdf/<bibkey>.pdf), so bibkey == PDF stem is a checkable invariant. Add a disambiguation letter after the year for same-author-same-year clashes (finkelstein-2003b-...)."
     },
     "based_on": {
       "type": "string",

@@ -1,7 +1,7 @@
 # research-superpowers
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.25.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.26.0-blue.svg)](CHANGELOG.md)
 [![Plugin for: Claude Code + OpenCode](https://img.shields.io/badge/plugin-Claude%20Code%20%2B%20OpenCode-purple.svg)](#installation)
 [![Lint](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml)
 
@@ -117,7 +117,7 @@ Two MCP servers by the same author add structurally verified citations and sourc
 
 ## 30-second example
 
-In a research project (scaffold one from `templates/research-project-template/`), drop a PDF into `input/bibliography/` and tell Claude Code:
+In a research project (scaffold one from `templates/research-project-template/`), point the project at the shared library (`.research-library`) and tell Claude Code:
 
 > Ingest the Finkelstein 2003 PDF.
 

@@ -561,6 +561,26 @@ QUARTO_XREF = re.compile(
 CITE_RE = re.compile(r"(?<![A-Za-z0-9_`@.\\])@([A-Za-z][A-Za-z0-9_:.+/-]*[A-Za-z0-9])")
 
 
+def _library_pdf_dir() -> Path | None:
+    """<library>/pdf, or None if this machine has no library configured.
+
+    Imported from the sibling library.py by path, not by package name: these scripts
+    ship into projects as loose files and are also loaded by the test suite via
+    importlib, so there is no package to import from.
+    """
+    import importlib.util
+    mod_path = Path(__file__).resolve().parent / "library.py"
+    if not mod_path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("_rs_library", mod_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.pdf_dir(required=False)
+    except Exception:                                  # pragma: no cover
+        return None
+
+
 def _not_build(path: Path) -> bool:
     return not any(d in path.parts for d in BUILD_DIRS)
 
@@ -714,20 +734,27 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         advisory.append(f"  Uncited, no source page ({len(unused)}): "
                         + ", ".join(unused[:8]) + (" …" if len(unused) > 8 else ""))
 
-    # ---- 8 (advisory): bibkey should equal the PDF filename stem.
-    # ADVISORY ON PURPOSE: input/bibliography/*.pdf is gitignored, so in CI the
-    # folder is empty and a hard gate would fail every build.
-    pdf_dir = Path("input/bibliography")
-    if pdf_dir.is_dir():
-        stems = {p.stem for p in pdf_dir.glob("**/*.pdf")}
-        if stems:
-            missing = sorted(k for k in with_page if k and k != "None" and k not in stems)
-            if missing:
-                advisory.append(
-                    f"  bibkey with no matching PDF stem ({len(missing)} of {len(with_page)}): "
-                    + ", ".join(missing[:6]) + (" …" if len(missing) > 6 else ""))
-            else:
-                advisory.append(f"  All {len(with_page)} bibkeys match a PDF stem.")
+    # ---- 8 (advisory): every source page's bibkey should have a PDF in the shared
+    # library (<library>/pdf/<bibkey>.pdf — the filename IS the citekey).
+    #
+    # ADVISORY, AND required=False, ON PURPOSE. The library is machine-local and does
+    # not exist in CI; a hard gate — or a raised LibraryNotConfigured — would fail
+    # every build and every contributor who has not configured it yet. A missing PDF
+    # is a worklist, not a broken repo.
+    lib_pdfs = _library_pdf_dir()
+    if lib_pdfs is None:
+        if with_page:
+            advisory.append("  No source library configured on this machine "
+                            "(RESEARCH_LIBRARY / .research-library) — PDF check skipped.")
+    else:
+        stems = {p.stem for p in lib_pdfs.glob("*.pdf")}
+        missing = sorted(k for k in with_page if k and k != "None" and k not in stems)
+        if missing:
+            advisory.append(
+                f"  bibkey with no PDF in the library ({len(missing)} of {len(with_page)}): "
+                + ", ".join(missing[:6]) + (" …" if len(missing) > 6 else ""))
+        elif with_page:
+            advisory.append(f"  All {len(with_page)} bibkeys have a PDF in the library.")
 
     if not hard and not advisory:
         advisory.append(f"  {len(defined)} citekeys, all resolving.")

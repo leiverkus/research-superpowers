@@ -5,6 +5,12 @@ Thumbs.db
 # Editor
 .vscode/extensions.json
 
+# The path to the shared source library. MACHINE-LOCAL — it differs between the
+# laptop and the institute machine, so committing it would break every other
+# checkout. Resolved by scripts/library.py (env RESEARCH_LIBRARY → this file →
+# ~/.config/research-superpowers/library).
+.research-library
+
 # Team-Kollaboration: Nextcloud-Symlinks und extern synchronisierte Ordner
 input/data-shared
 input/data-nextcloud

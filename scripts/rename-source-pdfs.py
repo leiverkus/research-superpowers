@@ -234,7 +234,8 @@ def resolve(pdf: Path, root: Path, bib: dict, old2new: dict, by_ay: dict,
     return None, "unresolved", ""
 
 
-def cmd_plan(root: Path, map_out: Path, old_map: Path | None, use_pdf: bool) -> int:
+def cmd_plan(root: Path, map_out: Path, old_map: Path | None, use_pdf: bool,
+             pdfs_dir: Path | None = None) -> int:
     bib = read_bib(root)
     if not bib:
         print("  ✗ no .bib entries found", file=sys.stderr)
@@ -253,7 +254,7 @@ def cmd_plan(root: Path, map_out: Path, old_map: Path | None, use_pdf: bool) -> 
             by_ay.setdefault((m.group(1), m.group(2)), []).append(k)
     by_doi = {e["doi"]: k for k, e in bib.items() if e["doi"]}
 
-    pdfs = sorted((root / "input" / "bibliography").rglob("*.pdf"))
+    pdfs = sorted((pdfs_dir or (root / "input" / "bibliography")).rglob("*.pdf"))
     rows, taken = [], {}
     for p in pdfs:
         key, signal, note = resolve(p, root, bib, old2new, by_ay, by_doi, use_pdf)
@@ -290,7 +291,8 @@ def cmd_plan(root: Path, map_out: Path, old_map: Path | None, use_pdf: bool) -> 
     return 0
 
 
-def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
+def cmd_apply(root: Path, map_path: Path, write: bool,
+              pdfs_dir: Path | None = None) -> int:
     data = json.loads(map_path.read_text(encoding="utf-8"))
     bib = read_bib(root)
     moves, skipped = [], 0
@@ -307,7 +309,7 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
         if key not in bib:
             raise SystemExit(f"  ✗ {r['pdf']} → '{key}' is in no .bib — refusing")
         src = root / r["pdf"]
-        dst = root / "input" / "bibliography" / f"{key}.pdf"
+        dst = (pdfs_dir or (root / "input" / "bibliography")) / f"{key}.pdf"
         if not src.exists():
             print(f"  ⚠ missing on disk, skipped: {r['pdf']}")
             continue
@@ -351,7 +353,7 @@ def cmd_apply(root: Path, map_path: Path, write: bool) -> int:
         else:
             shutil.move(str(src), str(dst))
     # drop the now-empty per-source subfolders of the older nested layout
-    for d in sorted((root / "input" / "bibliography").rglob("*"), reverse=True):
+    for d in sorted((pdfs_dir or (root / "input" / "bibliography")).rglob("*"), reverse=True):
         if d.is_dir() and not any(d.iterdir()):
             d.rmdir()
     print(f"  ✓ moved {len(moves)} file(s); the map records every old → new for undo")
@@ -365,6 +367,9 @@ def main() -> int:
     p = sub.add_parser("plan")
     p.add_argument("root", type=Path)
     p.add_argument("--map-out", type=Path, required=True)
+    p.add_argument("--pdf-dir", type=Path, default=None,
+                   help="where the PDFs are (default: <root>/input/bibliography). Point this "
+                        "at the shared library's quarantine to identify its unnamed files.")
     p.add_argument("--citekey-map", type=Path, default=None,
                    help="the migrate-citekeys map, so a pre-migration bibkey stem resolves")
     p.add_argument("--no-pdf", action="store_true", help="skip the DOI/title signals")
@@ -372,15 +377,18 @@ def main() -> int:
     a.add_argument("root", type=Path)
     a.add_argument("--map", type=Path, required=True)
     a.add_argument("--write", action="store_true")
+    a.add_argument("--pdf-dir", type=Path, default=None)
 
     args = ap.parse_args()
     root = args.root.resolve()
-    if not (root / "input" / "bibliography").is_dir():
-        print(f"  ✗ {root} has no input/bibliography/", file=sys.stderr)
+    pdfs = (args.pdf_dir.expanduser().resolve() if args.pdf_dir
+            else root / "input" / "bibliography")
+    if not pdfs.is_dir():
+        print(f"  ✗ no PDF directory at {pdfs}", file=sys.stderr)
         return 1
     if args.cmd == "plan":
-        return cmd_plan(root, args.map_out, args.citekey_map, not args.no_pdf)
-    return cmd_apply(root, args.map, args.write)
+        return cmd_plan(root, args.map_out, args.citekey_map, not args.no_pdf, pdfs)
+    return cmd_apply(root, args.map, args.write, pdfs)
 
 
 if __name__ == "__main__":

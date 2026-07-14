@@ -3,7 +3,7 @@ name: ingest-source
 description: Use when adding a scholarly source (PDF, book chapter, article) to the research project wiki under a specific focus. Produces a focus-driven Source page (claims relevant to the project, not a generic summary), extracts Entities, updates BibTeX, and logs the ingest. On re-ingest of the same source with a new focus, appends a new focus block to the existing page rather than overwriting. This is the ONLY skill for bringing sources into the knowledge wiki.
 inputs:
   - name: source_path
-    description: Absolute path to the already-acquired PDF or text file in input/bibliography/ (obtained via acquire-sources). No URL auto-download happens here — if the original is missing, the skill hard-stops (see step 2).
+    description: Absolute path to the already-acquired PDF or text file in the shared library (<library>/pdf/<bibkey>.pdf, obtained via acquire-sources). No URL auto-download happens here — if the original is missing, the skill hard-stops (see step 2).
     required: true
   - name: project_root
     description: Absolute path to the research project root
@@ -32,7 +32,7 @@ agents:
 
 # Ingest Source (focus-driven)
 
-Turn a raw scholarly source into structured wiki content **scoped to a specific focus** — what *this project* takes from *this source*. The wiki is purpose-built, not a generic archive. The raw PDF stays in `input/bibliography/` and can be re-read later under a different focus.
+Turn a raw scholarly source into structured wiki content **scoped to a specific focus** — what *this project* takes from *this source*. The wiki is purpose-built, not a generic archive. The raw PDF stays in the shared library and can be re-read later under a different focus.
 
 One source × focus → one focus block inside `knowledge/sources/<slug>.md`. Re-ingest with a different focus → a second focus block appended to the same page. One bibkey, one wiki page, multiple lenses stacked over time.
 
@@ -64,7 +64,11 @@ If any condition is missing: explain to the user which, ask for a short reason f
 Create TodoWrite tasks for each:
 
 1. **Determine focus** — read `input/description/*.md` if present; extract the project's research question (look for `## Research question` heading or first H2). Propose: "Default focus from project description: «<research question>». Use this for the ingest or refine? (e.g. 'focus on the stratigraphic argument for Megiddo IVA' is more useful than the whole research question)." If `input/description/` is absent, ask explicitly: "What's the focus for this ingest? One sentence — what aspect of this source serves your project?" **Do not proceed without an explicit confirmed focus string.**
-2. **Locate the acquired original** — expect the PDF **flat** in `input/bibliography/` (no subfolders) named `autor-jahr-kurztitel.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Tell the user the original is not on disk, point them to `input/bibliography/acquisition-todo.md`, and offer to run `acquire-sources`. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
+2. **Locate the acquired original** — the PDF lives in the **shared library**, not in the project: `<library>/pdf/<bibkey>.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). Resolve the library with `python scripts/library.py`, or from Python: `from library import pdf_for; pdf_for("<bibkey>")`.
+   **If it is missing → HARD-STOP.** Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
+   **Distinguish the two failures — they need different answers:**
+   - *The library is not configured on this machine* (`library.py` says so): the user must point this project at it — one line in `.research-library`. Do not report this as "PDF missing"; the file may well exist.
+   - *The library is configured but has no PDF for this bibkey*: the source was never acquired. Point the user at `input/bibliography/acquisition-todo.md` and offer to run `acquire-sources`.
 3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
 4. **Derive `bibkey` and slug — they are NOT the same thing.**
    - **`bibkey` = the whole PDF filename stem**, `<autor>-<jahr>-<kurztitel>` (e.g. `finkelstein-2003-low-chronology`, `mazar-2011b-iron-age` when disambiguating). Never the `autor-jahr` prefix alone: `bibkey` is a **cross-project join key** (`wiki-global-graph.py` matches sources across projects on it), so it must be derivable from the work's own metadata and identical in every project that cites the work. A key without the title collides — an audit of 17 wikis found three keys each denoting *two different papers*, and 17 joins lost to keys that drifted apart.
@@ -421,7 +425,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 
 - **Focus-driven, not summary-driven** — the wiki documents what THIS project takes from THIS source. Generic content stays in the PDF.
 - **One source = one wiki page, multiple focus blocks** — append over time as the project's needs evolve.
-- **The raw PDF is the archive** — `input/bibliography/autor-jahr-kurztitel.pdf` (flat, no subfolders) is the canonical "everything"; the wiki is the interpretation.
+- **The raw PDF is the archive** — `<library>/pdf/<bibkey>.pdf` is the canonical "everything"; the wiki is the interpretation.
 - **Wikilinks before full prose** — link every focus-relevant entity at first mention.
 - **Typed relations at ingest** — stance-bearing connections (confirms / contradicts / builds-on / cites) go into the `relations:` frontmatter as typed, confidence-tagged edges, not just prose wikilinks. The graph is born typed; `confidence: extracted` only with a quote + page.
 - **Verbatim quotations + page** — indispensable for drafts later; at least 1 quote per focus block.

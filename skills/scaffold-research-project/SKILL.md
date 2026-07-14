@@ -24,7 +24,9 @@ outputs:
     kind: created
   - path: <parent_directory>/<project_name>/schema/knowledge-frontmatter.schema.json
     kind: created
-  - path: <parent_directory>/<project_name>/scripts/lint-wiki.py
+  - path: <parent_directory>/<project_name>/scripts/library.py
+scripts/bib-subset.py
+scripts/lint-wiki.py
     kind: created
   - path: <parent_directory>/<project_name>/.git/
     kind: created
@@ -111,7 +113,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
     > "Project created at `<parent_directory>/<project_name>/`.
     > Next steps:
     > - Open `CLAUDE.md` to see the project's conventions
-    > - Drop a PDF into `input/bibliography/` and say 'ingest this source' to populate the wiki
+    > - Point the project at the shared library (one line in `.research-library`), then say 'ingest <bibkey>' to populate the wiki
     > - For the full walkthrough, see the plugin's `docs/tutorial.md`"
 
 ## Process Flow

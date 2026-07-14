@@ -18,7 +18,7 @@ inputs:
     description: Paths to knowledge/sources/*.md whose bibkeys are allowed for citation
     required: true
   - name: source_pdfs
-    description: Paths to the original PDFs in input/bibliography/ for the cited sources, for reaching back to examples/context when a page is too thin. Optional but strongly recommended; acquire-sources places these on disk.
+    description: Paths to the original PDFs for the cited sources (resolve with library.py: <library>/pdf/<bibkey>.pdf), for reaching back to examples/context when a page is too thin. Optional but strongly recommended; acquire-sources places these in the library.
     required: false
   - name: target_language
     description: de or en
@@ -39,7 +39,7 @@ agents:
 
 Turn stable synthesis pages into publishable prose. Every claim gets a citation. Every citation resolves in `output/bibtex/references.bib`. No inventing, no paraphrasing from memory — the wiki is the single source of truth for *what is claimed*.
 
-But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs on disk (`input/bibliography/`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow) below.
+But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs in the shared library (`<library>/pdf/<bibkey>.pdf`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow) below.
 
 **Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`."
 
@@ -80,7 +80,7 @@ overriding. Note which page and flag `kind` in the override reason.
 5. **Determine target length** from the plan (words / pages / chapter size) — treat it as a floor for *development*, not a ceiling to pad toward
 6. **Produce a section skeleton** — introduction, main parts, conclusion; confirm with user before prose
 7. **Draft prose with depth** — one section at a time; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`
-8. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF in `input/bibliography/` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory.
+8. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory.
 9. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
 10. **Write to target file** — `output/book/text/<nn-slug>.qmd` or `output/article/main.qmd`
 11. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
@@ -170,7 +170,7 @@ A single terse wiki bullet typically becomes a **developed passage**, not a sing
 **Reach-back procedure** (checklist step 8) — escalate only as far as needed:
 
 1. The source page's `### Direct quotes` and `### Examples & illustrations` sections — the cheapest, already-extracted depth.
-2. If still too thin: open the **original PDF** in `input/bibliography/` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
+2. If still too thin: open the **original PDF** at `<library>/pdf/<bibkey>.pdf` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
 3. Cite whatever you use. If the source genuinely lacks the needed depth, say so plainly or narrow the claim — do **not** fill the gap from memory.
 
 > **Per-project house style.** Density, example-richness, and target register are tunable per project in the root `CLAUDE.md` ("Manuscript style"). Read it before drafting; it overrides the defaults here.
@@ -188,7 +188,7 @@ For chapters > 3000 words, dispatch `drafter` subagent (see `agents/drafter.md`)
 - The section outline
 - List of synthesis pages (paths) to pull from
 - List of source pages (paths) with allowed citation keys
-- **List of the corresponding source PDF paths in `input/bibliography/`** — so the subagent can reach back for examples/context when a page is thin (checklist step 8). Without these, the subagent can only bullet-reflow.
+- **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 8). Without these, the subagent can only bullet-reflow.
 - Target word count (a floor for development, not a ceiling to pad)
 
 Main conversation composes the final draft from section outputs.

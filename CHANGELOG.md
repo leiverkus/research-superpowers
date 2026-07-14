@@ -6,6 +6,70 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.26.0] — 2026-07-14
+
+Source PDFs move out of each project and into **one shared library**. Zotero is out
+of the pipeline (see 0.25.0 for why); the library is a plain folder — no daemon, no
+API key, no console, CI-friendly and offline.
+
+    <library>/references.bib      the master bibliography
+    <library>/pdf/<bibkey>.pdf    one PDF per source; the filename IS the citekey
+
+Merging the 17 projects surfaced what duplication had been hiding: **four real
+metadata errors**, each recorded correctly in one project and wrongly in another —
+a DOI that does not resolve at all, a wrong title, and two wrong page ranges. You
+cannot fix a thing seventeen times. One record, fixed once.
+
+### Added
+
+- **`scripts/library.py`** (ships into every project) — resolves the library path:
+  `RESEARCH_LIBRARY` → `.research-library` in the project root → `~/.config/…`.
+  **Not a symlink**: symlinks need administrator rights on Windows, and
+  `input/bibliography/` is mixed-ownership — its PDFs are shared, but
+  `literaturguide.md`, `acquisition-todo.md` and the audit logs are per-project and
+  tracked. So the PDFs move out and the folder keeps its text artefacts.
+
+  `LibraryNotConfigured` carries an actionable message on purpose. The failure a user
+  actually hits is `ingest-source` hard-stopping, and "PDF not found" would send them
+  hunting for a file when the real problem is that this machine has never been told
+  where the library is.
+
+- **`scripts/bib-subset.py`** — writes `output/bibtex/references.bib` as the subset of
+  the library this project actually cites. The repo stays self-contained and zippable,
+  and CI renders without the library. A cited key the library does not know is a HARD
+  error: dropping it silently would leave the manuscript citing a key that is in no
+  `.bib`, and Quarto renders that as `???` while exiting 0. Entries dropped because
+  nothing cites them any more are reported, not vanished.
+
+- **`scripts/build-library.py`**, **`scripts/merge-bibs.py`** — the one-time migration.
+  733 PDFs collapse to 691 keys, and the duplicates are not all the same file: same
+  page count → keep the larger scan; **different page count → different files**, most
+  pages wins and every case is reported. That class is real: one project's
+  `james-2019-guidelines` is a 4-page extract of a 15-page paper, and its
+  `zissu-2023-underground` is a 0-page corrupt file. Nothing is deleted — the losers
+  go to a backup.
+
+### Changed
+
+- `input/bibliography/` holds **no PDFs**. It keeps its tracked text artefacts.
+- `acquire-sources` downloads into the library and reconciles against it — and the
+  library is *shared*, so a source another project already fetched counts as present.
+- `ingest-source`'s HARD-STOP now distinguishes *"the library is not configured on
+  this machine"* from *"the source was never acquired"*. They need different answers.
+- `drafting-manuscript` / `drafter` reach back into `<library>/pdf/<bibkey>.pdf`.
+- `lint-wiki.py`'s bibkey↔PDF check reads the library. It stays **advisory** and
+  resolves with `required=False`: the library is machine-local and absent in CI, so a
+  hard gate would fail every build and every new contributor.
+- `rename-source-pdfs.py` gained `--pdf-dir`, so it can identify the library's
+  unnamed files too.
+
+### Fixed
+
+- `agents/source-acquirer.md` prescribed `<Lastname - Title - Year>.pdf` — contradicting
+  the skill's own `autor-jahr-kurztitel` rule. Two naming rules in one contract pair.
+- Check 8 of `lint_citekeys` had **no test for its non-empty branch**; a regression
+  there was invisible. It has one now.
+
 ## [0.25.0] — 2026-07-14
 
 Zotero can be the upstream for bibliographic metadata, PDFs and annotations — but
