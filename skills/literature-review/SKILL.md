@@ -180,6 +180,8 @@ When using MCPs, paste `inline_citation.authoritative_bibliography_line` verbati
 |---------|----------|
 | "15 sources are enough for now" | 15 is the MINIMUM, not the goal. |
 | "English-only is faster" | German and French scholarship goes missing systematically. |
+| "I'll search for the people who work on this" | An author-targeted query finds the people you already know, and the corpus then reproduces your reading list. Query the **method**, not the surname. Replacing three author queries with method-term queries in one review took a corpus from 15 to 27. |
+| "One term is enough, it's the standard name" | It is the standard name *in your discipline*. Spelling variants alone decide hits: on a real library `"random labelling"` and `"random labeling"` each found a paper the other missed. |
 | "I already know the debate" | Knowing it doesn't replace a documented search — reproducibility. |
 | "The audit log is bureaucracy" | Without it the search isn't replicable. |
 | "Let me just download the PDFs while I'm here" | Not in this skill — search is download-free now. Record each `oa_pdf`/DOI; `acquire-sources` does the fetching. |
@@ -187,6 +189,7 @@ When using MCPs, paste `inline_citation.authoritative_bibliography_line` verbati
 ## Key Principles
 
 - **Strategic guide, not a paper dump** — structure reading order, debates, gaps
+- **Query the method, not the author** — and give each method every name it has: the other disciplines' term for it, the US and UK spelling, the German/French form. A method is renamed by everyone who borrows it, so a single-term query measures your own vocabulary rather than the field's. **Record which term produced which hit** — that is a finding about the field, not search bookkeeping.
 - **German + English + French where the field demands** — discipline-specific
 - **OA-first metadata** — record each candidate's `oa_pdf`/DOI; `acquire-sources` does the downloading
 - **Transparency** — audit log is a mandatory output

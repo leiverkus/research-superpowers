@@ -344,7 +344,33 @@ A single terse wiki bullet typically becomes a **developed passage**, not a sing
    ```
 
    It returns the **physical** PDF page — right for opening the file, wrong for citing. Take the printed page number from the page itself.
+
+   **Search for the concept, not the string.** `bib-search` is lexical: it matches the characters you typed and nothing else. A method is written differently by every discipline that borrowed it, so a single-string query measures your vocabulary, not the library. Name the method, list its aliases, `OR` them into one query, and **say which alias hit** — see [Searching for a concept](#searching-for-a-concept-not-a-string).
 4. Cite whatever you use. If the source genuinely lacks the needed depth, say so plainly or narrow the claim — do **not** fill the gap from memory.
+
+### Searching for a concept, not a string
+
+Before a concept search, run `python scripts/bib-search.py index` — it is incremental and costs about a second. A stale index answers about the library you had, not the one you have.
+
+Then build **one** query out of the method's aliases:
+
+```bash
+python scripts/bib-search.py '"random labelling" OR "random labeling" OR "mark permutation"
+   OR "permutation of marks" OR "toroidal shift" OR "random thinning"' --limit 40
+```
+
+What belongs in the alias list, in order of how often it is the one that pays:
+
+- **Spelling variants first.** `labelling` / `labeling`, `modelling` / `modeling`, `analyse` / `analyze`. Measured on the real library: `"random labelling"` found one paper, `"random labeling"` found a different one — a 311-page dissertation that makes the technique its explicit default. **One letter, and it was invisible.** This is the cheapest alias and the most neglected.
+- **The other disciplines' names for it.** Ecology, statistics and archaeology rename each other's methods. In the same measurement `"mark permutation"` surfaced three papers that a purely archaeological vocabulary never reaches.
+- **German / French / Spanish forms** where the field publishes in them.
+- Hyphenation and noun/verb forms (`mark permutation` / `permuting the marks`).
+
+**Report which alias hit which source.** That line is the point of the exercise: it is a finding about the field's vocabulary, not search bookkeeping — and it is what makes the next item visible.
+
+> **Know the ceiling.** On a hand-checked set of five papers that the wiki says use random labelling, the expanded query found **two**. The other three — including the one author for whom it is the *only* inferential null — contain no occurrence of `labelling`, `labeling`, `permutation`, `reshuffl` or `randomis` on any page. They describe the procedure in prose and never name it.
+>
+> **No lexical query can reach those, however many synonyms you add.** When a concept search comes back thin, that is evidence about *naming*, not about absence — go to the source pages and the wiki's concept page, which record what the paper *does* rather than what it calls it. Do not report "not found in the library" from a lexical miss.
 
 > **Per-project house style.** Density, example-richness, and target register are tunable per project in the root `CLAUDE.md` ("Manuscript style"). Read it before drafting; it overrides the defaults here.
 
