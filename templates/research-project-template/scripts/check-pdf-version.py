@@ -28,6 +28,8 @@ page numbers. The script scores them and reports the evidence, so a human decide
 
   cover-sheet      "Accepted Manuscript", "peer reviewed version of the following
                    article", "postprint" … in the first two pages          — decisive
+  repository       an arXiv / eScholarship / institutional-repository stamp on the
+                   first pages — a deposited copy with no printed journal pages — decisive
   no-figures       the body says "Figure N" but the PDF embeds NO images   — very strong
   word-producer    Producer/Creator is Microsoft Word                      — strong
                    (publishers typeset with 3B2, Arbortext, SPi, TeX …)
@@ -71,6 +73,20 @@ TYPESETTERS = re.compile(r"3b2|arbortext|spi\b|springer|elsevier|atypon|tex|late
                          r"pdftex|xetex|indesign|quark|apex|newgen|integra|thomson digital",
                          re.I)
 WORDLIKE = re.compile(r"microsoft.{0,3}word|word 20\d\d|libreoffice|openoffice|pages", re.I)
+
+# A repository / preprint stamp on the first pages is decisive on its own: the file is
+# a deposited copy, NOT the typeset article, so it carries no printed journal page
+# numbers — the exact failure that makes a page anchor invented. arXiv stamps every
+# page "arXiv:NNNN.NNNNN"; eScholarship and White-Rose-style IRs announce themselves on
+# a cover sheet; bio/medRxiv stamp a preprint banner. (Found live: forte-2012 was an
+# eScholarship manuscript and vanetten-2020 an arXiv preprint — both slipped through as
+# "ok", and their source pages cited physical PDF positions as if they were printed pages.)
+REPO_STAMP = re.compile(
+    r"arxiv:\s*\d{4}\.\d{4,5}"           # arXiv preprint stamp (left margin of every page)
+    r"|escholarship(?:\.org)?"           # UC eScholarship institutional-repository cover
+    r"|this is a repository copy of"     # White Rose and the many IRs that clone its cover
+    r"|(?:bio|med)rxiv preprint",        # bioRxiv / medRxiv preprint banner
+    re.I)
 
 
 def _load(name: str, path: Path):
@@ -133,6 +149,11 @@ def inspect(pdf: Path, printed: tuple[int, int] | None = None) -> dict:
     if COVER.search(head):
         signals.append("cover-sheet: the PDF says so itself")
 
+    repo = REPO_STAMP.search(head)
+    if repo:
+        signals.append(f"repository-version: '{repo.group(0).strip()[:32]}' "
+                       f"— a deposited copy, no printed journal pagination")
+
     producer = f"{meta.get('Producer', '')} {meta.get('Creator', '')}"
     if WORDLIKE.search(producer) and not TYPESETTERS.search(producer):
         signals.append(f"word-producer: {producer.strip()[:48]}")
@@ -170,7 +191,8 @@ def inspect(pdf: Path, printed: tuple[int, int] | None = None) -> dict:
         "signals": signals + (weak if strong else []),   # weak evidence only alongside strong
         # Decisive only when the document announces itself, or when two independent
         # structural tells agree. One strong tell = "look at it", not "it is a manuscript".
-        "verdict": ("manuscript" if any(s.startswith("cover-sheet") for s in signals)
+        "verdict": ("manuscript" if any(s.startswith(("cover-sheet", "repository-version"))
+                                         for s in signals)
                     or strong >= 2
                     else "suspect" if strong == 1
                     else "ok"),
