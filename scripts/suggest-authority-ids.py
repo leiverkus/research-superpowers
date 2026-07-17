@@ -32,8 +32,11 @@ WHAT IT SUGGESTS
     2 of 19 in one project), which is why wikidata_qid is primary. Quote a
     getty_aat_id in the frontmatter ('300xxxxxx') so YAML keeps it a string.
 
-Requires network (Wikidata API) and PyYAML. This is plugin-maintainer tooling;
-it is NOT mirrored into the scaffolded template/example and is not run by CI.
+Requires network (Wikidata API) and PyYAML. Wikidata throttles bursts with HTTP
+429, so requests retry with exponential backoff (honouring Retry-After) — without
+that, a rate-limited query is silently miscounted as "no candidate". This is
+plugin-maintainer tooling; it is NOT mirrored into the scaffolded template/example
+and is not run by CI.
 
 USAGE
 -----
@@ -46,6 +49,7 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -121,10 +125,45 @@ def search_terms(title: str) -> list[str]:
     return uniq
 
 
-def _get(url: str) -> dict:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+# Transient HTTP statuses worth retrying: 429 is Wikidata throttling a burst; the
+# 5xx family is a server hiccup. Anything else is a real error and is raised at once.
+_RETRIABLE = {429, 500, 502, 503, 504}
+
+
+def _retry_after(err: urllib.error.HTTPError) -> float | None:
+    """Seconds from a Retry-After header when Wikidata sends one, capped so a
+    hostile or absurd value can't hang the run. Only the numeric-seconds form is
+    honoured (Wikidata sends that); an HTTP-date form falls back to the backoff."""
+    raw = err.headers.get("Retry-After") if err.headers else None
+    if raw and raw.strip().isdigit():
+        return min(float(raw.strip()), 60.0)
+    return None
+
+
+def _get(url: str, *, retries: int = 5, base: float = 1.0) -> dict:
+    """GET + parse JSON, retrying rate-limit (429) and transient 5xx with
+    exponential backoff.
+
+    Without this a single 429 drops a whole page's candidates silently — the page
+    is then counted as 'no Wikidata candidate' when it was never actually asked.
+    On a batch of dozens of pages Wikidata throttles hard, so the tool was mostly
+    reporting its own rate-limiting as absence. Back off (honouring Retry-After)
+    and ask again instead."""
+    for attempt in range(retries + 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code in _RETRIABLE and attempt < retries:
+                time.sleep(_retry_after(e) or min(base * 2 ** attempt, 30.0))
+                continue
+            raise
+        except urllib.error.URLError:                 # transient DNS / connection drop
+            if attempt < retries:
+                time.sleep(min(base * 2 ** attempt, 30.0))
+                continue
+            raise
 
 
 def wd_search(term: str, limit: int) -> list[dict]:
