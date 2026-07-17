@@ -34,8 +34,14 @@ jobs:
         os: [ubuntu-24.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out repository
+      - name: Check out repository (with tags)
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # test_release.LiveRepoIsFullyTagged runs `release.py audit` against
+          # THIS repo, so it needs the tags. The guard is deliberately not
+          # skipped when they are absent: one that quietly disappears when the
+          # checkout config regresses is the failure class it exists to catch.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
