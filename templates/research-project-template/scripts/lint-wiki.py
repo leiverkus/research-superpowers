@@ -11,7 +11,7 @@ Deterministic, CI-friendly checks:
 The citekey checks exist because `bibkey` is not merely a citation key: it is the
 cross-project JOIN KEY that scripts/wiki-global-graph.py matches sources on. An
 audit of 17 wikis found the documented convention honoured by only 40% of 511
-keys — costing 17 missed joins and producing 2 false positives (one key denoting
+keys — costing 17 missed joins and producing 3 false positives (one key denoting
 two different papers). Nothing checked it. Now something does:
 
   * every .bib entry key matches the schema's bibkey pattern

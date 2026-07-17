@@ -19,7 +19,7 @@ the authority IDs the frontmatter already carries:
     convention, which ``lint-wiki.py`` enforces. This docstring used to claim the
     keys were "stable via Better BibTeX" — they never were. An audit of 17 wikis
     found the convention honoured by only 40% of 511 keys, which cost 17 missed
-    joins and produced 2 false positives. The ``bibkeys`` sub-command below exists
+    joins and produced 3 false positives. The ``bibkeys`` sub-command below exists
     to make exactly that failure visible.)
 
 This tool is the first, high-precision step. It does **not** build the merged

@@ -99,6 +99,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - `scaffold-research-project` described the output tree as `output/publication/article/…` and
   `output/publication/book/…`. The template has had no `publication/` level for some time.
 
+- **The citekey rationale under-counted its own evidence.** The audit that motivated the
+  `surname-year-shorttitle` migration found **three** keys each denoting two different papers
+  (`hensel-2024`, `tebes-2023`, `maeir-2021` — as the 0.23.0 entry records). Seven places said
+  two, including `migrate-citekeys.py`'s own "WHY THIS EXISTS" docstring, which named only the
+  first two. `ingest-source` was the one place that had it right.
+
 ## [0.30.0] — 2026-07-14
 
 ### Added

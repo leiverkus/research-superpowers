@@ -248,7 +248,7 @@ bibkey: {key}
 class CitekeyIntegrity(unittest.TestCase):
     """`bibkey` is the cross-project JOIN KEY (wiki-global-graph.py matches sources
     on it). An audit of 17 wikis found the convention honoured by only 40% of 511
-    keys — 17 missed joins, 2 false positives — because nothing checked it.
+    keys — 17 missed joins, 3 false positives — because nothing checked it.
     """
 
     def _run(self, d, bibs: dict, pages: dict, qmds: dict = None):
