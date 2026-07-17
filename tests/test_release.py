@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import pathlib
+import re
 import tempfile
 import unittest
 
@@ -220,6 +221,65 @@ class LiveRepoIsFullyTagged(unittest.TestCase):
     def test_every_documented_version_is_tagged(self):
         """Guards the real repo, not a fixture — this is what went wrong."""
         self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 0)
+
+
+class PlanChangelog(unittest.TestCase):
+    """Where a new version section goes, and what happens to the notes already
+    written under [Unreleased].
+
+    The bug: inserting before the first `## [` heading files the new version
+    ABOVE [Unreleased] and strands the notes there — so `notes` finds only the
+    empty skeleton and the release ships "_Describe the release here._" while
+    the real notes sit orphaned one heading up.
+    """
+
+    WITH_NOTES = ("# Changelog\n\n## [Unreleased]\n\n### Fixed\n\n- a note\n\n"
+                  "## [0.1.0] — 2026-01-01\n\nFirst.\n")
+    EMPTY_UNRELEASED = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] — 2026-01-01\n\nFirst.\n"
+    NO_UNRELEASED = "# Changelog\n\n## [0.1.0] — 2026-01-01\n\nFirst.\n"
+
+    def _headings(self, text):
+        return re.findall(r"^##\s*\[([^\]]+)\]", text, re.MULTILINE)
+
+    def test_unreleased_notes_are_promoted_not_stranded(self):
+        out, what = rel.plan_changelog(self.WITH_NOTES, "0.2.0", "2026-07-17")
+        self.assertIn("promoted", what)
+        # the notes now live under 0.2.0 — which is what `notes` will publish
+        self.assertIn("- a note", rel.extract_changelog_section("0.2.0", out))
+        # ...and no longer under [Unreleased]
+        self.assertNotIn("- a note", out.split("## [0.2.0]")[0])
+
+    def test_new_version_goes_below_unreleased(self):
+        out, _ = rel.plan_changelog(self.WITH_NOTES, "0.2.0", "2026-07-17")
+        self.assertEqual(self._headings(out), ["Unreleased", "0.2.0", "0.1.0"])
+
+    def test_unreleased_survives_and_is_left_empty(self):
+        out, _ = rel.plan_changelog(self.WITH_NOTES, "0.2.0", "2026-07-17")
+        head = out.split("## [0.2.0]")[0]
+        self.assertIn("## [Unreleased]", head)
+        self.assertNotIn("###", head)          # nothing left under it
+
+    def test_blank_line_after_the_heading(self):
+        # `\s*$` in the [Unreleased] pattern would eat it and glue the notes on.
+        out, _ = rel.plan_changelog(self.WITH_NOTES, "0.2.0", "2026-07-17")
+        self.assertIn("## [0.2.0] — 2026-07-17\n\n### Fixed", out)
+
+    def test_empty_unreleased_gets_a_skeleton_below_it(self):
+        out, what = rel.plan_changelog(self.EMPTY_UNRELEASED, "0.2.0", "2026-07-17")
+        self.assertIn("skeleton", what)
+        self.assertEqual(self._headings(out), ["Unreleased", "0.2.0", "0.1.0"])
+        self.assertIn("## [0.2.0] — 2026-07-17\n\n_Describe", out)
+
+    def test_no_unreleased_section_still_files_newest_first(self):
+        out, what = rel.plan_changelog(self.NO_UNRELEASED, "0.2.0", "2026-07-17")
+        self.assertIn("skeleton", what)
+        self.assertEqual(self._headings(out), ["0.2.0", "0.1.0"])
+
+    def test_existing_section_is_left_alone(self):
+        once, _ = rel.plan_changelog(self.WITH_NOTES, "0.2.0", "2026-07-17")
+        twice, what = rel.plan_changelog(once, "0.2.0", "2026-07-17")
+        self.assertEqual(once, twice)
+        self.assertIn("already present", what)
 
 
 class CmdCheck(_TempRepo):

@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.32.1] — 2026-07-17
+
+The release helper filed new versions above [Unreleased] and left the notes behind.
+
+### Fixed
+
+- **`release.py bump` put the new version in the wrong place — and stranded the release
+  notes.** It inserted the section before the first `## [` heading. In a Keep-a-Changelog
+  file that heading is `## [Unreleased]`, so the new version landed *above* it.
+
+  The ordering was the visible half. The damaging half was quieter: notes written under
+  `[Unreleased]` during development **stayed there**, while the new section got the
+  `_Describe the release here._` skeleton. Since `release.py notes` publishes exactly that
+  section, the release would have shipped the placeholder as its body with the real notes
+  orphaned one heading up — and nothing would have failed. Both 0.31.0 and 0.32.0 had to be
+  hand-written around this.
+
+  `bump` now promotes the `[Unreleased]` notes into the new version section and leaves
+  `[Unreleased]` empty above it — what the format means by cutting a release. It still writes
+  a skeleton when there is nothing to promote, and it is still idempotent.
+
 ## [0.32.0] — 2026-07-17
 
 A release that never happened now fails the build.

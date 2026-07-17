@@ -180,6 +180,49 @@ def cmd_audit(args) -> int:
     return 0
 
 
+# `[ \t]*$`, not `\s*$`: \s matches newlines, so `\s*$` would eat the blank line
+# after the heading and glue the promoted notes straight onto it.
+UNRELEASED_RE = re.compile(r"^##[ \t]*\[Unreleased\][ \t]*$", re.MULTILINE | re.IGNORECASE)
+VERSION_HEADING_RE = re.compile(r"^##\s*\[\d+\.\d+\.\d+\]", re.MULTILINE)
+
+SKELETON_BODY = "\n\n_Describe the release here._\n\n### Added\n\n### Changed\n\n### Fixed\n\n"
+
+
+def plan_changelog(cl: str, version: str, today: str) -> tuple[str, str]:
+    """Return (new CHANGELOG text, what happened) for releasing `version`.
+
+    Keep a Changelog puts `## [Unreleased]` on top and the newest release under
+    it. Naively inserting before the first `## [` heading therefore files the new
+    version ABOVE [Unreleased] — and strands the notes written during
+    development under [Unreleased], where `notes` will never find them. The
+    release then ships "_Describe the release here._" as its body while the real
+    notes sit orphaned. So: promote those notes rather than skirt them.
+    """
+    if extract_changelog_section(version, cl) is not None:
+        return cl, "CHANGELOG section already present"
+
+    m_unrel = UNRELEASED_RE.search(cl)
+    m_ver = VERSION_HEADING_RE.search(cl)
+    heading = f"## [{version}] — {today}"
+
+    if m_unrel:
+        body_start = m_unrel.end()
+        body_end = m_ver.start() if m_ver else len(cl)
+        body = cl[body_start:body_end]
+        if body.strip():
+            # The notes are already written — they ARE this release. Move them
+            # down under the version heading and leave [Unreleased] empty.
+            return (cl[:m_unrel.start()] + "## [Unreleased]\n\n" + heading + body
+                    + cl[body_end:]), "promoted the [Unreleased] notes into it"
+        # [Unreleased] exists but is empty: skeleton goes directly below it.
+        return (cl[:body_end] + heading + SKELETON_BODY + cl[body_end:]), "inserted a skeleton"
+
+    if m_ver:
+        return (cl[:m_ver.start()] + heading + SKELETON_BODY
+                + cl[m_ver.start():]), "inserted a skeleton"
+    return cl + "\n" + heading + SKELETON_BODY, "inserted a skeleton"
+
+
 def cmd_notes(args) -> int:
     section = extract_changelog_section(args.version)
     if section is None:
@@ -212,14 +255,8 @@ def cmd_bump(args) -> int:
         print("::error::README version badge not found — nothing written", file=sys.stderr)
         return 1   # fail before any file is touched
 
-    cl = CHANGELOG.read_text(encoding="utf-8")
-    skeleton_inserted = extract_changelog_section(version) is None
-    if skeleton_inserted:
-        today = args.date or datetime.date.today().isoformat()
-        skeleton = (f"## [{version}] — {today}\n\n"
-                    "_Describe the release here._\n\n### Added\n\n### Changed\n\n### Fixed\n\n")
-        m2 = re.search(r"^##\s*\[", cl, re.MULTILINE)
-        cl = (cl[:m2.start()] + skeleton + cl[m2.start():]) if m2 else cl + "\n" + skeleton
+    today = args.date or datetime.date.today().isoformat()
+    cl, what = plan_changelog(CHANGELOG.read_text(encoding="utf-8"), version, today)
 
     # --- Phase 2: everything validated — now commit all writes together. ---
     PLUGIN.write_text(plugin_text, encoding="utf-8")
@@ -227,10 +264,11 @@ def cmd_bump(args) -> int:
     README.write_text(readme_text, encoding="utf-8")
     CHANGELOG.write_text(cl, encoding="utf-8")
 
-    if skeleton_inserted:
-        print(f"bumped to {version}; inserted CHANGELOG skeleton — write the notes, then tag v{version}")
-    else:
-        print(f"bumped to {version}; CHANGELOG section already present")
+    print(f"bumped to {version}; {what}")
+    if what.startswith("inserted"):
+        print(f"  write the notes, then tag v{version}")
+    elif what.startswith("promoted"):
+        print(f"  read them over, then tag v{version}")
     return 0
 
 
