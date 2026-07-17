@@ -71,7 +71,7 @@ CASES = [
     ("getty-aat-bad-pattern", _variant(type="concept", bibkey=_DELETE, getty_aat_id="54327"), False),
     # bibkey shape: surname-year-shorttitle. It is a cross-project JOIN KEY, so the
     # schema pins it — an audit found the old convention was honoured by only 40% of
-    # 511 keys, which cost 17 missed joins and 2 false positives.
+    # 511 keys, which cost 17 missed joins and 3 false positives.
     ("bibkey-valid", _variant(bibkey="finkelstein-2003-low-chronology"), True),
     ("bibkey-valid-multipart-surname", _variant(bibkey="regev-et-al-2020-radiocarbon"), True),
     ("bibkey-valid-disambiguator", _variant(bibkey="finkelstein-2003b-low-chronology"), True),

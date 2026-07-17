@@ -377,19 +377,37 @@ The script checks deterministically and fast. Content checks
 
 Trigger: human says "Draft [section/chapter]."
 
+Drafting is staged, and the argument is settled with the human before any prose
+exists. Nothing is drafted in one pass.
+
 Steps:
 1. LLM gathers relevant Synthesis and Source pages.
-2. LLM creates a draft in `output/`, following the **Manuscript style
-   (drafting depth)** rules above — develop each point with examples and
-   explanation drawn from the sources, do not reflow bullets into flat prose.
+2. **Architecture first.** LLM writes an outline — thesis, claim chain, a claim
+   per section with its evidence, scope boundary and word budget — to
+   `output/<book|article>/outline/<basename>.md` (derived from the target file:
+   `book/text/03-methods.qmd` → `book/outline/03-methods.md`). It is never
+   rendered and is not listed in `_quarto.yml`.
+   **The human approves the claim chain before drafting starts.**
+3. **Then section by section.** Per section: the LLM sketches the argument
+   (steps, evidence, the concrete material, the counter-position and how it is
+   handled) → human approves → prose for that section only → human approves,
+   with any deviation from the sketch named explicitly → append, mark the
+   section approved, next.
    - For a book chapter: in `output/book/`
    - For an article: in `output/article/`
-3. Where a wiki page is too thin to develop a point, the LLM reaches back to the
+4. Prose follows the **Manuscript style (drafting depth)** rules above — develop
+   each point with examples and explanation drawn from the sources, do not
+   reflow bullets into flat prose.
+5. Where a wiki page is too thin to develop a point, the LLM reaches back to the
    source — its `### Direct quotes` / `### Examples & illustrations`, or the
    original PDF at `<library>/pdf/<bibkey>.pdf` at the cited pages — and cites what it uses.
-4. The draft contains Quarto citations (`@citekey`) referring to
+6. The draft contains Quarto citations (`@citekey`) referring to
    `output/bibtex/references.bib`.
-5. Human revises the draft.
+7. Human revises the draft. The outline is what you revise *against* — keep the
+   two in sync, and a chapter picked up weeks later needs no re-litigating.
+
+**Want a straight run instead?** Say so ("zieh durch") — the LLM names which
+stops it is skipping and logs the reason. The stages are a default, not a cage.
 
 ### 5. Read the wiki
 

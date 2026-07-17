@@ -97,7 +97,7 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `.mcp.json` — registers the `wiki-graph` MCP server for Claude Code
    - `input/` (with its `bibliography/`, `data/`, `description/`, `ideas/`, `notes/` subdirectories — the `description/project-description.md` template file goes too)
    - `knowledge/` (plain Markdown wiki — `_meta/`, the four `_example-*.md` files in `entities/`, `concepts/`, `sources/`, `synthesis/`, plus an empty `assets/` and `_meta/log.md`, `_meta/index.md`; no `_quarto.yml` or `Makefile` — the wiki has no build step)
-   - `output/` (`bibtex/references.bib`, `bibtex/csl/`, `publication/article/article.qmd`, `publication/book/_quarto.yml` and chapters, `presentation/talk.qmd`, plus their Makefiles)
+   - `output/` (`bibtex/references.bib`, `bibtex/csl/`, `article/article.qmd`, `book/_quarto.yml` and chapters, `presentation/talk.qmd`, plus their Makefiles; and the empty `article/outline/` + `book/outline/` dirs where `drafting-manuscript` keeps each manuscript's argument architecture — not rendered, never listed in `_quarto.yml`)
 
 9. **Patch CLAUDE.md frontmatter** with the user's answers. Read the new `CLAUDE.md`, replace the placeholder frontmatter block at the top:
    ```yaml

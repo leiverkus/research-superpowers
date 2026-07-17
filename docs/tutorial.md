@@ -1,6 +1,8 @@
 # Tutorial — End-to-End Walkthrough
 
-A complete pass through every phase, on one realistic example. The example project ("Iron Age IIA Chronology in the Southern Levant") matches `examples/example-project/` in the plugin repo — you can compare against the artefacts checked in there.
+A complete pass through every phase, on one realistic example — the same project checked into `examples/example-project/`. File names, slugs and citation keys are the ones you will find there, so you can open the artefacts and compare.
+
+The two differ in **how far they run**, not in what they are: this walkthrough carries the project through all nine phases, while the checked-in copy stops after the first synthesis and the drafting outline — its later artefacts (Cohen 1979, Finkelstein 1999, the peer-review reports, the rendered PDF) exist only in this text. Where the tutorial shows a file the example does not have, it says so.
 
 Time: 30–60 minutes for the read-through; the actual research it stands in for would be months.
 
@@ -26,13 +28,13 @@ The assistant invokes `brainstorming-research`. It probes:
 - What's the deliverable? (Journal article, ~6000 words, English.)
 - What would *change your mind*? (If the Cohen stratigraphy turns out to be undermined by post-Cohen excavation, or if a new 14C series from a Negev fortress site lands.)
 
-The skill writes `input/ideas/negev-fortresses-chronology-design.md`. **SOFT-GATE:** the skill won't proceed to plan-writing until you sign off on the design. You read it, edit one sentence, say "looks good, proceed."
+The skill writes `input/ideas/low-chronology-design.md`. **SOFT-GATE:** the skill won't proceed to plan-writing until you sign off on the design. You read it, edit one sentence, say "looks good, proceed."
 
 ## Phase 2 — Writing the plan (skill: `writing-research-plan`)
 
 The plan reads the `methodology: hermeneutic` from your project `CLAUDE.md` and uses the hermeneutic template (research question + method sketch + expected sources + iteration expectation — *no* frozen hypothesis).
 
-It writes `input/ideas/negev-fortresses-chronology-plan.md` with tasks:
+It writes `input/ideas/low-chronology-plan.md` with tasks:
 
 ```
 - [ ] Literature review on the Iron Age IIA chronology debate
@@ -76,8 +78,8 @@ You refine — the project research question is too broad for *this* source. You
 The skill then:
 
 1. Reads the PDF in full **under that focus** (not just abstract; reads with the focus question actively in mind, marking anything that bears on it).
-2. Derives slug `cohen-1979`.
-3. Creates `knowledge/sources/cohen-1979.md` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979`) and a body containing exactly one `## Focus: <your focus> — <date>` block (claims, direct quotes, explicit boundary of what the source does *not* address), a one-paragraph `## Other content in this source` note, and union `## Mentioned entities` + `## Connections` sections.
+2. Derives the slug `cohen-1979` **and** the bibkey `cohen-1979-fortresses` — two different things. The slug names the wiki page; the bibkey is the cross-project join key and must be `surname-year-shorttitle`, identical in every project that cites the work (it doubles as the PDF filename stem, `<library>/pdf/cohen-1979-fortresses.pdf`). A bare `cohen-1979` fails the schema pattern and `lint-wiki` hard-stops on it. You can see the split in the example project: page `finkelstein-piasetzky-2003.md` carries `bibkey: finkelstein-2003-wrong`.
+3. Creates `knowledge/sources/cohen-1979.md` with frontmatter (`type: source`, `status: review`, `author: llm`, `bibkey: cohen-1979-fortresses`) and a body containing exactly one `## Focus: <your focus> — <date>` block (claims, direct quotes, explicit boundary of what the source does *not* address), a one-paragraph `## Other content in this source` note, and union `## Mentioned entities` + `## Connections` sections.
 4. Extracts entities **relevant to the focus**: `cohen` (person), `negev-fortresses` (concept), `tel-arad` (place), `kadesh-barnea` (place), `iron-age-iia` (concept), `high-chronology` (concept). Entities unrelated to the focus (e.g. Cohen's brief excursus on Phoenician trade) are not extracted now — they stay in the PDF until a future re-ingest needs them.
 5. Creates an entity page for each new one.
 6. Writes the BibTeX entry.
@@ -108,7 +110,7 @@ For each task in the plan, the skill routes:
 - **Ingest tasks** → `source-ingester` subagent (done above).
 - **Synthesis task** ("chronology debate as it touches Negev fortresses") → handled in the main conversation (high context integration; subagent isolation would lose the cross-source argument).
 
-The synthesis page lands at `knowledge/synthesis/chronology-debate-negev.md`. You read it, push back on one paragraph (the assistant overstated Mazar's position), revise together, and only then promote `status: review` → `status: stable`. **Only the user promotes to stable.** Agents never self-promote — this is a hard editorial rule, not a soft gate.
+The synthesis page lands at `knowledge/synthesis/chronology-debate.md`. You read it, push back on one paragraph (the assistant overstated Mazar's position), revise together, and only then promote `status: review` → `status: stable`. **Only the user promotes to stable.** Agents never self-promote — this is a hard editorial rule, not a soft gate.
 
 The skill walks the [Critical Thinking checklist](../skills/executing-research-plan/SKILL.md) on the synthesis before flagging it ready: claim → evidence → framework (*Quellenkritik* for textual / stratigraphic claims) → confounders → fallacies → falsifiability.
 
@@ -118,26 +120,51 @@ Because `methodology: hermeneutic`, the review is a single-pass "synthesis revie
 
 **SOFT-GATE** check before drafting:
 
-1. At least one synthesis page is `status: stable` ✓ (`chronology-debate-negev.md`)
+1. At least one synthesis page is `status: stable` ✓ (`chronology-debate.md`)
 2. All sources cited in the planned section exist as `knowledge/sources/*.md` and have BibTeX entries ✓
 3. `wiki-lint` is green ✓
 4. The plan has an explicit Draft task ✓
+5. No page this draft pulls from carries an open `review_flag` ✓
 
-Skill produces the section skeleton first:
+Conditions 1 and 5 are exactly where the checked-in example stops: there `chronology-debate.md` is still `status: review` and carries an open `weak-support` flag, so drafting never starts and no override is logged. Here we got past it in Phase 6 by promoting the synthesis to `stable` after resolving the flag — that promotion is the difference between the two.
 
+Drafting runs in three stages, and no prose is written until the argument is settled.
+
+**Stage A — architecture.** The skill writes `output/article/outline/main.md` — the path is derived from the target file, `article/main.qmd` → `article/outline/main.md`: a thesis, a claim chain, and a claim per section. Not a table of contents — a table of contents cannot be wrong, and the point of this stage is to put something on the table that *can* be.
+
+```markdown
+## Thesis
+The Negev fortresses cannot arbitrate the chronology debate, because the
+sequences used to date them are themselves dated by the pottery in question.
+
+## Claim chain
+The debate's two camps agree on the stratigraphy and disagree on its anchoring
+(S2–S3), so the disagreement is not evidential but methodological (S4). The 14C
+reconciliation attempts inherit the same circularity (S5), which is why the
+Negev material settles nothing on its own (S6).
+
+## Sections
+### S3 — The case for the 9th century
+- **Claim:** the Low Chronology's Negev argument rests on three sites whose
+  sequences are anchored by the ceramic horizon they are meant to date
+- **Evidence:** `[@finkelstein-1999-hazor]`, `[@finkelstein-2003-wrong]`
+- **Function:** hands S4 the circularity it diagnoses
+- **Not here:** the 14C rebuttal — that is S5
+- **Budget:** ~700 words
+- **Status:** outlined
 ```
-1. Introduction — the chronology problem in the Negev
-2. State of the field — Cohen 1979 to Mazar 2011
-3. The case for late 10th century (High Chronology)
-4. The case for 9th century (Low Chronology)
-5. Reconciliation attempts (14C, Modified Conventional)
-6. What the Negev fortresses can and cannot tell us
-7. Conclusion
-```
 
-You approve the skeleton. The skill drafts each section in prose, citing inline as `[@cohen-1979, p. 79]`, `[@finkelstein-1999]`, etc. Every citation key gets verified against `output/bibtex/references.bib`. Direct quotes come from the source page's "Verbatim quotes" section, never reconstructed from memory.
+**STOP 1.** You read the chain and push back: S6 is doing two jobs at once. The skill splits it, updates the outline, and asks again. This costs one exchange. Discovering it after 4000 words costs an afternoon.
 
-The skill writes to `output/article/main.qmd` and runs `quarto render`. The first render fails (one citation key collision — you have `mazar-2011` and `mazar-2011b`); the skill resolves it and re-renders successfully.
+**Stage B — section by section.** For S3, the skill sketches the argument into the outline — the steps, which source carries each one, the concrete material (Tel Masos Stratum II), the counter-position (`[@mazar-2011-iron]`) and how it is handled. **STOP 2**: you approve the argument. Only then does the prose get written, citing inline as `[@cohen-1979-fortresses, p. 79]`, `[@finkelstein-1999-hazor]`. **STOP 3**: the prose comes back with a deviations line — "step 2 weaker than sketched: Finkelstein 1999 gives the Arad sequence, not Masos". You accept, the section is appended to `output/article/main.qmd`, its `Status` goes to `approved`, and the loop moves to S4.
+
+That deviation is the whole reason the stage exists. Drafted in one pass, it would have been quietly smoothed over and read as settled.
+
+**Stage C — finishing.** Every citation key gets verified against `output/bibtex/references.bib`. Direct quotes come from the source page's "Verbatim quotes" section, never reconstructed from memory.
+
+The check catches one. You cite two different Mazar 2011 papers, and both went in as `mazar-2011-iron`. Nothing would have failed: the render exits 0 and the PDF looks right — one of the two works just silently carries the other's pages. This is the failure the key shape exists to prevent, and it is why the disambiguator goes in the **year** slot, not on the end: `mazar-2011-iron` and `mazar-2011b-iron-age`. You split the key and re-render.
+
+The outline file stays behind. It is what you revise against after peer review, and it is why picking the chapter back up three weeks later does not mean re-litigating its structure.
 
 Log line appended to `_meta/log.md`.
 
@@ -172,14 +199,14 @@ The closing checklist:
 
 You agree to the Zenodo deposit; the skill prepares the metadata (it doesn't submit on your behalf — you do that step), then logs the DOI.
 
-`git add . && git commit -m "finish: negev-fortresses-chronology"`. Project closed.
+`git add . && git commit -m "finish: low-chronology"`. Project closed.
 
 ## What you produced
 
 ```
 input/ideas/
-├── negev-fortresses-chronology-design.md
-└── negev-fortresses-chronology-plan.md
+├── low-chronology-design.md
+└── low-chronology-plan.md
 
 input/bibliography/
 ├── literaturguide.md
@@ -196,11 +223,13 @@ knowledge/
 ├── entities/        (~15 .md files)
 ├── concepts/        (3 .md files: high-chronology, low-chronology, iron-age-iia)
 └── synthesis/
-    └── chronology-debate-negev.md  (status: stable)
+    └── chronology-debate.md  (status: stable)
 
 output/
 ├── bibtex/references.bib
 └── article/
+    ├── outline/
+    │   └── main.md              (argument architecture; never rendered)
     ├── main.qmd
     ├── main.pdf
     └── reviews/
@@ -223,7 +252,16 @@ The rest of the project stays hermeneutic. This is what "methodology: mixed" loo
 
 ## Where to look in the example project
 
-`examples/example-project/` in the plugin repo has a smaller version of this same workflow — fewer sources, only the early phases populated, but you can see the file layout and frontmatter conventions in concrete form.
+`examples/example-project/` is this project, stopped early. What is checked in and directly comparable with the text above:
+
+| Tutorial phase | Artefact in the example |
+|---|---|
+| 1–2 Brainstorm / plan | `input/ideas/low-chronology-design.md`, `low-chronology-plan.md` |
+| 5 Ingest | `knowledge/sources/finkelstein-piasetzky-2003.md` (full), `mazar-2011.md`, `regev-et-al-2020.md` (stubs) — note slug ≠ `bibkey` |
+| 6 Synthesis | `knowledge/synthesis/chronology-debate.md` — `status: review`, one open `review_flag` |
+| 7 Drafting, Stage A | `output/article/outline/main.md` — thesis, claim chain, six sections, all at `Status: outlined` |
+
+What is **not** there: Cohen 1979 and Finkelstein 1999 (never ingested), any drafted prose, the reviews, the PDF. The example stops precisely where the drafting SOFT-GATE stops it — the synthesis is not `stable` and its flag is open, so Stage B never runs and no override is logged. That is the gate working, not the example being unfinished: its outline records that S4, the article's load-bearing section, has no citable source at all.
 
 ## Where to go next
 
