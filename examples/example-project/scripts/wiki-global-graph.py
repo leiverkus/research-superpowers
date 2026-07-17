@@ -11,10 +11,12 @@ the authority IDs the frontmatter already carries:
   * ``type=entity`` : ``orcid`` (living researchers — the key that actually
     covers working scientists), ``gnd_id`` (persons), ``idai_gazetteer_id``
     (places), ``wikidata_qid``
-  * ``type=concept``: ``getty_aat_id`` (Getty AAT — the controlled-vocabulary
-    key for methods / concepts), or ``wikidata_qid`` / ``gnd_id`` where AAT has
-    no matching term. This is what makes concept-level cross-project links —
-    the deepest tissue of a methods portfolio — mechanically visible.
+  * ``type=concept``: ``wikidata_qid`` — the primary key, since Wikidata covers
+    concepts as well as entities — with ``getty_aat_id`` (Getty AAT) as an
+    optional extra where that heritage thesaurus has a precise term (measured:
+    2 of 19 concepts in one project). This is what makes concept-level
+    cross-project links — the deepest tissue of a methods portfolio —
+    mechanically visible.
   * ``type=source`` : ``bibkey`` (BibTeX key; stable via the surname-year-shorttitle
     convention, which ``lint-wiki.py`` enforces. This docstring used to claim the
     keys were "stable via Better BibTeX" — they never were. An audit of 17 wikis
@@ -214,15 +216,15 @@ def _print_report(overlap, projects) -> None:
         print()
 
     # Honest blind spot: only *untagged* pages are invisible to an ID-only match.
-    # Concepts can now carry a vocabulary id (getty_aat_id / wikidata_qid /
-    # gnd_id); those that don't are the remaining blind spot.
+    # Concepts can now carry a vocabulary id (wikidata_qid primary, getty_aat_id /
+    # gnd_id optional); those that don't are the remaining blind spot.
     con_without_id = sum(p.get("concepts", 0) - p.get("concepts_with_vocab_id", 0)
                          for p in present)
     ent_without_id = sum(p.get("entities", 0) - p.get("entities_with_authority_id", 0)
                          for p in present)
     print("Blind spot: pages without a join id are not eligible for matching.")
-    print(f"  {con_without_id} concept page(s) without a vocabulary id (getty_aat_id / "
-          f"wikidata_qid / gnd_id) and {ent_without_id} entity page(s) without an authority id.")
+    print(f"  {con_without_id} concept page(s) without a vocabulary id (wikidata_qid / "
+          f"getty_aat_id / gnd_id) and {ent_without_id} entity page(s) without an authority id.")
 
 
 # ---------------------------------------------------------------------------

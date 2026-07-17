@@ -10,7 +10,7 @@ Every `knowledge/**/*.md` page begins with a YAML frontmatter block. The normati
 
 ## Optional fields
 
-`tags`, `sources`, `bibkey` (required on sources), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and `getty_aat_id` (on concepts — the Getty AAT controlled-vocabulary join key that makes cross-project *concept* overlap visible).
+`tags`, `sources`, `bibkey` (required on sources), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
 
 ## Field semantics in short
 
