@@ -66,12 +66,12 @@ substitution matches nothing).
 
 import argparse
 import difflib
+import importlib.util
 import json
 import re
 import shutil
 import subprocess
 import sys
-import unicodedata
 from pathlib import Path
 
 import yaml
@@ -81,6 +81,24 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8")
     except AttributeError:  # pragma: no cover - non-reconfigurable stream
         pass
+
+
+def _load(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# The canonical bibkey generator is the SINGLE source of truth, in the shipped,
+# tested library.py — the same code `add-to-library.py` uses. This maintainer
+# migration tool delegates the folding (deascii, stopwords) and the final
+# assembly (make_bibkey) to it, so a key minted by a migration and a key minted
+# by a direct add can never disagree for the same work. (library.py lives in the
+# template tree; it is loaded, not imported, because it is not on sys.path here.)
+lib = _load("_rs_library",
+            Path(__file__).resolve().parent.parent
+            / "templates" / "research-project-template" / "scripts" / "library.py")
 
 # --------------------------------------------------------------------------
 # Conventions
@@ -111,12 +129,6 @@ QUARTO_XREF_RE = re.compile(
 # resolves nowhere and Quarto renders ??? while exiting 0.
 CITEKEY_CONT = r"[A-Za-z0-9_-]"
 
-STOPWORDS = {
-    "the", "a", "an", "of", "and", "in", "on", "for", "to", "from", "with", "at",
-    "der", "die", "das", "und", "von", "im", "zur", "zum", "des", "ein", "eine",
-    "la", "le", "les", "el", "del", "al", "il", "un", "une", "y", "e",
-}
-
 BIB_ENTRY_RE = re.compile(r"(@[a-zA-Z]+\s*\{\s*)([^,\s]+)(\s*,)")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
@@ -124,34 +136,10 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 # --------------------------------------------------------------------------
 # Key generation
 # --------------------------------------------------------------------------
-
-# Letters that NFKD does NOT decompose, because they are distinct letters and not
-# "base + combining diacritic". Without an explicit mapping the [^a-z] filter drops
-# them silently, mangling the surname: Turkish "Sırmaçek" → "srmacek", Polish
-# "Trybała" → "trybaa". Both happened.
-_UNDECOMPOSABLE = {
-    "ı": "i", "İ": "I",          # Turkish dotless / dotted i
-    "ł": "l", "Ł": "L",          # Polish stroked l
-    "đ": "d", "Đ": "D",          # Croatian / Vietnamese stroked d
-    "ħ": "h", "Ħ": "H",          # Maltese
-    "ŧ": "t", "ø": "o", "Ø": "O",
-    "æ": "ae", "Æ": "Ae", "œ": "oe", "Œ": "Oe",
-    "ß": "ss", "þ": "th", "Þ": "Th", "ð": "d", "Ð": "D",
-    "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue",
-}
-
-
-def deascii(s: str) -> str:
-    """Fold to ASCII the way the PDF-filename rule does (ä→ae, ß→ss, é→e).
-
-    The explicit table above must come FIRST: NFKD only splits base+diacritic, so a
-    letter like ı or ł survives it untouched and is then dropped by the [^a-z]
-    filter — silently shortening the surname and minting a key nobody can guess.
-    """
-    for src, dst in _UNDECOMPOSABLE.items():
-        s = s.replace(src, dst)
-    s = unicodedata.normalize("NFKD", s)
-    return "".join(c for c in s if not unicodedata.combining(c))
+# The folding table (deascii), the stopword list and the final assembly all live
+# in library.py now — see the module-level `lib` load above. `deascii` is aliased
+# here so the parsing helpers below read unchanged.
+deascii = lib.deascii
 
 
 def _brace_value(text: str, i: int) -> str | None:
@@ -213,13 +201,14 @@ def year_of(body: str) -> str | None:
 
 
 def shorttitle_of(body: str, words: int = 1) -> str | None:
-    """First significant title word(s): stopwords dropped, deascii'd, lowercased."""
-    raw = _field(body, "title")
-    if not raw:
-        return None
-    text = deascii(re.sub(r"[{}\\$]", "", raw)).lower()
-    parts = [w for w in re.findall(r"[a-z0-9]+", text) if w not in STOPWORDS and len(w) > 2]
-    return "-".join(parts[:words]) if parts else None
+    """First significant title word(s): stopwords dropped, deascii'd, lowercased.
+
+    Delegates the slug mechanics to library.propose_shorttitle, so the rule is
+    identical to what add-to-library proposes. `words=1` is kept deliberately: it
+    is the proposal length this migration was run with, and the map it produces is
+    reviewed by hand anyway — bumping it here would only churn already-migrated
+    projects on a re-plan."""
+    return lib.propose_shorttitle(_field(body, "title"), words=words)
 
 
 def make_key(body: str) -> tuple[str | None, str]:
@@ -235,7 +224,10 @@ def make_key(body: str) -> tuple[str | None, str]:
     missing = [n for n, v in (("author/editor", s), ("year", y), ("title", t)) if not v]
     if missing:
         return None, "missing " + ", ".join(missing)
-    return f"{s}-{y}-{t}", "ok"
+    try:
+        return lib.make_bibkey(s, y, t), "ok"
+    except ValueError as e:                       # a slot that survived the check above
+        return None, str(e)                       # but is empty after folding — surface it
 
 
 # --------------------------------------------------------------------------
