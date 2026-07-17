@@ -58,8 +58,13 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Check out repository
+      - name: Check out repository (with tags)
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # `release.py audit` asks which versions are tagged. The default
+          # shallow checkout fetches no tags, so every version would look
+          # untagged — audit fails closed on that rather than passing vacuously.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -95,6 +100,13 @@ jobs:
         run: |
           v=$(python -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
           python scripts/release.py check --tag "v$v"
+
+      - name: Every documented version was actually released
+        # `check` above only ever runs with a tag in hand, so it cannot notice a
+        # release that was never tagged: 0.27.0-0.30.0 were bumped, changelogged
+        # and merged, then sat untagged behind a green CI while GitHub still
+        # showed 0.26.1 as latest. This is the check that says so.
+        run: python scripts/release.py audit
 
       - name: Frontmatter schema is valid JSON
         run: |

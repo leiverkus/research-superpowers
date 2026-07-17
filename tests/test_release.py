@@ -150,6 +150,78 @@ class CmdBump(_TempRepo):
         self.assertEqual(_quiet(rel.cmd_bump,argparse.Namespace(version="0.2", date=None)), 1)
 
 
+class ReleasedVersions(unittest.TestCase):
+    def test_newest_first_and_unreleased_skipped(self):
+        text = "# Changelog\n\n## [Unreleased]\n\nwip\n\n" + SAMPLE.split("\n", 2)[2]
+        self.assertEqual(rel.released_versions(text), ["0.12.0", "0.11.1", "0.11.0"])
+
+    def test_version_tuple_orders_numerically(self):
+        # '0.10.0' < '0.9.0' as strings — the audit floor must not be fooled.
+        self.assertGreater(rel.version_tuple("0.10.0"), rel.version_tuple("0.9.0"))
+
+
+class CmdAudit(_TempRepo):
+    """The bug this exists for: 0.27.0–0.30.0 were bumped, changelogged and
+    merged, but never tagged. `check` could not catch it — it only runs on tag
+    push, so a forgotten tag means it never runs at all."""
+
+    def _changelog(self, *versions):
+        body = "# Changelog\n\n## [Unreleased]\n\n"
+        for v in versions:
+            body += f"## [{v}] — 2026-01-01\n\nNotes for {v}.\n\n"
+        self.changelog.write_text(body, encoding="utf-8")
+
+    def setUp(self):
+        super().setUp()
+        self._saved_tags = rel.git_tags
+
+    def tearDown(self):
+        rel.git_tags = self._saved_tags
+        super().tearDown()
+
+    def test_all_tagged_passes(self):
+        self._changelog("0.6.0", "0.5.0", "0.4.0")
+        rel.git_tags = lambda: {"v0.6.0", "v0.5.0", "v0.4.0"}
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 0)
+
+    def test_untagged_older_version_fails(self):
+        self._changelog("0.6.0", "0.5.0", "0.4.0")
+        rel.git_tags = lambda: {"v0.6.0", "v0.4.0"}          # 0.5.0 never released
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 1)
+
+    def test_newest_untagged_passes_release_in_flight(self):
+        # The release PR bumps the manifest and writes the notes BEFORE the tag
+        # exists. Failing here would redden every release PR.
+        self._changelog("0.6.0", "0.5.0", "0.4.0")
+        rel.git_tags = lambda: {"v0.5.0", "v0.4.0"}
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 0)
+
+    def test_versions_below_floor_are_not_audited(self):
+        # 0.1.0/0.2.0 predate the first tag (v0.3.0); 0.3.1 is a section for a
+        # release that never happened. Immutable history, not a finding.
+        self._changelog("0.5.0", "0.4.0", "0.3.1", "0.2.0", "0.1.0")
+        rel.git_tags = lambda: {"v0.5.0", "v0.4.0"}
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 0)
+
+    def test_gap_at_the_floor_is_still_caught(self):
+        self._changelog("0.5.0", "0.4.0", "0.2.0")
+        rel.git_tags = lambda: {"v0.5.0", "v0.2.0"}          # 0.4.0 == floor, missing
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 1)
+
+    def test_no_tags_visible_fails_loudly_not_vacuously(self):
+        # A shallow checkout sees no tags, so EVERY version looks untagged. The
+        # dangerous answer here is a silent pass.
+        self._changelog("0.6.0", "0.5.0", "0.4.0")
+        rel.git_tags = lambda: set()
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 1)
+
+
+class LiveRepoIsFullyTagged(unittest.TestCase):
+    def test_every_documented_version_is_tagged(self):
+        """Guards the real repo, not a fixture — this is what went wrong."""
+        self.assertEqual(_quiet(rel.cmd_audit, argparse.Namespace()), 0)
+
+
 class CmdCheck(_TempRepo):
     def _bump_all_to(self, v):
         # set both manifests + a changelog section so only the tag varies
