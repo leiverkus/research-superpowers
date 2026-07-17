@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.33.0] — 2026-07-17
+
 ### Added
 
 - **`bib-search.py` now also searches curated BibTeX `keywords`.** Full-text search and a
