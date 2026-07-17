@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`scripts/suggest-authority-ids.py` now retries Wikidata's rate-limiting with
+  exponential backoff.** Wikidata throttles bursts with HTTP 429; the tool dropped
+  each throttled query and counted the page as "no candidate" — so on a batch of
+  dozens of pages it was mostly reporting its own rate-limiting as absence (46 of
+  42 queries failed on one real run). `_get` now retries 429 and transient 5xx with
+  exponential backoff, honouring a `Retry-After` header (capped), so a large run
+  returns complete candidate lists instead of throttled blanks. Maintainer tooling
+  only — not shipped, not mirrored.
+
 ## [0.34.0] — 2026-07-17
 
 ### Added
