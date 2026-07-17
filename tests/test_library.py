@@ -329,3 +329,72 @@ class DuplicateKeyInTheLibrary(unittest.TestCase):
         with _Env(), tempfile.TemporaryDirectory() as d:
             hard, _ = self._run(d, ["smith-2016-software"], ["smith-2016-software"])
             self.assertEqual([h for h in hard if "DUPLICATE-KEY-IN-LIBRARY" in h], [])
+
+
+class KeywordReading(unittest.TestCase):
+    """`library.read_keywords()` — the BibTeX `keywords` field reader `bib-search.py`
+    builds its keyword index from. Pure string processing (no subprocess, unlike
+    `extract_pages`), so these test it directly against a literal .bib file rather
+    than going through `_Env`/`find_library`."""
+
+    def _bib(self, d, text):
+        p = pathlib.Path(d) / "references.bib"
+        p.write_text(text, encoding="utf-8")
+        return p
+
+    def test_splits_on_semicolon_and_trims(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d, "@article{a-2020-x,\n"
+                              "  keywords = { random labelling ;  mark permutation  }\n}\n")
+            self.assertEqual(lib.read_keywords(p), {"a-2020-x": ["random labelling", "mark permutation"]})
+
+    def test_an_entry_with_no_keywords_field_is_ABSENT_not_empty(self):
+        # "not in the dict" and "in the dict with []" would mean different things to a
+        # caller computing coverage — this reader must never manufacture the latter.
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d, "@article{a-2020-x,\n  title = {T}\n}\n")
+            self.assertEqual(lib.read_keywords(p), {})
+            self.assertNotIn("a-2020-x", lib.read_keywords(p))
+
+    def test_an_unbalanced_entry_is_skipped_never_guessed(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d,
+                "@article{broken-2019-x,\n"
+                "  title = {Missing closing brace\n"
+                "  keywords = {should never be reached}\n\n"
+                "@article{fine-2021-y,\n"
+                "  keywords = {a real term}\n}\n")
+            got = lib.read_keywords(p)
+            self.assertNotIn("broken-2019-x", got)
+
+    def test_an_unbalanced_entry_does_not_corrupt_a_LATER_valid_entry(self):
+        # Regex-driven `finditer` over the whole text, not a sequential cursor — one
+        # bad entry must not drag down everything found after it.
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d,
+                "@article{broken-2019-x,\n"
+                "  title = {Missing closing brace\n"
+                "  keywords = {should never be reached}\n\n"
+                "@article{fine-2021-y,\n"
+                "  keywords = {a real term}\n}\n")
+            got = lib.read_keywords(p)
+            self.assertEqual(got.get("fine-2021-y"), ["a real term"])
+
+    def test_within_entry_dedup_is_case_insensitive_and_keeps_first_seen_casing(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d, "@article{a-2020-x,\n"
+                              "  keywords = {Low Chronology; low chronology; LOW CHRONOLOGY}\n}\n")
+            self.assertEqual(lib.read_keywords(p), {"a-2020-x": ["Low Chronology"]})
+
+    def test_multiple_entries_each_keep_their_own_list(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d,
+                "@article{a-2020-x,\n  keywords = {alpha; beta}\n}\n\n"
+                "@article{b-2021-y,\n  keywords = {gamma}\n}\n")
+            self.assertEqual(lib.read_keywords(p),
+                              {"a-2020-x": ["alpha", "beta"], "b-2021-y": ["gamma"]})
+
+    def test_empty_and_whitespace_only_terms_are_dropped(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = self._bib(d, "@article{a-2020-x,\n  keywords = {alpha;; ;   ;beta}\n}\n")
+            self.assertEqual(lib.read_keywords(p), {"a-2020-x": ["alpha", "beta"]})

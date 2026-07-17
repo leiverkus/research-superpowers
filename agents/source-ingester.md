@@ -43,6 +43,9 @@ frontmatter.
   append the letter suffix **after the year** (`mazar-2011b-iron-age`)
 - Min. 1 verbatim quote per focus block, with page number, max ~5
 - Min. 1–5 claims per focus block, each one sentence with page reference
+- **BibTeX `keywords`:** on first ingest, 3–8 terms — canonical name plus known
+  synonyms/aliases (spelling variants, other disciplines' names, stems). See
+  "BibTeX Entry Convention" in the embedded skill.
 - **Typed relations:** for every stance-bearing connection (confirms /
   contradicts / supplements / builds-on / cites another page) write a typed
   entry in the page's `relations:` frontmatter — `type` from the controlled
@@ -55,7 +58,10 @@ frontmatter.
   block, do not overwrite previous focus blocks; replace `## Other content
   in this source`; union the `## Mentioned entities` and `## Connections`
   sections and the `relations:` frontmatter (dedupe by `(target, type)`,
-  keep the higher confidence, merge `because`)
+  keep the higher confidence, merge `because`); union the BibTeX entry's
+  `keywords` field with any newly-recognized terms, deduped
+  case-insensitively — the one BibTeX field this subagent updates on
+  re-ingest, everything else stays frozen
 
 ## Output report (strict markdown)
 
@@ -78,7 +84,8 @@ fresh | append-section (existing focus blocks: N) | update-existing-focus (warne
 
 ### Files modified
 - knowledge/entities/<existing>.md (added back-link)
-- output/bibtex/references.bib (added entry — only on first ingest)
+- output/bibtex/references.bib (added entry on first ingest; keywords field
+  updated on re-ingest if new terms were recognized)
 - knowledge/_meta/log.md (appended)
 
 ### Entities extracted (focus-relevant)
@@ -95,7 +102,7 @@ fresh | append-section (existing focus blocks: N) | update-existing-focus (warne
 | Target | Type | Confidence | Because (short) |
 <one row per `relations:` entry, or "none — no stance-bearing connections">
 
-### BibTeX entry (or "unchanged from prior ingest" if re-ingest)
+### BibTeX entry (unchanged from prior ingest, or "keywords updated: added <term>, <term>" if re-ingest recognized new terms)
 \`\`\`bibtex
 @article{<slug>, ...}
 \`\`\`
