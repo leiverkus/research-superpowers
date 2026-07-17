@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.31.0] — 2026-07-17
+
+Drafting stops guessing what the chapter argues.
+
 ### Changed
 
 - **`drafting-manuscript` now settles the argument before it writes prose.**
