@@ -23,6 +23,7 @@ the `Skill` tool (e.g. `Skill ingest-source`).
 
 ## Cross-cutting skills
 
+- **add-to-library** — add one PDF directly to the shared master library (verify metadata + keywords), outside the project ingest flow
 - **wiki-lint** — run scripts/lint-wiki.py (structural, deterministic)
 - **wiki-graph** — build/query the knowledge graph (god nodes, bridges, communities; CLI + MCP)
 - **semantic-wiki-review** — LLM content audit (contradictions, stale syntheses)

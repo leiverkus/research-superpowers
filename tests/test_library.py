@@ -398,3 +398,145 @@ class KeywordReading(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = self._bib(d, "@article{a-2020-x,\n  keywords = {alpha;; ;   ;beta}\n}\n")
             self.assertEqual(lib.read_keywords(p), {"a-2020-x": ["alpha", "beta"]})
+
+
+mb = _load("merge_bibs", ROOT / "scripts" / "merge-bibs.py")
+
+
+class MakeBibkey(unittest.TestCase):
+    """`library.make_bibkey` — the canonical `autor-jahr[letter]-kurztitel` key.
+
+    The key is the PDF filename stem AND the cross-project join key, so the
+    folding must match migrate-citekeys.py exactly and an unfillable slot must
+    raise (so the skill stops and asks) rather than mint a half-key."""
+
+    def test_the_documented_canonical_example(self):
+        self.assertEqual(lib.make_bibkey("Finkelstein", "2003", "low chronology"),
+                         "finkelstein-2003-low-chronology")
+
+    def test_umlauts_fold_the_filename_way(self):
+        self.assertEqual(lib.make_bibkey("Müller", "2020", "Übergang"),
+                         "mueller-2020-uebergang")
+
+    def test_undecomposable_letters_survive_folding(self):
+        # NFKD alone drops Turkish ı / Polish ł — the explicit table must catch them.
+        self.assertEqual(lib.make_bibkey("Sırmaçek", "2019", "detection"),
+                         "sirmacek-2019-detection")   # ı→i, ç→c; without the table: srmacek
+        self.assertEqual(lib.make_bibkey("Trybała", "2021", "mapping"),
+                         "trybala-2021-mapping")      # ł→l keeps the l; without it: trybaa
+
+    def test_particles_and_spaces_collapse_into_the_surname(self):
+        self.assertEqual(lib.make_bibkey("van der Toorn", "1996", "family religion"),
+                         "vandertoorn-1996-family-religion")
+
+    def test_a_hyphenated_kurztitel_argument_is_accepted_as_is(self):
+        # The caller may pass the kurztitel already hyphenated; slugifying is idempotent.
+        self.assertEqual(lib.make_bibkey("Mazar", "2011", "iron-age"),
+                         "mazar-2011-iron-age")
+
+    def test_disambiguation_letter_goes_after_the_year(self):
+        self.assertEqual(lib.make_bibkey("Mazar", "2011", "iron age", letter="b"),
+                         "mazar-2011b-iron-age")
+
+    def test_a_year_range_takes_the_first_year(self):
+        self.assertEqual(lib.make_bibkey("Smith", "1998–2007", "survey"),
+                         "smith-1998-survey")
+
+    def test_a_missing_slot_raises_not_returns_a_half_key(self):
+        with self.assertRaises(ValueError):
+            lib.make_bibkey("", "2003", "low chronology")     # no surname
+        with self.assertRaises(ValueError):
+            lib.make_bibkey("Finkelstein", "no year here", "low")   # no 4-digit year
+        with self.assertRaises(ValueError):
+            lib.make_bibkey("Finkelstein", "2003", "!!!")     # kurztitel slugs to nothing
+
+    def test_a_multi_character_letter_is_rejected(self):
+        with self.assertRaises(ValueError):
+            lib.make_bibkey("Mazar", "2011", "iron age", letter="ab")
+
+
+class ProposeShorttitle(unittest.TestCase):
+    def test_drops_stopwords_and_keeps_the_first_significant_words(self):
+        self.assertEqual(
+            lib.propose_shorttitle("The Low Chronology and the Problem of the Archaeology"),
+            "low-chronology-problem")
+
+    def test_respects_the_words_limit(self):
+        self.assertEqual(lib.propose_shorttitle("Copper Smelting in the Arabah", words=1),
+                         "copper")
+
+    def test_a_title_of_only_stopwords_yields_none(self):
+        self.assertIsNone(lib.propose_shorttitle("The And Of"))
+
+    def test_none_title_is_tolerated(self):
+        self.assertIsNone(lib.propose_shorttitle(""))
+
+
+class NextFreeLetter(unittest.TestCase):
+    def test_a_bare_incumbent_gives_the_newcomer_a(self):
+        # The bare-year incumbent holds the no-letter slot; the newcomer takes 'a'.
+        self.assertEqual(
+            lib.next_free_letter(["mazar-2011-iron-age", "smith-2011-other"], "Mazar", "2011"),
+            "a")
+
+    def test_skips_letters_already_in_use(self):
+        self.assertEqual(
+            lib.next_free_letter(["mazar-2011-iron-age", "mazar-2011a-copper"], "Mazar", "2011"),
+            "b")
+
+    def test_no_prior_key_at_all_still_returns_a_letter(self):
+        # Caller only asks for a letter once a genuine collision is known, so 'a' is fine.
+        self.assertEqual(lib.next_free_letter([], "Mazar", "2011"), "a")
+
+    def test_folding_matches_make_bibkey_so_the_scan_actually_hits(self):
+        self.assertEqual(
+            lib.next_free_letter(["mueller-2020-uebergang"], "Müller", "2020"), "a")
+
+
+class EmitEntry(unittest.TestCase):
+    """`library.emit_entry` must be byte-identical to what merge-bibs.py writes,
+    so a directly-added entry and the same entry re-rendered by a later merge
+    produce no spurious diff on the shared references.bib."""
+
+    def _merge_bibs_render(self, etype, key, fields):
+        # Reproduce merge-bibs.py's exact entry-writing loop (main(), lines 227–236).
+        f = {k: v for k, v in fields.items() if str(v).strip()}
+        width = max((len(k) for k in f), default=6)
+        lines = [f"@{etype}{{{key},"]
+        for name in mb.FIELD_ORDER:
+            if name in f:
+                lines.append(f"  {name.ljust(width)} = {{{f[name]}}},")
+        for name in sorted(set(f) - set(mb.FIELD_ORDER)):
+            lines.append(f"  {name.ljust(width)} = {{{f[name]}}},")
+        lines.append("}")
+        return "\n".join(lines)
+
+    def test_field_order_matches_merge_bibs(self):
+        self.assertEqual(lib.BIB_FIELD_ORDER, mb.FIELD_ORDER)
+
+    def test_output_is_byte_identical_to_merge_bibs(self):
+        fields = {"author": "Finkelstein, Israel", "title": "The Low Chronology",
+                  "journal": "Levant", "year": "2003", "doi": "10.1179/lev.2003.35.1.65",
+                  "keywords": "low chronology; iron age"}
+        self.assertEqual(lib.emit_entry("article", "finkelstein-2003-low-chronology", fields),
+                         self._merge_bibs_render("article", "finkelstein-2003-low-chronology", fields))
+
+    def test_round_trips_through_the_merge_bibs_parser(self):
+        fields = {"author": "Mazar, Amihai", "title": "Iron Age Chronology",
+                  "year": "2011", "keywords": "iron age; chronology"}
+        text = lib.emit_entry("article", "mazar-2011-iron-age", fields) + "\n"
+        parsed = list(mb.iter_entries(text))
+        self.assertEqual(len(parsed), 1)
+        etype, key, body = parsed[0]
+        self.assertEqual((etype, key), ("article", "mazar-2011-iron-age"))
+        got = mb.fields_of(body)
+        self.assertEqual(got["author"], "Mazar, Amihai")
+        self.assertEqual(got["title"], "Iron Age Chronology")
+        self.assertEqual(got["keywords"], "iron age; chronology")
+
+    def test_blank_fields_are_dropped(self):
+        text = lib.emit_entry("article", "a-2020-x",
+                              {"author": "X, Y", "doi": "", "note": "   "})
+        self.assertIn("author", text)
+        self.assertNotIn("doi", text)
+        self.assertNotIn("note", text)

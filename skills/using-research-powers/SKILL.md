@@ -59,6 +59,7 @@ gap surfaced while writing). See `docs/phase-flow.md`.
 Support skills are context-triggered, not phase-bound:
 
 - **critical-thinking** — when evaluating evidence, methodology, or contested sources
+- **add-to-library** — when adding one PDF straight to the shared library (verify + keyword it), outside the project ingest flow
 - **grant-finder** — when planning funding in parallel to publication
 - **wiki-lint** — before drafting, before finishing, after bulk ingest
 - **wiki-graph** — to analyse the wiki's structure (god nodes, bridges, clusters) and export it as a graph
@@ -129,6 +130,7 @@ Trigger examples:
 - "Find literature on X" → **literature-review**
 - "Get / download the PDFs", "Quellen beschaffen" → **acquire-sources**
 - "Ingest this source" → **ingest-source**
+- "Add this PDF straight to the library", "in die Bibliothek aufnehmen" → **add-to-library**
 - "Analyze the data" → **executing-research-plan** (if plan exists) else **writing-research-plan** first
 - "Write the chapter" → **drafting-manuscript** (if synthesis pages stable) else back to synthesis
 - "Review the manuscript" → **requesting-peer-review**
@@ -138,7 +140,7 @@ Trigger examples:
 ## Skill Types
 
 **Rigid** (must follow the checklist exactly, do not skip steps):
-- brainstorming-research, writing-research-plan, acquire-sources, ingest-source, executing-research-plan, drafting-manuscript, finishing-a-research-project
+- brainstorming-research, writing-research-plan, acquire-sources, ingest-source, add-to-library, executing-research-plan, drafting-manuscript, finishing-a-research-project
 
 **Flexible** (adapt principles to context):
 - critical-thinking, literature-review, peer-review, grant-finder, wiki-lint, wiki-graph

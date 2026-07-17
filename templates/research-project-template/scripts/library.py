@@ -40,6 +40,8 @@ USAGE (from any script in this folder)
 
 import os
 import re
+import string
+import unicodedata
 from pathlib import Path
 
 CONFIG_NAME = ".research-library"
@@ -202,6 +204,143 @@ def read_keywords(bib_path: Path) -> dict[str, list[str]]:
         if seen:
             out[bibkey] = list(seen.values())
     return out
+
+
+# --------------------------------------------------------------------------
+# Canonical bibkey generation  (autor-jahr-kurztitel)
+# --------------------------------------------------------------------------
+# The bibkey IS the PDF filename stem and the cross-project join key, so the
+# same work must yield the same key in every project and every tool. The
+# folding table and stopword list below are copied VERBATIM from the maintainer
+# scripts/migrate-citekeys.py: that script is not importable from here (it lives
+# in maintainer-only scripts/, never shipped into a project), so this is a
+# deliberate second copy that must stay byte-identical, not an oversight — the
+# same reasoning read_keywords() gives for the brace scanner. If you change one,
+# change both, or a migrated key and a directly-added key for the same work stop
+# matching and the join breaks silently.
+
+STOPWORDS = {
+    "the", "a", "an", "of", "and", "in", "on", "for", "to", "from", "with", "at",
+    "der", "die", "das", "und", "von", "im", "zur", "zum", "des", "ein", "eine",
+    "la", "le", "les", "el", "del", "al", "il", "un", "une", "y", "e",
+}
+
+# Letters NFKD does NOT decompose, because they are distinct letters and not
+# "base + combining diacritic". Without an explicit mapping the [^a-z] filter
+# drops them silently, mangling the surname: Turkish "Sırmaçek" → "srmacek",
+# Polish "Trybała" → "trybaa". Both happened.
+_UNDECOMPOSABLE = {
+    "ı": "i", "İ": "I",          # Turkish dotless / dotted i
+    "ł": "l", "Ł": "L",          # Polish stroked l
+    "đ": "d", "Đ": "D",          # Croatian / Vietnamese stroked d
+    "ħ": "h", "Ħ": "H",          # Maltese
+    "ŧ": "t", "ø": "o", "Ø": "O",
+    "æ": "ae", "Æ": "Ae", "œ": "oe", "Œ": "Oe",
+    "ß": "ss", "þ": "th", "Þ": "Th", "ð": "d", "Ð": "D",
+    "ä": "ae", "Ä": "Ae", "ö": "oe", "Ö": "Oe", "ü": "ue", "Ü": "Ue",
+}
+
+
+def deascii(s: str) -> str:
+    """Fold to ASCII the way the PDF-filename rule does (ä→ae, ß→ss, é→e).
+
+    The explicit table comes FIRST: NFKD only splits base+diacritic, so a letter
+    like ı or ł survives it untouched and is then dropped by the [^a-z] filter —
+    silently shortening the surname and minting a key nobody can guess.
+    """
+    for src, dst in _UNDECOMPOSABLE.items():
+        s = s.replace(src, dst)
+    s = unicodedata.normalize("NFKD", s)
+    return "".join(c for c in s if not unicodedata.combining(c))
+
+
+def propose_shorttitle(title: str, words: int = 3) -> str | None:
+    """A *suggestion* for the kurztitel: the first significant title words,
+    stopwords dropped, deascii'd, lowercased, hyphen-joined. None if the title
+    yields nothing usable.
+
+    Only a starting point — the kurztitel is a human/LLM judgement, NOT a
+    deterministic function of the title. "The Low Chronology and the Problem of
+    the Archaeology of Iron Age Palestine" has the short title `low-chronology`,
+    but the first three significant words give `low-chronology-problem`. So this
+    proposes; the caller chooses. (This is why the default is multi-word, unlike
+    migrate-citekeys.py's words=1 — a single word is almost never the right key.)
+    """
+    if not title:
+        return None
+    text = deascii(re.sub(r"[{}\\$]", "", title)).lower()
+    parts = [w for w in re.findall(r"[a-z0-9]+", text) if w not in STOPWORDS and len(w) > 2]
+    return "-".join(parts[:words]) if parts else None
+
+
+def make_bibkey(surname: str, year: str, shorttitle: str, letter: str = "") -> str:
+    """Assemble the canonical `autor-jahr[letter]-kurztitel` key.
+
+    `surname` is folded to ASCII and stripped to [a-z] (particles and spaces
+    collapse: "van der Toorn" → `vandertoorn`); `year` is the first 4-digit year
+    found; `shorttitle` is the CHOSEN kurztitel (see propose_shorttitle) folded
+    and slugified. `letter` is an optional disambiguation letter that goes AFTER
+    the year (see next_free_letter).
+
+    Raises ValueError when a slot cannot be filled — deliberately, so the skill
+    stops and asks rather than minting a key from missing data.
+    """
+    sur = re.sub(r"[^a-z]", "", deascii(str(surname)).lower())
+    ym = re.search(r"(1[0-9]{3}|20[0-9]{2})", str(year))
+    slug = "-".join(re.findall(r"[a-z0-9]+", deascii(str(shorttitle)).lower()))
+    missing = [n for n, v in (("surname", sur), ("year", ym), ("shorttitle", slug)) if not v]
+    if missing:
+        raise ValueError("cannot build a bibkey — missing " + ", ".join(missing))
+    if letter and not re.fullmatch(r"[a-z]", letter):
+        raise ValueError(f"disambiguation letter must be a single a–z character, got {letter!r}")
+    return f"{sur}-{ym.group(1)}{letter}-{slug}"
+
+
+def next_free_letter(existing_keys, surname: str, year: str) -> str:
+    """Lowest disambiguation letter free for a NEW `surname-year-*` work.
+
+    Scans the existing keys for `surname-year([a-z]?)-…`, treating the bare-year
+    incumbent as occupying the no-letter slot, and returns the lowest a–z letter
+    not yet used. The incumbent is never re-lettered — its key is a live PDF
+    filename and may already be cited — so the newcomer always takes a letter.
+    """
+    sur = re.sub(r"[^a-z]", "", deascii(str(surname)).lower())
+    ym = re.search(r"(1[0-9]{3}|20[0-9]{2})", str(year))
+    if not (sur and ym):
+        raise ValueError("cannot disambiguate — missing surname or year")
+    pat = re.compile(rf"^{re.escape(sur)}-{ym.group(1)}([a-z]?)-")
+    used = {m.group(1) for k in existing_keys if (m := pat.match(k))}
+    for c in string.ascii_lowercase:
+        if c not in used:
+            return c
+    raise ValueError(f"ran out of disambiguation letters for {sur}-{ym.group(1)}")
+
+
+# --------------------------------------------------------------------------
+# BibTeX entry emission  (byte-format identical to scripts/merge-bibs.py)
+# --------------------------------------------------------------------------
+# Kept in step with merge-bibs.py FIELD_ORDER + entry-writing loop, so an entry
+# appended directly to the master by add-to-library.py and the same entry
+# re-rendered by a later merge-bibs run are byte-for-byte identical — no spurious
+# diff on the shared references.bib.
+BIB_FIELD_ORDER = ["author", "editor", "title", "shorttitle", "journal", "booktitle",
+                   "series", "school", "institution", "publisher", "address", "volume",
+                   "number", "pages", "year", "isbn", "issn", "url", "doi", "keywords", "note"]
+
+
+def emit_entry(etype: str, key: str, fields: dict) -> str:
+    """One BibTeX entry as text — FIELD_ORDER first, then leftovers alphabetical,
+    field name left-padded to the widest key. Empty/blank fields are dropped."""
+    f = {k: str(v).strip() for k, v in fields.items() if str(v).strip()}
+    width = max((len(k) for k in f), default=6)
+    lines = [f"@{etype}{{{key},"]
+    for name in BIB_FIELD_ORDER:
+        if name in f:
+            lines.append(f"  {name.ljust(width)} = {{{f[name]}}},")
+    for name in sorted(set(f) - set(BIB_FIELD_ORDER)):
+        lines.append(f"  {name.ljust(width)} = {{{f[name]}}},")
+    lines.append("}")
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":

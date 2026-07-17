@@ -48,7 +48,7 @@ diff -q schema/knowledge-frontmatter.schema.json \
 for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
            scripts/graph_mcp.py scripts/wiki-global-graph.py \
            scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
-           scripts/check-pdf-version.py \
+           scripts/check-pdf-version.py scripts/add-to-library.py \
            scripts/vendor/cytoscape.min.js; do
   diff -q "templates/research-project-template/$rel" "examples/example-project/$rel"
 done
@@ -83,12 +83,12 @@ Two sets of files are duplicated and must stay identical:
   `templates/research-project-template/schema/`, and
   `examples/example-project/schema/`.
 - **Wiki `scripts/`** — two copies: `templates/research-project-template/scripts/`
-  and `examples/example-project/scripts/`. Nine paths, and the authoritative list
+  and `examples/example-project/scripts/`. Ten paths, and the authoritative list
   is the loop in `.github/workflows/lint.yml` ("Script mirrors are in sync") —
   **that** is what gates the build; this prose is a copy and copies drift:
   `lint-wiki.py`, `wiki-to-graph.py`, `graph_mcp.py`, `wiki-global-graph.py`,
   `library.py`, `bib-subset.py`, `bib-search.py`, `check-pdf-version.py`,
-  `vendor/cytoscape.min.js`.
+  `add-to-library.py`, `vendor/cytoscape.min.js`.
 
   The repo-root `scripts/` is a **different thing**: maintainer tools
   (`build-library.py`, `lint-plugin.py`, `merge-bibs.py`, `migrate-citekeys.py`,
@@ -111,7 +111,7 @@ cp "$src"/schema/knowledge-frontmatter.schema.json examples/example-project/sche
 for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
            scripts/graph_mcp.py scripts/wiki-global-graph.py \
            scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
-           scripts/check-pdf-version.py \
+           scripts/check-pdf-version.py scripts/add-to-library.py \
            scripts/vendor/cytoscape.min.js; do
   cp "$src/$rel" "examples/example-project/$rel"
 done
