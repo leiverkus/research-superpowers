@@ -26,6 +26,11 @@ skill's frontmatter.
   `audit.warn_marker`. Otherwise fall back to the manual path.
 - Respect polite-pool email headers and rate limits
 - Deduplicate by DOI / title across databases
+- **Dedup against the library too.** The parent may embed an "already in the
+  shared library" list of `bibkey` / DOI (from its step-3 `bib-search` pass).
+  Treat those as already found: do not re-list them as new candidates, and spend
+  the search budget on works NOT on that list. Report under "Notes for reviewer"
+  if a database's best hits were all already owned.
 - Grade each candidate A / B / C (A = central, must-read; B = relevant; C =
   peripheral). When using the MCP: `audit.source_class=aggregator` → downgrade
   to C; `source_class=suspect` → exclude.

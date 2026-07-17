@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`literature-review` now searches the shared library first (new step 3).** Before
+  dispatching the `literature-scout` to external databases, it runs `bib-search` over
+  the master bibliography — using the "search for the concept, not one string" discipline
+  (aliases, stems, and the curated keywords that catch papers describing a method without
+  naming it). Hits are collapsed by bibkey, screened, and entered in the weighted table
+  with a new access marker **`● Bibliothek`** (already owned, no acquisition); their
+  bibkeys/DOIs are passed to the scout so it dedupes and spends its budget on the gap
+  rather than re-finding what is already on disk. As the shared library grows, a new
+  question increasingly overlaps sources already collected — this stops paying to
+  rediscover and re-download them. `literature-scout` gains a matching dedup-against-the-
+  library rule; `acquire-sources` already skips present files by bibkey.
+
 ## [0.33.1] — 2026-07-17
 
 ### Added
