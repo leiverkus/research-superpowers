@@ -355,22 +355,28 @@ Before a concept search, run `python scripts/bib-search.py index` — it is incr
 Then build **one** query out of the method's aliases:
 
 ```bash
-python scripts/bib-search.py '"random labelling" OR "random labeling" OR "mark permutation"
-   OR "permutation of marks" OR "toroidal shift" OR "random thinning"' --limit 40
+python scripts/bib-search.py '"random labelling" OR "random labeling" OR relabel* OR shuffl*
+   OR "mark permutation" OR "permutation of marks" OR "toroidal shift" OR "random thinning"' --limit 40
 ```
 
 What belongs in the alias list, in order of how often it is the one that pays:
 
 - **Spelling variants first.** `labelling` / `labeling`, `modelling` / `modeling`, `analyse` / `analyze`. Measured on the real library: `"random labelling"` found one paper, `"random labeling"` found a different one — a 311-page dissertation that makes the technique its explicit default. **One letter, and it was invisible.** This is the cheapest alias and the most neglected.
+- **Word stems, not exact forms — `relabel*`, not `relabelling`.** A paper writes *relabeled*, *permuted*, *shuffling*; an exact-form alias list matches none of those. This is not hypothetical: adding `relabel*` and `shuffl*` to the query above takes it from **two of five** hand-checked papers to **three**, because one of them names the procedure four times over — "randomly relabeled", "randomly permuted", "shuffling only the labels" — in inflections no exact form catches.
+- **Keep the stem rare.** Check selectivity before adding one; a stem that matches half the library buys nothing and costs a paper you already had. On this library `relabel*` matches 5 pages, `shuffl*` 21 — both precise. `permut*` matches 116 and `random*` matches 2,126: adding `permut*` surfaced a new paper and **dropped one the narrower query had found**, because FTS5 ranks by BM25 and a broad stem floods the ranking with pages that merely use the word. Prefer several narrow queries over one broad one.
 - **The other disciplines' names for it.** Ecology, statistics and archaeology rename each other's methods. In the same measurement `"mark permutation"` surfaced three papers that a purely archaeological vocabulary never reaches.
 - **German / French / Spanish forms** where the field publishes in them.
-- Hyphenation and noun/verb forms (`mark permutation` / `permuting the marks`).
 
 **Report which alias hit which source.** That line is the point of the exercise: it is a finding about the field's vocabulary, not search bookkeeping — and it is what makes the next item visible.
 
-> **Know the ceiling.** On a hand-checked set of five papers that the wiki says use random labelling, the expanded query found **two**. The other three — including the one author for whom it is the *only* inferential null — contain no occurrence of `labelling`, `labeling`, `permutation`, `reshuffl` or `randomis` on any page. They describe the procedure in prose and never name it.
+> **Know the ceiling — and don't overstate it.** On a hand-checked set of five papers that the wiki says use random labelling, the stem query above finds **three**. The two it misses fail for different reasons, and telling them apart is the whole lesson:
 >
-> **No lexical query can reach those, however many synonyms you add.** When a concept search comes back thin, that is evidence about *naming*, not about absence — go to the source pages and the wiki's concept page, which record what the paper *does* rather than what it calls it. Do not report "not found in the library" from a lexical miss.
+> - **One is outranked, not unnamed.** It writes "permutation" on two pages and "shuffl" on a third. A lexical query *can* reach it — but only a stem broad enough to cost another paper its place. That is a **ranking** limit, and re-querying more narrowly (one alias per query) is the fix.
+> - **One is genuinely unnamed.** It calls the procedure "random type assignment to the points in the pattern" and carries no alias on any page. **No lexical query reaches it**, and adding synonyms cannot change that.
+>
+> When a concept search comes back thin, that is evidence about *naming*, not about absence — go to the source pages and the wiki's concept page, which record what the paper *does* rather than what it calls it. Do not report "not found in the library" from a lexical miss.
+>
+> **Reaching for embeddings here is a trap.** The obvious fix — index the library semantically and search by meaning — was prototyped and measured against exactly this question (BGE-M3 and Qwen3-Embedding-0.6B, chunked from 450 down to 40 tokens), and it does not pay. Scored on a 3,000-page sample — a tenth of the library, so a tenth of the difficulty — BGE-M3 put all five gold pages between rank 334 and 621 (`recall@20 = 0 of 5`); Qwen3, the better of the two by a factor of four, reached `recall@10 = 1 of 5`. That merely **ties** the naive one-string FTS query, which scores its 1 of 5 against the *whole* library — and it costs a 2.3-hour index build. A page of dense academic prose carries one method sentence among hundreds, and the average drowns it at every chunk size whose vectors still fit in memory. The vocabulary gap above is real; a vector index is not what closes it.
 
 > **Per-project house style.** Density, example-richness, and target register are tunable per project in the root `CLAUDE.md` ("Manuscript style"). Read it before drafting; it overrides the defaults here.
 
