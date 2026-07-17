@@ -6,6 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`add-to-library` skill — put one PDF straight into the shared master library,
+  outside the project ingest flow.** For a standalone PDF (a colleague sends one, an OA
+  download) that should live in the collection now — so `bib-search` finds it for every
+  future project — but doesn't warrant a wiki-producing ingest. The skill inspects the
+  PDF cheaply (docinfo + first-page text, **no full read**), **verifies** the metadata
+  against Crossref/OpenAlex (stopping and asking rather than guessing when it can't),
+  curates 3–8 keywords from the docinfo + abstract, and hands the verified fields to the
+  new shipped `scripts/add-to-library.py`, which computes the canonical bibkey, places
+  the PDF at `<library>/pdf/<bibkey>.pdf`, and appends the entry to
+  `<library>/references.bib`. Re-adding a work already present (matched by DOI) unions
+  its keywords instead of duplicating the key; a genuine `autor-jahr-kurztitel` clash
+  with a different work takes a disambiguation letter. The canonical bibkey generator now
+  lives in the shipped, tested `library.py` (`make_bibkey`, `propose_shorttitle`,
+  `next_free_letter`, `emit_entry`), byte-format-matched to `merge-bibs.py`.
+- **`merge-bibs.py` is now monotonic (master-only fold).** A source added straight to the
+  master, cited by no project, was dropped on the next merge (the merge was built purely
+  from project roots). It now folds in entries that live only in the existing `--out`
+  master — master-only keys only, so a project's corrected value always wins over a stale
+  master rendering of the same key — and reports the count.
+
 ### Changed
 
 - **`literature-review` now searches the shared library first (new step 3).** Before

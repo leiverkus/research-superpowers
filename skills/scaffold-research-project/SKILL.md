@@ -90,6 +90,8 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    - `scripts/library.py` — resolves the shared source library. **Without it nothing can find a PDF.**
    - `scripts/bib-subset.py` — writes `output/bibtex/references.bib` as the cited subset of the library
    - `scripts/bib-search.py` — page-level full-text search across the library (SQLite FTS5; the index is a local cache, never in the synced folder)
+   - `scripts/check-pdf-version.py` — flags manuscript-vs-published PDFs before ingest
+   - `scripts/add-to-library.py` — adds one PDF directly to the shared master library (the `add-to-library` skill drives it)
    - `scripts/lint-wiki.py`
    - `scripts/wiki-to-graph.py`
    - `scripts/graph_mcp.py` — stdlib MCP server exposing the graph queries

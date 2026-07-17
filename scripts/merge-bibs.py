@@ -156,34 +156,52 @@ def main() -> int:
     # purpose: two projects' keyword sets are both correct facts to UNION, not a
     # disagreement for the generic one-value-wins loop below to adjudicate.
     keyword_terms: dict[str, dict[str, tuple[str, list[str]]]] = defaultdict(dict)
+    def absorb(key: str, etype: str, body: str, proj: str) -> None:
+        etypes[key].append(etype)
+        for f, v in fields_of(body).items():
+            if f in DROP or not v.strip():
+                continue
+            if f == "keywords":
+                for term in v.split(";"):
+                    term = term.strip()
+                    if not term:
+                        continue
+                    tn = term.casefold()
+                    if tn in keyword_terms[key]:
+                        best = richer(keyword_terms[key][tn][0], term)
+                        keyword_terms[key][tn] = (best, keyword_terms[key][tn][1] + [proj])
+                    else:
+                        keyword_terms[key][tn] = (term, [proj])
+                continue
+            n = norm(v)
+            if n in seen[key][f]:
+                best = richer(seen[key][f][n][0], v)
+                seen[key][f][n] = (best, seen[key][f][n][1] + [proj])
+            else:
+                seen[key][f][n] = (v, [proj])
+
     for root in args.roots:
         proj = root.name if root.name != "paper" else root.parent.name
         for bib in sorted((root / "output").glob("**/*.bib")):
             if any(d in bib.parts for d in BUILD_DIRS):
                 continue
             for etype, key, body in iter_entries(bib.read_text(encoding="utf-8", errors="replace")):
-                etypes[key].append(etype)
-                for f, v in fields_of(body).items():
-                    if f in DROP or not v.strip():
-                        continue
-                    if f == "keywords":
-                        for term in v.split(";"):
-                            term = term.strip()
-                            if not term:
-                                continue
-                            tn = term.casefold()
-                            if tn in keyword_terms[key]:
-                                best = richer(keyword_terms[key][tn][0], term)
-                                keyword_terms[key][tn] = (best, keyword_terms[key][tn][1] + [proj])
-                            else:
-                                keyword_terms[key][tn] = (term, [proj])
-                        continue
-                    n = norm(v)
-                    if n in seen[key][f]:
-                        best = richer(seen[key][f][n][0], v)
-                        seen[key][f][n] = (best, seen[key][f][n][1] + [proj])
-                    else:
-                        seen[key][f][n] = (v, [proj])
+                absorb(key, etype, body, proj)
+
+    # Fold in entries that live ONLY in the existing master — added there directly
+    # (e.g. by the add-to-library skill), cited by no project. Without this they are
+    # dropped on the next merge, because the merge is otherwise built purely from the
+    # project roots. MASTER-ONLY keys only: a key a project also defines keeps the
+    # project's value, so a stale master rendering a project has since corrected can
+    # never resurface here.
+    master_only = 0
+    if args.out.is_file():
+        from_projects = set(seen) | set(keyword_terms)
+        for etype, key, body in iter_entries(args.out.read_text(encoding="utf-8", errors="replace")):
+            if key in from_projects:
+                continue
+            absorb(key, etype, body, "(master)")
+            master_only += 1
 
     conflicts = []
     entries: dict[str, tuple[str, dict[str, str]]] = {}
@@ -212,6 +230,9 @@ def main() -> int:
     hard = [c for c in conflicts if c["factual"]]
     soft = [c for c in conflicts if not c["factual"]]
     print(f"  {len(entries)} distinct bibkeys from {len(args.roots)} projects")
+    if master_only:
+        print(f"  {master_only} master-only entr(ies) carried through "
+              f"(added directly, cited by no project)")
     print(f"  {len(soft)} rendering difference(s) — resolved automatically (Unicode / longest)")
     print(f"  {len(hard)} FACTUAL conflict(s) — one value is simply wrong:\n")
     for c in hard:

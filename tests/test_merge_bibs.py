@@ -114,5 +114,67 @@ class KeywordUnion(unittest.TestCase):
             self.assertIn("keywords", merged)
 
 
+def _fields(text, key):
+    for _etype, k, body in mb.iter_entries(text):
+        if k == key:
+            return mb.fields_of(body)
+    return None
+
+
+class MasterOnlyFold(unittest.TestCase):
+    """The master-only fold makes the merge monotonic: an entry added straight to
+    the master (by add-to-library), cited by no project, must not be dropped on the
+    next merge — but ONLY master-only keys are folded, so a project's corrected
+    value always wins over a stale master rendering of the same key."""
+
+    def test_a_master_only_entry_survives_the_merge(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{cited-2020-x,\n  title = {X}, year = {2020}\n}\n")
+            out = root / "master.bib"
+            out.write_text("@article{direct-2099-z,\n  author = {Solo, H},\n"
+                           "  title = {Added Directly}, year = {2099}\n}\n", encoding="utf-8")
+            report = _run(a, out=out)
+            text = out.read_text(encoding="utf-8")
+            self.assertIn("direct-2099-z", text)            # carried through, not dropped
+            self.assertIn("cited-2020-x", text)
+            self.assertEqual(_fields(text, "direct-2099-z")["title"], "Added Directly")
+            self.assertIn("1 master-only", report)
+
+    def test_a_project_value_is_NOT_overridden_by_a_stale_master_value(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{shared-2015-y,\n  title = {The Corrected Title},\n"
+                                     "  doi = {10.1/right}\n}\n")
+            out = root / "master.bib"
+            out.write_text("@article{shared-2015-y,\n  title = {Old Wrong Title},\n"
+                           "  doi = {10.1/wrong}\n}\n", encoding="utf-8")
+            _run(a, out=out)
+            f = _fields(out.read_text(encoding="utf-8"), "shared-2015-y")
+            self.assertEqual(f["title"], "The Corrected Title")
+            self.assertEqual(f["doi"], "10.1/right")
+
+    def test_no_master_file_yet_is_fine(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{cited-2020-x,\n  title = {X}\n}\n")
+            out = root / "does-not-exist-yet.bib"
+            report = _run(a, out=out)
+            self.assertIn("cited-2020-x", out.read_text(encoding="utf-8"))
+            self.assertNotIn("master-only", report)          # nothing to carry through
+
+    def test_master_only_keywords_only_entry_survives(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{cited-2020-x,\n  title = {X}\n}\n")
+            out = root / "master.bib"
+            out.write_text("@article{direct-2099-z,\n  title = {D},\n"
+                           "  keywords = {alpha; beta}\n}\n", encoding="utf-8")
+            _run(a, out=out)
+            f = _fields(out.read_text(encoding="utf-8"), "direct-2099-z")
+            self.assertIn("alpha", f["keywords"])
+            self.assertIn("beta", f["keywords"])
+
+
 if __name__ == "__main__":
     unittest.main()

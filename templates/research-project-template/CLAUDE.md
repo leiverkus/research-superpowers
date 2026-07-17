@@ -185,6 +185,16 @@ Git is already the sync — the cloud carries only what git cannot hold.
   `input/bibliography/README.md`.
 - BibTeX entries for new sources are written during ingest into
   `output/bibtex/`, not left in input.
+- **Adding a PDF straight to the library (no ingest).** To put a standalone PDF
+  into the shared collection so it surfaces in `bib-search.py` for every project —
+  without a full read or wiki content — use the `add-to-library` skill (backed by
+  `scripts/add-to-library.py`). It verifies the metadata against Crossref/OpenAlex
+  (never guessing), derives keywords cheaply from the PDF's docinfo + first-page
+  abstract, computes the canonical bibkey, and appends the entry directly to
+  `<library>/references.bib`. A directly-added entry that no project yet cites is
+  preserved on the next central `merge-bibs.py` run (it folds master-only keys back
+  in), so it is never dropped. When a project later cites the work, `ingest-source`
+  reads it as usual — the master entry is already there.
 
 ### Knowledge folder
 - **LLM-generated and LLM-maintained.** The human reads and steers, the
