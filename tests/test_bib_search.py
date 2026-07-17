@@ -21,6 +21,7 @@ Stdlib unittest. Run: python -m unittest discover -s tests
 """
 import importlib.util
 import os
+import sqlite3
 import pathlib
 import tempfile
 import unittest
@@ -218,6 +219,69 @@ class WhereTheIndexLives(unittest.TestCase):
             other = f.library.parent / "Zweitbibliothek"
             (other / "pdf").mkdir(parents=True)
             self.assertNotEqual(bs.index_path(f.library), bs.index_path(other))
+
+
+class SchemaVersion(unittest.TestCase):
+    """SCHEMA_VERSION has to be READ, not just written.
+
+    It was written and never read back for three releases, which made a version bump
+    a silent no-op: `INSERT OR IGNORE` leaves the old row alone, `CREATE ... IF NOT
+    EXISTS` leaves the old tables alone, and the new code then queries the old shape.
+    The mismatch would surface as a wrong answer rather than an error.
+    """
+
+    def test_a_fresh_index_carries_the_current_version(self):
+        with _Fixture({"a-2020-x": ["copper"]}) as f:
+            bs.build(f.library, quiet=True)
+            con = sqlite3.connect(bs.index_path(f.library))
+            v = con.execute("SELECT v FROM meta WHERE k = 'schema'").fetchone()[0]
+            con.close()
+            self.assertEqual(int(v), bs.SCHEMA_VERSION)
+
+    def test_an_index_from_another_schema_is_refused_not_answered(self):
+        with _Fixture({"a-2020-x": ["copper"]}) as f:
+            bs.build(f.library, quiet=True)
+            old = bs.SCHEMA_VERSION
+            try:
+                bs.SCHEMA_VERSION = old + 1
+                # The read-only entry points must refuse. Answering from a schema
+                # they do not understand is the failure this check exists to stop.
+                with self.assertRaises(bs.IndexSchemaMismatch):
+                    bs.status(f.library)
+                with self.assertRaises(bs.IndexSchemaMismatch):
+                    bs.search(f.library, "copper")
+            finally:
+                bs.SCHEMA_VERSION = old
+
+    def test_build_repairs_the_mismatch_itself(self):
+        with _Fixture({"a-2020-x": ["copper"]}) as f:
+            bs.build(f.library, quiet=True)
+            old = bs.SCHEMA_VERSION
+            try:
+                bs.SCHEMA_VERSION = old + 1
+                # `build` is the one entry point that can fix it, so it must — the
+                # index is derived; there is nothing to lose and nothing to migrate.
+                st = bs.build(f.library, quiet=True)
+                self.assertEqual(st["indexed"], 1)
+                con = sqlite3.connect(bs.index_path(f.library))
+                v = con.execute("SELECT v FROM meta WHERE k = 'schema'").fetchone()[0]
+                con.close()
+                self.assertEqual(int(v), old + 1)
+                self.assertEqual(len(bs.search(f.library, "copper")), 1)
+            finally:
+                bs.SCHEMA_VERSION = old
+                bs.build(f.library, rebuild=True, quiet=True)
+
+    def test_rebuild_takes_the_wal_sidecars_with_it(self):
+        """Unlinking the .sqlite alone leaves the -wal, and SQLite replays it into
+        the fresh file — so a 'rebuild' would inherit the rows it meant to drop."""
+        with _Fixture({"a-2020-x": ["copper"]}) as f:
+            bs.build(f.library, quiet=True)
+            db = bs.index_path(f.library)
+            db.with_suffix(".sqlite-wal").write_bytes(b"stale")
+            bs.build(f.library, rebuild=True, quiet=True)
+            self.assertFalse(db.with_suffix(".sqlite-wal").exists()
+                             and db.with_suffix(".sqlite-wal").read_bytes() == b"stale")
 
 
 if __name__ == "__main__":

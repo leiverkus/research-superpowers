@@ -135,6 +135,25 @@ def extract_pages(pdf: Path) -> list[str]:
 
 # ── the index ────────────────────────────────────────────────────────────────
 
+class IndexSchemaMismatch(RuntimeError):
+    """The index on disk was built by a different SCHEMA_VERSION.
+
+    Raised, never migrated. The index is a *derived* artefact — rebuilding it takes
+    seconds and is always correct, whereas a migration is code that runs once, on
+    data nobody has any more, and is therefore never tested against the version it
+    claims to migrate from. `build()` rebuilds automatically; the read-only entry
+    points refuse rather than answer from a schema they do not understand.
+    """
+
+
+def _remove_index(db: Path) -> None:
+    """The index and its WAL sidecars. Removing the .sqlite alone leaves the -wal
+    behind, and SQLite will happily replay it into the fresh file."""
+    db.unlink(missing_ok=True)
+    for side in (db.with_suffix(".sqlite-wal"), db.with_suffix(".sqlite-shm")):
+        side.unlink(missing_ok=True)
+
+
 def connect(db: Path) -> sqlite3.Connection:
     db.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(db)
@@ -158,6 +177,20 @@ def connect(db: Path) -> sqlite3.Connection:
         );
         INSERT OR IGNORE INTO meta(k, v) VALUES('schema', '{SCHEMA_VERSION}');
     """)
+    # Read it back. The INSERT above is OR IGNORE, so on an existing index it is a
+    # no-op and the row still holds the version that BUILT the file — which is the
+    # whole point: the CREATE ... IF NOT EXISTS statements above are no-ops too, so
+    # an old file keeps its old table shapes while this code assumes the new ones.
+    # Without this check a schema bump is invisible and the mismatch surfaces later
+    # as a wrong answer instead of an error.
+    found = con.execute("SELECT v FROM meta WHERE k = 'schema'").fetchone()
+    on_disk = int(found[0]) if found else 0        # 0 = predates versioning
+    if on_disk != SCHEMA_VERSION:
+        con.close()
+        raise IndexSchemaMismatch(
+            f"The index was built with schema v{on_disk}, this is v{SCHEMA_VERSION}.\n"
+            f"    {db}\n"
+            f"    It is derived data — rebuild it:  python scripts/bib-search.py index --rebuild")
     return con
 
 
@@ -170,12 +203,21 @@ def _index_one(pdf: Path) -> tuple[str, list[str], str | None]:
 
 def build(library: Path, *, rebuild: bool = False, quiet: bool = False) -> dict:
     db = index_path(library)
-    if rebuild and db.exists():
-        db.unlink()
-        for side in (db.with_suffix(".sqlite-wal"), db.with_suffix(".sqlite-shm")):
-            side.unlink(missing_ok=True)
+    if rebuild:
+        _remove_index(db)
 
-    con = connect(db)
+    try:
+        con = connect(db)
+    except IndexSchemaMismatch as e:
+        # `build` is the one entry point that can *fix* this, so it does. Refusing
+        # here would hand the user an unusable index and a flag to guess at, for a
+        # change they did not make — and the file is derived, so there is nothing
+        # to lose. Say it out loud, though: a silent 11-second rebuild that the
+        # user did not ask for should still be visible in the output.
+        if not quiet:
+            print(f"  – {str(e).splitlines()[0]} Rebuilding from scratch.")
+        _remove_index(db)
+        con = connect(db)
     con.execute("INSERT OR REPLACE INTO meta(k, v) VALUES('library', ?)", (str(library),))
 
     pdf_dir = library / "pdf"
@@ -309,7 +351,11 @@ def main() -> int:
         return 1
 
     if args.query == "status":
-        st = status(library)
+        try:
+            st = status(library)
+        except IndexSchemaMismatch as e:
+            print(f"  ✗ {e}", file=sys.stderr)
+            return 1
         if args.json:
             print(json.dumps(st, indent=2, ensure_ascii=False))
             return 0
@@ -358,7 +404,7 @@ def main() -> int:
 
     try:
         hits = search(library, args.query, limit=args.limit, key=args.key)
-    except FileNotFoundError as e:
+    except (FileNotFoundError, IndexSchemaMismatch) as e:
         print(f"  ✗ {e}", file=sys.stderr)
         return 1
 
