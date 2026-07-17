@@ -46,6 +46,23 @@ A PDF that yields no text is invisible to search. Silently indexing it as "empty
 would make the library look complete when it is not, so `index` counts them and
 `status` lists them. Run OCR on those (`ocrmypdf`) and re-index.
 
+CURATED KEYWORDS — A THIRD MECHANISM, NOT DERIVED FROM THE TEXT
+-----------------------------------------------------------------
+Full-text search over the PDF (above) and a prototyped semantic/vector index were
+both measured against the same failure: a paper that describes a method in prose
+without ever naming it is invisible to a lexical query, however many synonyms you
+add, and no better reached by an embedding — see
+docs/measurements/2026-07-17-semantic-search/README.md for the numbers. Neither
+mechanism can close that gap, because both derive their signal from the text.
+
+A `keywords` field on the entry in <library>/references.bib (semicolon-separated,
+the Zotero / Better-BibTeX export convention) is a third mechanism: it is not
+derived from anything — it records what a human or LLM understood the source to
+be about, at ingest time (`ingest-source` writes it). Every search checks it,
+always, no separate flag — a keyword hit is microseconds and, being curated, can
+only ADD a result, never rank an exact lookup worse. Keyword hits carry
+`page: None` (they describe the whole document, not a passage) and print first.
+
 USAGE
 -----
     python scripts/bib-search.py index            # build / update (incremental)
@@ -82,9 +99,10 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 HERE = Path(__file__).resolve().parent
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 WORKERS = 8
 PDFTOTEXT_TIMEOUT = 180
+KEYWORD_HIT_CAP = 200  # safety valve only — curated sets are normally a handful
 
 
 def _load(name: str, path: Path):
@@ -173,6 +191,10 @@ def connect(db: Path) -> sqlite3.Connection:
         );
         CREATE VIRTUAL TABLE IF NOT EXISTS pages USING fts5(
             bibkey UNINDEXED, page UNINDEXED, text,
+            tokenize='unicode61 remove_diacritics 2'
+        );
+        CREATE VIRTUAL TABLE IF NOT EXISTS keywords USING fts5(
+            bibkey UNINDEXED, keyword,
             tokenize='unicode61 remove_diacritics 2'
         );
         INSERT OR IGNORE INTO meta(k, v) VALUES('schema', '{SCHEMA_VERSION}');
@@ -266,6 +288,28 @@ def build(library: Path, *, rebuild: bool = False, quiet: bool = False) -> dict:
                 if not quiet and done % 25 == 0:
                     print(f"    {done}/{len(stale)}")
                     con.commit()
+
+    # ── curated keywords ────────────────────────────────────────────────────
+    # Re-parsed whole on every run, no incremental tracking: ~900 entries costs
+    # nothing next to pdftotext extraction, the actual bottleneck. DELETE +
+    # reinsert is always correct and simple.
+    kw_path = library / "references.bib"
+    con.execute("DELETE FROM keywords")
+    kw_docs = kw_terms = 0
+    if kw_path.is_file():
+        lib = _load("_rs_library", HERE / "library.py")
+        try:
+            by_key = lib.read_keywords(kw_path)
+        except Exception as e:  # a malformed master bib must not abort PDF indexing
+            by_key = {}
+            if not quiet:
+                print(f"  – could not read keywords from {kw_path}: {e}")
+        rows = [(k, t) for k, terms in by_key.items() for t in terms]
+        con.executemany("INSERT INTO keywords(bibkey, keyword) VALUES(?, ?)", rows)
+        kw_docs, kw_terms = len(by_key), len(rows)
+    stats["keyword_docs"] = kw_docs
+    stats["keyword_terms"] = kw_terms
+
     con.commit()
     con.close()
     return stats
@@ -288,12 +332,38 @@ def _fallback_query(q: str) -> str:
 
 
 def search(library: Path, query: str, *, limit: int = 20, key: str | None = None) -> list[dict]:
+    """`limit` bounds page hits only. Keyword hits (capped separately by
+    KEYWORD_HIT_CAP, a safety valve — curated sets are normally a handful) are
+    always returned in full and listed first.
+
+    The two are never rank-fused: a keyword table and a page table are two
+    different FTS5 corpora, and their BM25 scores are not on a comparable scale
+    — the same reason a prototyped semantic index was never merged into this
+    search by score (see docs/measurements/2026-07-17-semantic-search/README.md).
+    Two independent queries, each sorted by its own rank, concatenated instead.
+    """
     db = index_path(library)
     if not db.exists():
         raise FileNotFoundError(
             f"No index yet for {library}.\n"
             f"    Build it:  python scripts/bib-search.py index")
     con = connect(db)
+
+    kw_sql = "SELECT bibkey, keyword, rank FROM keywords WHERE keywords MATCH ?"
+    kw_params: list = [query]
+    if key:
+        kw_sql += " AND bibkey = ?"
+        kw_params.append(key)
+    kw_sql += " ORDER BY rank LIMIT ?"
+    kw_params.append(KEYWORD_HIT_CAP)
+    try:
+        kw_rows = con.execute(kw_sql, kw_params).fetchall()
+    except sqlite3.OperationalError:
+        kw_params[0] = _fallback_query(query)
+        kw_rows = con.execute(kw_sql, kw_params).fetchall()
+    keyword_hits = [{"bibkey": b, "page": None, "snippet": kw, "matched": "keyword"}
+                     for b, kw, _ in kw_rows]
+
     sql = ("SELECT bibkey, page, snippet(pages, 2, '«', '»', ' … ', 14) AS s, rank"
            " FROM pages WHERE pages MATCH ?")
     params: list = [query]
@@ -302,14 +372,16 @@ def search(library: Path, query: str, *, limit: int = 20, key: str | None = None
         params.append(key)
     sql += " ORDER BY rank LIMIT ?"
     params.append(limit)
-
     try:
         rows = con.execute(sql, params).fetchall()
     except sqlite3.OperationalError:
         params[0] = _fallback_query(query)
         rows = con.execute(sql, params).fetchall()
     con.close()
-    return [{"bibkey": b, "page": p, "snippet": " ".join(s.split())} for b, p, s, _ in rows]
+    page_hits = [{"bibkey": b, "page": p, "snippet": " ".join(s.split()), "matched": "text"}
+                 for b, p, s, _ in rows]
+
+    return keyword_hits + page_hits
 
 
 def status(library: Path) -> dict:
@@ -323,9 +395,12 @@ def status(library: Path) -> dict:
         "SELECT bibkey FROM docs WHERE pages = 0 AND error IS NULL ORDER BY bibkey")]
     failed = [(r[0], r[1]) for r in con.execute(
         "SELECT bibkey, error FROM docs WHERE error IS NOT NULL ORDER BY bibkey")]
+    keyword_docs, keyword_terms = con.execute(
+        "SELECT COUNT(DISTINCT bibkey), COUNT(*) FROM keywords").fetchone()
     con.close()
     return {"index": str(db), "exists": True, "size_mb": round(db.stat().st_size / 1048576, 1),
-            "docs": docs, "pages": pages, "no_text": no_text, "failed": failed}
+            "docs": docs, "pages": pages, "no_text": no_text, "failed": failed,
+            "keyword_docs": keyword_docs, "keyword_terms": keyword_terms}
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -366,6 +441,9 @@ def main() -> int:
         print(f"  index   : {st['index']}  ({st['size_mb']} MB)")
         print(f"  library : {library}")
         print(f"  indexed : {st['docs']} document(s), {st['pages']} page(s) with text")
+        kw_pct = (st["keyword_docs"] / st["docs"] * 100) if st["docs"] else 0
+        print(f"  keywords: {st['keyword_docs']} of {st['docs']} document(s) carry curated "
+              f"keywords ({kw_pct:.0f}%), {st['keyword_terms']} term(s) total")
         if st["no_text"]:
             print(f"\n  ⚠ {len(st['no_text'])} PDF(s) have NO text layer — invisible to search.")
             print("    These are scans. OCR them (ocrmypdf) and re-index:")
@@ -391,6 +469,9 @@ def main() -> int:
         st = build(library, rebuild=args.rebuild)
         print(f"\n  ✓ {st['indexed']} document(s) indexed, {st['pages']} page(s) with text "
               f"({st['skipped']} unchanged) in {time.time() - t0:.0f}s")
+        if st.get("keyword_docs"):
+            print(f"  ✓ {st['keyword_docs']} document(s) carry curated keywords "
+                  f"({st['keyword_terms']} term(s) total)")
         if st["no_text"]:
             print(f"  ⚠ {len(st['no_text'])} PDF(s) yielded NO text — scans, invisible to search. "
                   f"See: bib-search.py status")
@@ -416,8 +497,11 @@ def main() -> int:
         return 1
     print(f"  {len(hits)} hit(s) — page numbers are PHYSICAL PDF pages, not printed ones\n")
     for h in hits:
-        print(f"  {h['bibkey']} · p. {h['page']}")
-        print(f"      {h['snippet']}")
+        if h["matched"] == "keyword":
+            print(f"  {h['bibkey']} · keyword: \"{h['snippet']}\"")
+        else:
+            print(f"  {h['bibkey']} · p. {h['page']}")
+            print(f"      {h['snippet']}")
     return 0
 
 

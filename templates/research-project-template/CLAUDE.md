@@ -140,6 +140,18 @@ Git is already the sync — the cloud carries only what git cannot hold.
   git repo inside Nextcloud. It is derived — if it is lost, rebuild it. PDFs with no
   text layer (scans) are **reported**, not silently indexed as empty; run `ocrmypdf`
   on those.
+
+  A search also matches curated `keywords` on library entries (BibTeX `keywords`
+  field, semicolon-separated, written by `ingest-source` — see that skill's BibTeX
+  Entry Convention). Keyword hits are shown first and carry no page number
+  (`page: null`), since they name what the whole document is about, not a passage:
+
+  ```bash
+  python scripts/bib-search.py "random labelling"   # matches curated keywords too, no extra flag
+  ```
+
+  Curated keywords exist for a source only once someone has actually read it and
+  recorded them — `bib-search.py status` reports coverage.
 - **PDF filename schema (canonical): `autor-jahr-kurztitel.pdf`** — all
   lowercase ASCII, hyphen-separated. `autor` = first author's surname (umlauts
   → `ae`/`oe`/`ue`, `ß` → `ss`; particles and spaces removed, e.g.

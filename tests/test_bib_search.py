@@ -41,10 +41,16 @@ bs = _load("bib_search", SCRIPTS / "bib-search.py")
 
 
 class _Fixture:
-    """A library plus a private cache dir, with pdftotext stubbed out."""
+    """A library plus a private cache dir, with pdftotext stubbed out.
 
-    def __init__(self, pages_by_key):
+    `bib_text`, if given, is written as `references.bib` in the fixture library —
+    the master bib `build()` reads for curated keywords. Default `None` writes no
+    bib file at all, so every existing call site (which omits this kwarg) exercises
+    the "no master bib yet" path unchanged."""
+
+    def __init__(self, pages_by_key, bib_text=None):
         self.pages = dict(pages_by_key)
+        self.bib_text = bib_text
         self.calls = []
 
     def __enter__(self):
@@ -54,6 +60,8 @@ class _Fixture:
         (self.library / "pdf").mkdir(parents=True)
         for k in self.pages:
             (self.library / "pdf" / f"{k}.pdf").write_bytes(b"%PDF-1.4\n" + k.encode())
+        if self.bib_text is not None:
+            (self.library / "references.bib").write_text(self.bib_text, encoding="utf-8")
 
         self._old_cache = os.environ.get("XDG_CACHE_HOME")
         os.environ["XDG_CACHE_HOME"] = str(d / "cache")
@@ -282,6 +290,90 @@ class SchemaVersion(unittest.TestCase):
             bs.build(f.library, rebuild=True, quiet=True)
             self.assertFalse(db.with_suffix(".sqlite-wal").exists()
                              and db.with_suffix(".sqlite-wal").read_bytes() == b"stale")
+
+
+class Keywords(unittest.TestCase):
+    """Curated BibTeX `keywords` — a third, non-text-derived search mechanism (see
+    docs/measurements/2026-07-17-semantic-search/README.md for why FTS and a
+    prototyped vector index both failed the case this closes)."""
+
+    def test_a_keyword_hit_carries_no_page_and_is_marked_keyword(self):
+        with _Fixture(
+            {"rabunal-2023-unraveling": ["copper smelting in the arabah"]},
+            bib_text="@article{rabunal-2023-unraveling,\n"
+                     "  keywords = {random type assignment; null model}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "random type assignment")
+            self.assertEqual(len(hits), 1)
+            self.assertEqual(hits[0]["bibkey"], "rabunal-2023-unraveling")
+            self.assertIsNone(hits[0]["page"])
+            self.assertEqual(hits[0]["matched"], "keyword")
+            self.assertEqual(hits[0]["snippet"], "random type assignment")
+
+    def test_key_restricts_keyword_hits_too(self):
+        with _Fixture(
+            {"a-2020-x": ["text"], "b-2021-y": ["text"]},
+            bib_text="@article{a-2020-x,\n  keywords = {shared term}\n}\n\n"
+                     "@article{b-2021-y,\n  keywords = {shared term}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "shared term", key="b-2021-y")
+            self.assertEqual([h["bibkey"] for h in hits], ["b-2021-y"])
+
+    def test_a_keyword_hit_and_a_page_hit_for_the_same_query_both_return_keyword_first(self):
+        with _Fixture(
+            {"a-2020-x": ["a page that happens to mention random labelling in prose"]},
+            bib_text="@article{a-2020-x,\n  keywords = {random labelling}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "random labelling")
+            self.assertEqual(len(hits), 2)
+            self.assertEqual(hits[0]["matched"], "keyword")
+            self.assertEqual(hits[1]["matched"], "text")
+
+    def test_no_master_bib_yet_keeps_text_search_working(self):
+        # Every OTHER test in this file omits bib_text entirely — this pins that the
+        # "no master bib" path degrades gracefully rather than being merely untested.
+        with _Fixture({"a-2020-x": ["copper smelting"]}) as f:
+            bs.build(f.library, quiet=True)
+            self.assertEqual(bs.status(f.library)["keyword_docs"], 0)
+            self.assertEqual(bs.status(f.library)["keyword_terms"], 0)
+            hits = bs.search(f.library, "copper")
+            self.assertEqual(len(hits), 1)
+            self.assertEqual(hits[0]["matched"], "text")
+
+    def test_an_unbalanced_master_bib_entry_does_not_abort_pdf_indexing(self):
+        with _Fixture(
+            {"a-2020-x": ["copper smelting"]},
+            bib_text="@article{broken-2019-x,\n"
+                     "  title = {Missing closing brace\n"
+                     "  keywords = {should never be reached}\n",
+        ) as f:
+            st = bs.build(f.library, quiet=True)
+            self.assertEqual(st["indexed"], 1)
+            self.assertEqual(len(bs.search(f.library, "copper")), 1)
+
+    def test_reindexing_twice_does_not_duplicate_keyword_rows(self):
+        with _Fixture(
+            {"a-2020-x": ["text"]},
+            bib_text="@article{a-2020-x,\n  keywords = {alpha; beta}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            bs.build(f.library, quiet=True)
+            self.assertEqual(bs.status(f.library)["keyword_terms"], 2)
+
+    def test_status_reports_correct_keyword_coverage(self):
+        with _Fixture(
+            {"a-2020-x": ["text"], "b-2021-y": ["text"], "c-2022-z": ["text"]},
+            bib_text="@article{a-2020-x,\n  keywords = {alpha; beta}\n}\n\n"
+                     "@article{b-2021-y,\n  keywords = {gamma}\n}\n\n"
+                     "@article{c-2022-z,\n  title = {no keywords here}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            st = bs.status(f.library)
+            self.assertEqual(st["keyword_docs"], 2)
+            self.assertEqual(st["keyword_terms"], 3)
 
 
 if __name__ == "__main__":

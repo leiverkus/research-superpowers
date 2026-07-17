@@ -60,10 +60,15 @@ FACTUAL = ("doi", "year", "pages", "volume", "number", "isbn")
 
 FIELD_ORDER = ["author", "editor", "title", "shorttitle", "journal", "booktitle",
                "series", "school", "institution", "publisher", "address", "volume",
-               "number", "pages", "year", "isbn", "issn", "url", "doi", "note"]
+               "number", "pages", "year", "isbn", "issn", "url", "doi", "keywords", "note"]
 
 # Dropped on merge: project-local bookkeeping that has no place in a shared library.
-DROP = {"file", "keywords", "abstract", "timestamp", "owner", "groups"}
+# NOT "keywords" — a project's curated keywords belong in the shared master too,
+# just not through this DROP-and-pick-a-winner path (see the union block in main()):
+# two projects' keyword sets for the same source are both correct facts, not a
+# disagreement, and the generic "longer string wins" merge would silently drop
+# whichever project's terms lose that comparison.
+DROP = {"file", "abstract", "timestamp", "owner", "groups"}
 
 
 def iter_entries(text: str):
@@ -147,6 +152,10 @@ def main() -> int:
     # key -> field -> {normalised: (rendering, [projects])}
     seen: dict[str, dict[str, dict[str, tuple[str, list[str]]]]] = defaultdict(lambda: defaultdict(dict))
     etypes: dict[str, list[str]] = defaultdict(list)
+    # key -> {casefolded term: (rendering, [projects])} — kept OUTSIDE `seen` on
+    # purpose: two projects' keyword sets are both correct facts to UNION, not a
+    # disagreement for the generic one-value-wins loop below to adjudicate.
+    keyword_terms: dict[str, dict[str, tuple[str, list[str]]]] = defaultdict(dict)
     for root in args.roots:
         proj = root.name if root.name != "paper" else root.parent.name
         for bib in sorted((root / "output").glob("**/*.bib")):
@@ -157,6 +166,18 @@ def main() -> int:
                 for f, v in fields_of(body).items():
                     if f in DROP or not v.strip():
                         continue
+                    if f == "keywords":
+                        for term in v.split(";"):
+                            term = term.strip()
+                            if not term:
+                                continue
+                            tn = term.casefold()
+                            if tn in keyword_terms[key]:
+                                best = richer(keyword_terms[key][tn][0], term)
+                                keyword_terms[key][tn] = (best, keyword_terms[key][tn][1] + [proj])
+                            else:
+                                keyword_terms[key][tn] = (term, [proj])
+                        continue
                     n = norm(v)
                     if n in seen[key][f]:
                         best = richer(seen[key][f][n][0], v)
@@ -166,7 +187,9 @@ def main() -> int:
 
     conflicts = []
     entries: dict[str, tuple[str, dict[str, str]]] = {}
-    for key in sorted(seen):
+    # union with keyword_terms: an entry could in principle carry ONLY a keywords
+    # field (nothing else disagreed on or agreed on), which would never touch `seen`.
+    for key in sorted(set(seen) | set(keyword_terms)):
         etype = max(set(etypes[key]), key=etypes[key].count)
         merged: dict[str, str] = {}
         for f, variants in seen[key].items():
@@ -178,6 +201,10 @@ def main() -> int:
             conflicts.append({"key": key, "field": f, "factual": f in FACTUAL,
                               "variants": [{"value": v, "projects": p} for v, p in variants.values()],
                               "chosen": picks[0][0]})
+        if keyword_terms.get(key):
+            # A union, never a conflict — must not appear in the report above.
+            terms = sorted((v for v, _ in keyword_terms[key].values()), key=str.casefold)
+            merged["keywords"] = "; ".join(terms)
         for f, v in overrides.get(key, {}).items():
             merged[f] = v
         entries[key] = (etype, merged)

@@ -45,7 +45,8 @@ Before closing the ingest, check that all five artefacts exist and are linked:
 (3) BibTeX entry in `output/bibtex/references.bib` with matching key,
 (4) entry in `knowledge/_meta/log.md`,
 (5) `scripts/lint-wiki.py` exit code 0 for this source,
-(6) every `## Connections` line that asserts a stance toward another page (confirms / contradicts / supplements / builds-on / cites) has a matching entry in the page's `relations:` frontmatter, each with a `confidence` value (see "Typed relations" below). Plain mentions stay as wikilinks — no `relations:` entry required for them.
+(6) every `## Connections` line that asserts a stance toward another page (confirms / contradicts / supplements / builds-on / cites) has a matching entry in the page's `relations:` frontmatter, each with a `confidence` value (see "Typed relations" below). Plain mentions stay as wikilinks — no `relations:` entry required for them,
+(7) the BibTeX entry's `keywords` field carries 3–8 curated terms (first ingest) or has newly-recognized terms unioned in (re-ingest under a new focus) — see "BibTeX Entry Convention" below.
 
 If any condition is missing: explain to the user which, ask for a short reason for skipping, write it to `knowledge/_meta/gate-overrides.log`, and close out the ingest.
 </SOFT-GATE>
@@ -80,7 +81,7 @@ Create TodoWrite tasks for each:
 8. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
 9. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible.
 10. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
-11. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug (only on first ingest of this source; subsequent focus passes don't change BibTeX)
+11. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug. On first ingest, include a `keywords` field: 3–8 terms — the method/topic's canonical name plus known synonyms and aliases (spelling variants, other disciplines' names, stems — the same discipline `drafting-manuscript`'s "Searching for a concept, not a string" documents). This is the one field that changes on re-ingest: union any newly-recognized terms in, deduped case-insensitively (see "BibTeX Entry Convention" below). Every other field is fixed at first ingest and does not change.
 12. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
 13. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
 14. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
@@ -94,6 +95,7 @@ When step 5 finds an existing source page:
 - **Same-focus warning:** if a focus block within the last 14 days matches the current focus string closely (case-insensitive substring), warn: "A recent focus block looks similar: «<existing focus>». Append anyway, update the existing block, or cancel?"
 - **Legacy migration:** if the existing page predates v0.5 (no `## Focus:` headings, uses old `## Core Theses` / `## Method` / etc.), offer: "Wrap the existing content as `## Focus: (legacy — full summary) — <original updated date>` before appending the new focus block?" User chooses; if declined, just append the new focus block alongside the old structure.
 - **Mode logged:** the agent output report names the mode (`fresh` | `append-section` | `update-existing-focus` | `legacy-wrap`).
+- **Keywords accrete too.** Unlike the rest of the BibTeX entry, `keywords` is unioned with any newly-recognized terms from this focus pass — see step 11 and "BibTeX Entry Convention" below.
 
 ## Provenance of substitutes
 
@@ -269,7 +271,7 @@ supplements / builds-on / cites) is mirrored by a typed entry in the
 entry is for the graph.*
 ```
 
-**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Other content in this source`). It replaces `## Other content in this source` with an updated paragraph. It unions `## Mentioned entities`, `## Connections`, and the `relations:` frontmatter block — deduplicated by `(target, type)`, keeping the **higher-confidence** entry when the same pair recurs (`extracted` > `inferred` > `ambiguous`) and merging the `because` notes. It does **not** touch the bibliographic header or earlier focus blocks.
+**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Other content in this source`). It replaces `## Other content in this source` with an updated paragraph. It unions `## Mentioned entities`, `## Connections`, and the `relations:` frontmatter block — deduplicated by `(target, type)`, keeping the **higher-confidence** entry when the same pair recurs (`extracted` > `inferred` > `ambiguous`) and merging the `because` notes. It also unions the BibTeX entry's `keywords` field with any newly-recognized terms, deduped case-insensitively — the one exception to "the bibliographic header does not change" below. It does **not** touch any other bibliographic field or earlier focus blocks.
 
 ## Typed relations
 
@@ -387,11 +389,14 @@ Key = slug exactly. Example:
   number   = {2},
   year     = {2003},
   pages    = {149--174},
-  doi      = {10.1179/tav.2003.2003.2.149}
+  doi      = {10.1179/tav.2003.2003.2.149},
+  keywords = {low chronology; Iron Age chronology; Megiddo stratigraphy}
 }
 ```
 
-If a key collides (e.g. two Finkelstein 2003 papers), append a letter: `finkelstein-2003a`, `finkelstein-2003b`. Update the source-page filename accordingly. On re-ingest with a new focus, the BibTeX entry is **not** changed — it's the same source.
+`keywords` is semicolon-separated (the Zotero / Better-BibTeX export convention): 3–8 terms, the canonical name plus known synonyms and aliases — this is what `bib-search.py` searches when a source describes a method in prose without ever naming it (see that script's module docstring and `drafting-manuscript`'s "Searching for a concept, not a string").
+
+If a key collides (e.g. two Finkelstein 2003 papers), append a letter: `finkelstein-2003a`, `finkelstein-2003b`. Update the source-page filename accordingly. On re-ingest with a new focus, the BibTeX entry is **not** changed — it's the same source — **except `keywords`: newly-recognized terms are unioned in, deduped case-insensitively.**
 
 ## Log Entry Convention
 

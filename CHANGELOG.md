@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.33.0] — 2026-07-17
+
+### Added
+
+- **`bib-search.py` now also searches curated BibTeX `keywords`.** Full-text search and a
+  prototyped vector/embedding index were both measured against a genuinely unnamed case — a
+  paper describing a method in prose without ever naming it — and neither could reach it
+  (`docs/measurements/2026-07-17-semantic-search/README.md`). A curated `keywords` field on
+  the master bibliography (written by `ingest-source` during reading, unioned in on re-ingest
+  under a new focus) is a third mechanism: it records human/LLM understanding directly instead
+  of deriving it from the text.
+
+  Always-on, no new flag — a keyword hit is microseconds and, being curated, can only add
+  results, never rank an exact lookup worse. `merge-bibs.py` now unions keyword sets across
+  projects for the same source instead of silently dropping the field.
+
 ## [0.32.1] — 2026-07-17
 
 The release helper filed new versions above [Unreleased] and left the notes behind.
