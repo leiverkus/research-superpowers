@@ -43,8 +43,13 @@ diff -q schema/knowledge-frontmatter.schema.json \
         examples/example-project/schema/knowledge-frontmatter.schema.json
 
 # 2b. Script mirrors are byte-identical (canonical source: the template)
+#     This list must match .github/workflows/lint.yml ("Script mirrors are in
+#     sync") exactly — that job is what actually gates the build.
 for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
-           scripts/graph_mcp.py scripts/vendor/cytoscape.min.js; do
+           scripts/graph_mcp.py scripts/wiki-global-graph.py \
+           scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
+           scripts/check-pdf-version.py \
+           scripts/vendor/cytoscape.min.js; do
   diff -q "templates/research-project-template/$rel" "examples/example-project/$rel"
 done
 
@@ -77,11 +82,23 @@ Two sets of files are duplicated and must stay identical:
 - **Frontmatter schema** — three copies: repo root `schema/`,
   `templates/research-project-template/schema/`, and
   `examples/example-project/schema/`.
-- **Wiki `scripts/`** (`lint-wiki.py`, `wiki-to-graph.py`, `graph_mcp.py`,
-  `vendor/cytoscape.min.js`) — two copies:
-  `templates/research-project-template/scripts/` and
-  `examples/example-project/scripts/`. (The repo-root `scripts/` holds only
-  `lint-plugin.py`, which is plugin-internal and **not** mirrored.)
+- **Wiki `scripts/`** — two copies: `templates/research-project-template/scripts/`
+  and `examples/example-project/scripts/`. Nine paths, and the authoritative list
+  is the loop in `.github/workflows/lint.yml` ("Script mirrors are in sync") —
+  **that** is what gates the build; this prose is a copy and copies drift:
+  `lint-wiki.py`, `wiki-to-graph.py`, `graph_mcp.py`, `wiki-global-graph.py`,
+  `library.py`, `bib-subset.py`, `bib-search.py`, `check-pdf-version.py`,
+  `vendor/cytoscape.min.js`.
+
+  The repo-root `scripts/` is a **different thing**: maintainer tools
+  (`build-library.py`, `lint-plugin.py`, `merge-bibs.py`, `migrate-citekeys.py`,
+  `release.py`, `rename-source-pdfs.py`, `zotero-to-bib.py`). They are
+  plugin-internal, never scaffolded into a project, and **not** mirrored.
+
+> **Adding a mirrored script? Add it to the lint.yml loop in the same commit.**
+> The loop is an allowlist, so a new script that nobody enters **fails open** —
+> CI stays green while the mirror rots. That is the one failure this check exists
+> to prevent, and the only way to hit it.
 
 **The template is the canonical source.** After editing a script or the schema,
 re-sync the copies, e.g.:
@@ -90,7 +107,11 @@ re-sync the copies, e.g.:
 src=templates/research-project-template
 cp "$src"/schema/knowledge-frontmatter.schema.json schema/
 cp "$src"/schema/knowledge-frontmatter.schema.json examples/example-project/schema/
-for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py scripts/graph_mcp.py scripts/vendor/cytoscape.min.js; do
+for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
+           scripts/graph_mcp.py scripts/wiki-global-graph.py \
+           scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
+           scripts/check-pdf-version.py \
+           scripts/vendor/cytoscape.min.js; do
   cp "$src/$rel" "examples/example-project/$rel"
 done
 ```
