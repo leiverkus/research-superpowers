@@ -156,6 +156,7 @@ Cross-cutting (context-triggered, no phase binding):
 
 | Skill | Purpose |
 |---|---|
+| `add-to-library` | Add one standalone PDF straight to the shared master library — verifies metadata against Crossref/OpenAlex, derives keywords cheaply from docinfo + abstract, computes the bibkey, places the PDF + appends the entry. Outside the project ingest flow |
 | `wiki-lint` | Structural validation (frontmatter, wikilinks, override rate) — runs `scripts/lint-wiki.py` |
 | `wiki-graph` | Structure analysis — runs `scripts/wiki-to-graph.py`; god nodes, bridges, clusters; exports graph.json / graph.graphml |
 | `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, aggregator citations) |
