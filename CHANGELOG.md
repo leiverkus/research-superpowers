@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`check-pdf-version.py` now flags repository / preprint versions (arXiv, eScholarship,
+  bio/medRxiv, White-Rose-style IRs).** These carry no printed journal pagination, so a
+  page anchor taken from one is invented — checkable and wrong. Two live sources slipped
+  through as "ok" (an eScholarship manuscript and an arXiv preprint) and their wiki pages
+  cited physical PDF positions as printed pages. A new `REPO_STAMP` signal detects the
+  cover/stamp on the first pages and marks the file a manuscript decisively; a bare
+  mention of "arXiv" in a published paper's prose does not trip it. New
+  `tests/test_check_pdf_version.py` (network-free, the readers stubbed) pins the verdicts.
+
 ### Changed
 
 - **`scripts/suggest-authority-ids.py` now retries Wikidata's rate-limiting with
