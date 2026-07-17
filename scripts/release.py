@@ -11,6 +11,19 @@ Sub-commands
         that CHANGELOG.md has a `## [x.y.z]` section. Exit non-zero otherwise.
         (Run by .github/workflows/release.yml on tag push, and locally.)
 
+    python scripts/release.py audit
+        Verify every version CHANGELOG documents was actually tagged — the
+        newest section excepted, since during a release PR the manifest is
+        bumped and the notes are written before the tag is pushed.
+        (Run by .github/workflows/lint.yml on every push/PR.)
+
+        `check` cannot catch a *missing* release: it only runs when a tag is
+        pushed, so forgetting to tag means it never runs at all. That is not
+        hypothetical — 0.27.0 through 0.30.0 were bumped, changelogged and
+        merged, and sat untagged behind a green CI until someone noticed
+        GitHub still showed 0.26.1 as latest. This sub-command is the check
+        that would have said so, one release later instead of six.
+
     python scripts/release.py notes --version 0.12.0
         Print the body of that CHANGELOG section to stdout (release notes).
 
@@ -25,6 +38,7 @@ import datetime
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 # Force UTF-8 stdout/stderr: `notes` prints the CHANGELOG section (em dashes),
@@ -42,6 +56,16 @@ README = ROOT / "README.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
+
+# `audit` floor. Everything below this predates the release discipline and is
+# immutable history, not a finding:
+#   * the first tag is v0.3.0, so 0.1.0 and 0.2.0 were never taggable at all;
+#   * 0.3.1 is a CHANGELOG section for a release that never happened — NO commit
+#     ever carried 0.3.1 in its manifests (git rev-list v0.3.0..v0.4.0 has four
+#     commits; none of them). There is nothing to tag, so it can never be fixed.
+# Auditing that stretch is archaeology. From 0.4.0 on the history is clean, so
+# that is where enforcement starts.
+AUDIT_FLOOR = (0, 4, 0)
 
 
 def _plugin_version() -> str:
@@ -87,6 +111,72 @@ def cmd_check(args) -> int:
             print(f"::error::release check: {p}")
         return 1
     print(f"release check OK — v{tag_v} (manifests + tag + changelog all agree)")
+    return 0
+
+
+def git_tags() -> set[str]:
+    """Every tag visible in this checkout. Empty set if git cannot answer."""
+    try:
+        out = subprocess.run(["git", "-C", str(ROOT), "tag", "--list"],
+                             capture_output=True, text=True, check=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {ln.strip() for ln in out.splitlines() if ln.strip()}
+
+
+def version_tuple(v: str) -> tuple[int, int, int]:
+    """'0.4.0' → (0, 4, 0), so versions compare numerically ('0.10.0' > '0.9.0')."""
+    major, minor, patch = v.split(".")
+    return int(major), int(minor), int(patch)
+
+
+def released_versions(text: str | None = None) -> list[str]:
+    """Versions documented in CHANGELOG.md, in file order (newest first).
+
+    The semver capture group also does the filtering: `## [Unreleased]` has no
+    x.y.z, so it never matches and needs no special case."""
+    if text is None:
+        text = CHANGELOG.read_text(encoding="utf-8")
+    return re.findall(r"^##\s*\[(\d+\.\d+\.\d+)\]", text, re.MULTILINE)
+
+
+def cmd_audit(args) -> int:
+    versions = released_versions()
+    if not versions:
+        print("::error::release audit: CHANGELOG.md documents no '## [x.y.z]' version")
+        return 1
+
+    tags = git_tags()
+    if not tags:
+        # Fail loudly rather than pass vacuously: with no tags visible EVERY
+        # version looks untagged, so a silent pass here would be the same class
+        # of bug this command exists to catch.
+        print("::error::release audit: no git tags visible — a shallow checkout cannot "
+              "answer this. Use actions/checkout with fetch-depth: 0 (or fetch-tags: true).")
+        return 1
+
+    # The newest section is exempt: a release PR bumps the manifests and writes
+    # the notes BEFORE the tag is pushed, so requiring it would fail every
+    # release PR — the false positive that gets a check switched off.
+    newest, older = versions[0], versions[1:]
+    missing = [v for v in older
+               if version_tuple(v) >= AUDIT_FLOOR and f"v{v}" not in tags]
+
+    if missing:
+        for v in missing:
+            print(f"::error::release audit: CHANGELOG documents {v}, but v{v} is not tagged — "
+                  f"that version was never released")
+        print(f"::error::release audit: {len(missing)} documented version(s) never tagged. "
+              f"Tag the commit whose manifests carry the version, then push the tags "
+              f"ONE AT A TIME — GitHub creates no push event at all when more than three "
+              f"tags arrive in a single push, so the release workflow would never fire.")
+        return 1
+
+    if f"v{newest}" in tags:
+        print(f"release audit OK — every documented version is tagged (newest: v{newest})")
+    else:
+        print(f"release audit OK — v{newest} is not tagged yet (expected while its release "
+              f"is in flight); every older version is tagged")
     return 0
 
 
@@ -150,6 +240,8 @@ def main() -> int:
     c = sub.add_parser("check", help="verify manifests + tag + changelog agree")
     c.add_argument("--tag", required=True)
     c.set_defaults(func=cmd_check)
+    a = sub.add_parser("audit", help="verify every documented version was tagged")
+    a.set_defaults(func=cmd_audit)
     n = sub.add_parser("notes", help="print the CHANGELOG section for a version")
     n.add_argument("--version", required=True)
     n.set_defaults(func=cmd_notes)

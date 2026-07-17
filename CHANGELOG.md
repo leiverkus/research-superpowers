@@ -6,6 +6,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.32.0] — 2026-07-17
+
+A release that never happened now fails the build.
+
+### Fixed
+
+- **Six releases were documented but never released — and CI was green throughout.**
+
+  0.27.0, 0.28.0, 0.28.1, 0.29.0, 0.29.1 and 0.30.0 were bumped, changelogged and merged.
+  None was tagged. Releases here are cut by pushing a tag, so all six sat unreleased while
+  GitHub served **0.26.1** as latest and every check passed.
+
+  `release.py check` could not have caught it. It only ever runs with a tag in hand —
+  `release.yml` on tag push, `lint.yml` feeding it the manifest's own version — so forgetting
+  to tag means it never runs. The failure was a *missing invocation*, not a wrong answer, and
+  no check can fail if no check executes.
+
+  `release.py audit` (new) asks from the other side: every version the CHANGELOG documents must
+  have a tag. It runs in `lint.yml` on every push and PR, where nothing was watching.
+
+  - It **exempts the newest section** — a release PR bumps the manifests and writes the notes
+    before the tag exists, so requiring one there would redden every release PR. A gap
+    therefore surfaces one release later; these six would have been caught at 0.28.0 rather
+    than accumulating.
+  - It **stops below 0.4.0.** The first tag is `v0.3.0`, so 0.1.0 and 0.2.0 were never
+    taggable — and 0.3.1 is a section for a release that never happened: no commit ever carried
+    0.3.1 in its manifests, so there is nothing to tag and nothing to fix.
+  - With **no tags visible** (a shallow checkout) it fails rather than passes — every version
+    would look untagged, and a silent pass there is the same class of bug. Hence
+    `fetch-depth: 0` on the lint job.
+
+  The six tags have since been pushed and their releases built. Worth recording for the next
+  person: **push tags one at a time.** GitHub creates no push event *at all* when more than
+  three tags arrive in a single push, so the workflow never fires and the tags land silently.
 ## [0.31.0] — 2026-07-17
 
 Drafting stops guessing what the chapter argues.
