@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.34.0] — 2026-07-17
+
 ### Added
 
 - **`add-to-library` skill — put one PDF straight into the shared master library,
