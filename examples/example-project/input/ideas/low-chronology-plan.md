@@ -93,9 +93,9 @@ Forschungsstand literature: discovered by a `literature-review` pass; ingested p
 **Files:** `output/article/article.md`
 
 - [ ] Confirm `wiki-lint` exits 0
-- [ ] Skeleton: Introduction → Forschungsstand → Argument structure of the debate → The Negev case → Discussion → Conclusion
-- [ ] Sign-off on skeleton with user
-- [ ] Draft section by section, ~6,000 words ±15%
+- [ ] Outline (`output/article/outline/article.md`): thesis + claim chain + per-section claims and budgets
+- [ ] STOP 1 — sign-off on the architecture with user
+- [ ] Per section: argument sketch → STOP 2 → prose → STOP 3 → append, ~6,000 words ±15%
 - [ ] Inline citations as `[@bibkey, p. XX]` only from `output/bibtex/references.bib`
 - [ ] `quarto render` exits 0
 

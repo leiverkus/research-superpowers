@@ -106,8 +106,8 @@ Dataset: `input/data/c14-levant-ironage.csv` (wird in Task 2 erzeugt).
 
 - Files: `output/article/main.md` (Sections: Introduction / Methods /
   Results / Discussion / Conclusion), Target ~9.000 Wörter
-- [ ] Skeleton + Sign-off
-- [ ] Draft section-by-section (6 Sections)
+- [ ] Outline (Thesis + Claim Chain + Section-Claims) + Sign-off (STOP 1)
+- [ ] Pro Section: Argumentationsskizze → STOP 2 → Prosa → STOP 3 (6 Sections)
 - [ ] Citations ausschließlich aus `output/bibtex/references.bib`
 - [ ] `make render` exitcode 0
 - [ ] Word count ± 10%

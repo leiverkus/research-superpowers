@@ -1,6 +1,6 @@
 ---
 name: drafting-manuscript
-description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
+description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Settles the argument architecture with the user first, then drafts section by section — each section's argument agreed before its prose is written. Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
 inputs:
   - name: plan_task_id
     description: Reference to the explicit Draft task in input/ideas/<slug>-plan.md
@@ -24,9 +24,11 @@ inputs:
     description: de or en
     required: false
   - name: target_word_count
-    description: Target prose length (±15%)
+    description: Target prose length (±15%), distributed over the sections as per-section budgets in the outline
     required: false
 outputs:
+  - path: output/<book|article>/outline/<basename>.md
+    kind: created_or_modified
   - path: output/**/*.qmd
     kind: created_or_modified
   - path: knowledge/_meta/log.md
@@ -39,9 +41,11 @@ agents:
 
 Turn stable synthesis pages into publishable prose. Every claim gets a citation. Every citation resolves in `output/bibtex/references.bib`. No inventing, no paraphrasing from memory — the wiki is the single source of truth for *what is claimed*.
 
-But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs in the shared library (`<library>/pdf/<bibkey>.pdf`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow) below.
+But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs in the shared library (`<library>/pdf/<bibkey>.pdf`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow).
 
-**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`."
+And the wiki tells you *what is claimed* — never *what this chapter argues*. The claim chain is the author's contribution, not the wiki's, and it is the thing that drifts: drafted in one pass, a chapter wanders into whatever the sources happen to be rich about, and the drift only becomes visible once thousands of words exist and are expensive to throw away. So the argument is **settled on paper and discussed before any prose exists**, then carried out one section at a time, each section's argument agreed before it is written. See [The three stages](#the-three-stages).
+
+**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`. Three stages: we settle the argument architecture first, then go section by section — argument, then prose, with a check-in at each."
 
 <SOFT-GATE>
 Before drafting, check:
@@ -63,28 +67,81 @@ resolving it first (fix the page, set the flag `state: resolved`) over
 overriding. Note which page and flag `kind` in the override reason.
 </SOFT-GATE>
 
+## The three stages
+
+| Stage | Produces | Ends at |
+|-------|----------|---------|
+| **A — Architecture** | Thesis + claim chain + per-section claims, in the outline file | **STOP 1**: user approves the architecture |
+| **B — Section loop** | Per section: an argument sketch, then its prose | **STOP 2** and **STOP 3**, per section |
+| **C — Finishing** | Citation check, render, log | Done |
+
+Stage B repeats per section. A chapter is finished when every section in the outline has `Status: approved`.
+
+<STAGE-GATE>
+Three stops. At each one you **present and wait** — the message that presents a
+stop ends there. Do not present a stop and continue past it in the same message;
+that is not a check-in, it is an announcement.
+
+**STOP 1 — Architecture (end of Stage A).** The outline file is written; present
+the thesis and the claim chain (not the whole file — the user can read it) and
+ask whether the chain holds. Wait. No prose exists yet and none is written until
+this is approved.
+
+**STOP 2 — Section argument (per section, Stage B).** The section's
+Argumentationsgang is sketched into the outline. Present it. Ask whether the
+argument is right *before* it costs a thousand words. Wait. This is the cheap
+place to redirect — that is the entire point of the stage.
+
+**STOP 3 — Section prose (per section, Stage B).** The prose for THIS section
+only, plus an explicit line on where it deviates from the approved sketch (or
+"no deviations"). Present. Wait. On approval, append to the target file, set the
+section's `Status: approved`, and move to the next section — one section per
+turn, never two.
+
+**Overriding.** The user may want a straight run ("zieh durch", "just draft the
+whole thing"). That is legitimate. Name which stops you are skipping, write the
+reason to `knowledge/_meta/gate-overrides.log`, and proceed. An override is
+per-request, not permanent: it covers this draft, not the next one. Repeated
+overrides on STOP 2 mean the section loop is not earning its cost — worth saying
+so out loud.
+</STAGE-GATE>
+
 ## When to use
 
 - A plan Draft task is current (`executing-research-plan` routes here)
 - Synthesis page(s) are stable and user asks for chapter/article draft
-- Rewriting a chapter after peer-review revisions (iterate via same skill)
+- Rewriting a chapter after peer-review revisions (iterate via same skill — the outline is the thing you revise against)
 
 **NOT for:** first-draft brainstorming (use `brainstorming-research`), unsynthesized material (go back and synthesize first), grant research narratives from scratch (use `grant-finder`).
 
 ## Checklist
 
+### Stage A — Architecture
+
 1. **Confirm plan task** — find the exact entry in `<slug>-plan.md`; confirm output file path
 2. **Pre-flight checks (SOFT-GATE)** — stable synthesis pages? BibTeX complete? wiki-lint green? No open `review_flags` on the pages you pull from?
 3. **Read all referenced synthesis pages** fully
 4. **Read all cited source pages** — the full page, especially the `### Direct quotes` and `### Examples & illustrations` sections (the raw material for depth), not just the one-line claims
-5. **Determine target length** from the plan (words / pages / chapter size) — treat it as a floor for *development*, not a ceiling to pad toward
-6. **Produce a section skeleton** — introduction, main parts, conclusion; confirm with user before prose
-7. **Draft prose with depth** — one section at a time; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`
-8. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory.
-9. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
-10. **Write to target file** — `output/book/text/<nn-slug>.qmd` or `output/article/main.qmd`
-11. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
-12. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
+5. **Resume check** — if an outline already exists at the derived path, read it and continue from the first section whose `Status` is not `approved`. Do not restart the chapter.
+6. **Write the outline** — thesis, claim chain, per-section claims, to `output/<book|article>/outline/<basename>.md` (see [Outline file](#outline-file)). Distribute `target_word_count` into per-section budgets
+7. **STOP 1** — present thesis + claim chain, wait for approval, revise until the chain holds
+
+### Stage B — Section loop (repeat per section)
+
+8. **Sketch the section's argument** — claim, steps with their evidence, the concrete material, the counter-position and how it is handled, the handoff to the next section (see [Section argument sketch](#section-argument-sketch)). Write it into the outline under that section. Bullets, not prose
+9. **STOP 2** — present the sketch, wait for approval, revise until the argument is right
+10. **Draft prose for this section only** — against the approved sketch; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
+11. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
+12. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass
+13. **STOP 3** — present the prose + the deviation line, wait for approval, revise
+14. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 8 for the next section
+15. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
+
+### Stage C — Finishing
+
+16. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
+17. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
+18. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
 
@@ -94,17 +151,29 @@ digraph drafting {
     "Pre-flight (SOFT-GATE)" [shape=box];
     "Gate passes?" [shape=diamond];
     "Back to synthesis / ingest / lint" [shape=box];
-    "Read synthesis pages" [shape=box];
-    "Read source pages" [shape=box];
-    "Determine length" [shape=box];
-    "Section skeleton" [shape=box];
-    "User approves skeleton?" [shape=diamond];
-    "Draft prose section by section" [shape=box];
+    "Read synthesis + source pages" [shape=box];
+    "Outline exists?" [shape=diamond];
+    "Write outline: thesis + claim chain" [shape=box];
+    "Resume at first unapproved section" [shape=box];
+    "STOP 1: architecture approved?" [shape=diamond];
+    "Revise outline" [shape=box];
+
+    "Next unapproved section" [shape=box];
+    "Sketch section argument" [shape=box];
+    "STOP 2: argument approved?" [shape=diamond];
+    "Revise sketch" [shape=box];
+    "Draft prose for THIS section" [shape=box];
     "Page too thin for depth?" [shape=diamond];
     "Reach back to source quotes / PDF" [shape=box];
+    "Check prose against sketch" [shape=box];
+    "STOP 3: section approved?" [shape=diamond];
+    "Revise prose" [shape=box];
+    "Append to .qmd; Status=approved" [shape=box];
+    "Sections left?" [shape=diamond];
+
     "Verify citations" [shape=box];
     "Citations complete?" [shape=diamond];
-    "Write target file" [shape=box];
+    "Fix citations" [shape=box];
     "Render check" [shape=box];
     "Render OK?" [shape=diamond];
     "Fix render errors" [shape=box];
@@ -114,21 +183,38 @@ digraph drafting {
     "Confirm plan task" -> "Pre-flight (SOFT-GATE)";
     "Pre-flight (SOFT-GATE)" -> "Gate passes?";
     "Gate passes?" -> "Back to synthesis / ingest / lint" [label="no"];
-    "Gate passes?" -> "Read synthesis pages" [label="yes"];
-    "Read synthesis pages" -> "Read source pages";
-    "Read source pages" -> "Determine length";
-    "Determine length" -> "Section skeleton";
-    "Section skeleton" -> "User approves skeleton?";
-    "User approves skeleton?" -> "Section skeleton" [label="no"];
-    "User approves skeleton?" -> "Draft prose section by section" [label="yes"];
-    "Draft prose section by section" -> "Page too thin for depth?";
+    "Gate passes?" -> "Read synthesis + source pages" [label="yes"];
+    "Read synthesis + source pages" -> "Outline exists?";
+    "Outline exists?" -> "Resume at first unapproved section" [label="yes"];
+    "Outline exists?" -> "Write outline: thesis + claim chain" [label="no"];
+    "Write outline: thesis + claim chain" -> "STOP 1: architecture approved?";
+    "STOP 1: architecture approved?" -> "Revise outline" [label="no"];
+    "Revise outline" -> "STOP 1: architecture approved?";
+    "STOP 1: architecture approved?" -> "Next unapproved section" [label="yes"];
+    "Resume at first unapproved section" -> "Next unapproved section";
+
+    "Next unapproved section" -> "Sketch section argument";
+    "Sketch section argument" -> "STOP 2: argument approved?";
+    "STOP 2: argument approved?" -> "Revise sketch" [label="no"];
+    "Revise sketch" -> "STOP 2: argument approved?";
+    "STOP 2: argument approved?" -> "Draft prose for THIS section" [label="yes"];
+
+    "Draft prose for THIS section" -> "Page too thin for depth?";
     "Page too thin for depth?" -> "Reach back to source quotes / PDF" [label="yes"];
-    "Reach back to source quotes / PDF" -> "Draft prose section by section";
-    "Page too thin for depth?" -> "Verify citations" [label="no"];
+    "Reach back to source quotes / PDF" -> "Draft prose for THIS section";
+    "Page too thin for depth?" -> "Check prose against sketch" [label="no"];
+    "Check prose against sketch" -> "STOP 3: section approved?";
+    "STOP 3: section approved?" -> "Revise prose" [label="no"];
+    "Revise prose" -> "STOP 3: section approved?";
+    "STOP 3: section approved?" -> "Append to .qmd; Status=approved" [label="yes"];
+    "Append to .qmd; Status=approved" -> "Sections left?";
+    "Sections left?" -> "Next unapproved section" [label="yes"];
+    "Sections left?" -> "Verify citations" [label="no"];
+
     "Verify citations" -> "Citations complete?";
-    "Citations complete?" -> "Draft prose section by section" [label="no"];
-    "Citations complete?" -> "Write target file" [label="yes"];
-    "Write target file" -> "Render check";
+    "Citations complete?" -> "Fix citations" [label="no"];
+    "Fix citations" -> "Verify citations";
+    "Citations complete?" -> "Render check" [label="yes"];
     "Render check" -> "Render OK?";
     "Render OK?" -> "Fix render errors" [label="no"];
     "Fix render errors" -> "Render check";
@@ -136,6 +222,86 @@ digraph drafting {
     "Log entry" -> "Done";
 }
 ```
+
+## Outline file
+
+One outline per draft target. The path is **derived mechanically** from `output_path`: same directory root, `outline/`, same basename, `.md`.
+
+| Target | Outline |
+|--------|---------|
+| `output/book/text/03-methods.qmd` | `output/book/outline/03-methods.md` |
+| `output/article/article.qmd` | `output/article/outline/article.md` |
+
+It sits outside Quarto's render tree (`_quarto.yml` lists chapters explicitly), so it never renders. It is a **living document**: the architecture, plus each section's approved argument sketch, plus the per-section status. That is what makes a long chapter survive a context compaction or a break of several days — the agreements are on disk, not in the chat history. It is also what you revise against after peer review.
+
+```markdown
+---
+title: "<Chapter / section title>"
+type: outline
+target: output/book/text/03-methods.qmd
+plan_task: "<Draft task id from <slug>-plan.md>"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+target_words: 4500
+status: draft | approved
+---
+
+# Outline: <Chapter title>
+
+## Thesis
+
+<ONE sentence: what this chapter establishes that the reader did not have
+before. Not a topic ("this chapter discusses the Low Chronology") — a claim
+("the Low Chronology's stratigraphic case rests on three sites whose sequences
+are themselves dated by the pottery they are meant to date"). If you cannot
+write it as one sentence, the chapter has no thesis yet — go back to the
+synthesis pages before proposing an outline.>
+
+## Claim chain
+
+<2–5 sentences of prose: how the sections build from the thesis to the
+conclusion, each one earning the next. Readable aloud as a chain. THIS is what
+the user approves at STOP 1 — if it only makes sense as a list of topics, it is
+a table of contents, not an argument.>
+
+## Sections
+
+### S1 — <Section title>
+
+- **Claim:** <what this section establishes — one sentence>
+- **Evidence:** `[@bibkey1]`, `[@bibkey2]`
+- **Synthesis basis:** `[[synthesis-page-slug]]`
+- **Function:** <what it hands to the next section>
+- **Not here:** <the adjacent point that belongs elsewhere — the anti-drift line>
+- **Budget:** ~<n> words
+- **Status:** outlined | sketched | drafted | approved
+
+### S2 — <Section title>
+…
+```
+
+## Section argument sketch
+
+At STOP 2, this block goes into the outline **under the section it belongs to**, then gets approved. Bullets — writing prose here defeats the purpose.
+
+```markdown
+#### Argument (approved YYYY-MM-DD)
+
+- **Claim:** <the section's claim, sharpened by the discussion>
+- **Steps:**
+  1. <step> — carried by `[@bibkey, p. XX]`
+  2. <step> — carried by `[@bibkey, p. XX]`
+  3. <step> — carried by `[@bibkey, p. XX]`
+- **Concrete material:** <the specific artefact / site / passage / dataset that
+  illustrates the argument, named, with its source-page anchor. If you cannot
+  name one, this section will be assertion-stacking — find one or narrow the
+  claim.>
+- **Counter-position:** <the strongest objection in the literature, cited> —
+  handled by <conceding / refuting on evidence X / bracketing as out of scope>
+- **Hands to next:** <the sentence the next section can start from>
+```
+
+The counter-position line is not decoration. A section that cannot name what argues against it has not engaged the debate, and a reviewer will say so — cheaper to hear it here.
 
 ## Citation Rules
 
@@ -167,7 +333,7 @@ The single most common failure of wiki-driven drafting is **bullet-reflow**: eac
 
 A single terse wiki bullet typically becomes a **developed passage**, not a single sentence. If a paragraph has assertions but no example and no explanation, it is not finished.
 
-**Reach-back procedure** (checklist step 8) — escalate only as far as needed:
+**Reach-back procedure** (checklist step 11) — escalate only as far as needed:
 
 1. The source page's `### Direct quotes` and `### Examples & illustrations` sections — the cheapest, already-extracted depth.
 2. If still too thin: open the **original PDF** at `<library>/pdf/<bibkey>.pdf` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
@@ -189,16 +355,18 @@ A single terse wiki bullet typically becomes a **developed passage**, not a sing
 - **Book / article citations**: `dao-paper-search-mcp.search_crossref(doi=...)` returns `inline_citation.markdown` (a ready Author-Year link) and `authoritative_bibliography_line` (the full references-list line). Paste both verbatim instead of formatting Author-Year yourself.
 - **Web citations**: `dao-searxng-mcp.fetch_url(url=...)` returns `source_class`. If `aggregator` or `suspect`, either find the primary source or name the aggregator status transparently in the text.
 
-## Subagent Dispatch (optional, for long chapters)
+## Subagent dispatch (per section, not per chapter)
 
-For chapters > 3000 words, dispatch `drafter` subagent (see `agents/drafter.md`) per section. The subagent receives:
-- The section outline
+For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/drafter.md`) at checklist step 10 — **one section, after its sketch has passed STOP 2**. Never fan out across sections: a chapter drafted in parallel cannot be steered, which is the failure this skill's staging exists to prevent.
+
+The subagent receives:
+- **The approved argument sketch** for this section — its contract; the prose must carry out *this* argument, not a reasonable-looking alternative
 - List of synthesis pages (paths) to pull from
 - List of source pages (paths) with allowed citation keys
-- **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 8). Without these, the subagent can only bullet-reflow.
-- Target word count (a floor for development, not a ceiling to pad)
+- **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 11). Without these, the subagent can only bullet-reflow
+- The section's word budget from the outline (a floor for development, not a ceiling to pad toward)
 
-Main conversation composes the final draft from section outputs.
+Its report includes a **deviations-from-sketch** line. Carry that into STOP 3 verbatim — do not quietly absorb it. A deviation the user never sees is exactly the drift the stages are meant to surface.
 
 ## Quarto Template Hooks
 
@@ -206,31 +374,42 @@ The template's `output/book/` uses a Quarto book structure (see `templates/resea
 
 - `_quarto.yml` defines the chapter list — update when adding a new chapter file
 - `text/<nn-slug>.qmd` is the chapter-file naming convention (`01-introduction.qmd`, `02-state-of-the-field.qmd`, …)
+- `outline/<nn-slug>.md` holds the chapter's argument architecture — not listed in `_quarto.yml`, never rendered
 - `template/_preamble.tex` holds LaTeX preamble for PDF output
 - `Makefile` targets: `make render`, `make preview`, `make clean`
 
-For articles, use `output/article/main.qmd` with single-file layout.
+For articles, use `output/article/article.qmd` with single-file layout and `output/article/outline/article.md`.
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|----------|
+| "I'll show the outline and get started on section 1 — saves a round-trip" | A stop you walk past is not a stop. The message that presents a stop ends there. |
+| "The user approved the outline, so the sections are approved" | STOP 1 approves the *chain*. Each section's argument is its own agreement — that is where the focus is actually held. |
+| "I'll draft all the sections and we can discuss at the end" | Discussion after the fact is editing, not steering. By then the drift is expensive to undo — which is why it never gets undone. |
+| "Section 3 needs a point from section 5, I'll pull it forward" | That is drift. Either change the outline and say so, or respect the section's "Not here" line. |
+| "The source is rich here, so I'll go deeper than the sketch said" | Source richness is not an argument. The sketch is the contract; if it is wrong, renegotiate it — don't silently exceed it. |
+| "The subagent's deviations line is minor, I won't mention it" | Then the stages bought nothing. Deviations go to the user verbatim. |
+| "Thesis: 'this chapter examines the Low Chronology'" | That is a topic, not a thesis. A thesis can be wrong; a topic cannot. Rewrite it as a claim. |
 | "The source roughly says …" | Either a verbatim quote with page, or a paraphrase with a citation. No hearsay. |
 | "I've turned every wiki bullet into a sentence — done" | That is bullet-reflow, not prose. Each substantive point needs development: grounding, an example from the source, and why it matters. |
 | "The wiki page is thin, so the paragraph is thin" | The wiki points to the depth; the source holds it. Reach back to the quotes/examples or the PDF and cite — don't ship a thin paragraph. |
 | "It needs more depth, I'll just add explanation I know" | Grounded elaboration comes from the source and is cited. Explanation from memory is invention. |
 | "I'll cite this passage properly later" | Later citations get forgotten. Get it right now, or not at all. |
-| "I'll start drafting; structure can come later" | Skeleton first, sign-off, then prose. |
 | "Wiki-lint isn't needed, I know everything is fine" | Mandatory before every draft — broken wikilinks are invisible when rendered. |
 | "This page is `stable`, so it's safe to draft" | Stable is maturity, not health. An open `review_flag` on it is an unresolved content concern — resolve or override, don't ignore. |
 | "The chapter is so good, I'll ignore the render errors" | A chapter that won't render is not a chapter. |
 
 ## Key Principles
 
+- **Architecture before prose** — the thesis and claim chain are settled and approved before a single paragraph exists
+- **The argument is agreed before it is written** — per section: sketch, discuss, then draft. Redirecting twenty lines is free; redirecting a thousand words is not
+- **A stop is a stop** — present and wait; never present and continue in the same message
+- **The outline is the memory** — status per section on disk, so a long chapter survives compaction, breaks, and revision rounds
 - **The wiki is truth** — every claim traceable to a synthesis or source page
 - **Elaborate from the source, not from memory** — the wiki says *what* is claimed; the source holds the examples and explanations. Reach back and cite; a thin wiki page is a pointer, not a limit
 - **Develop, don't reflow** — a wiki bullet becomes a developed passage (assertion → grounding → example → significance), not one flat sentence
+- **Deviations are surfaced, not absorbed** — prose that leaves the sketch says so
 - **Every citation verified** — bibkey existence before commit
-- **Skeleton before prose** — structural sign-off first
 - **Render check is part of drafting** — not "later"
 - **One draft per run, one log entry** — keep changes traceable

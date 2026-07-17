@@ -55,7 +55,7 @@ oversight — the reason in the log makes that traceable.
 - Before sending to an external reviewer, before submission, before grant deadline
 - After major revision, to re-check whether open issues were addressed
 
-**NOT for:** first-draft feedback (use `drafting-manuscript`'s skeleton review), copy-editing (separate task), single-paragraph checks.
+**NOT for:** first-draft feedback (use `drafting-manuscript`'s architecture and per-section stops), copy-editing (separate task), single-paragraph checks.
 
 ## Checklist
 

@@ -6,6 +6,99 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`drafting-manuscript` now settles the argument before it writes prose.**
+
+  The skill produced long, well-cited chapters in a single pass — and that was the problem.
+  A chapter drafted in one go wanders into whatever the sources happen to be rich about, and
+  the drift only becomes visible once thousands of words exist and are too expensive to throw
+  away. So they don't get thrown away.
+
+  The skill *said* "confirm with user before prose". Three things made sure that never
+  happened:
+
+  - The thing being confirmed was a **heading list** ("introduction, main parts, conclusion").
+    Approving it approved nothing about the argument — a table of contents cannot be wrong.
+  - The **DOT graph had no user node** between skeleton approval and the render check.
+    `"Draft prose section by section"` looped only to `"Page too thin?"`. "Section by section"
+    was a model-internal loop, not a dialogue — and the graph is what gets read as the control
+    flow.
+  - **Subagent dispatch fanned out** across all sections at once, then composed the chapter
+    from the results. Maximally unsteerable.
+
+  Drafting now runs in three stages:
+
+  - **Stage A — architecture.** A thesis (one sentence, and it must be falsifiable — a topic
+    is not a thesis), a claim chain, and per section: its claim, evidence, function in the
+    chain, a `Not here:` scope line, and a word budget. Written to
+    `output/<book|article>/outline/<basename>.md`, derived mechanically from the target
+    (`book/text/03-methods.qmd` → `book/outline/03-methods.md`). Outside Quarto's render tree.
+  - **Stage B — section loop.** Per section: sketch the argument (steps with their evidence,
+    the concrete material, the counter-position and how it is handled, the handoff) → **STOP**
+    → prose for that section only → **STOP** → append, mark approved, next. Redirecting twenty
+    lines is free; redirecting a thousand words is not.
+  - **Stage C** — the existing citation check, render, log.
+
+  Supporting changes:
+
+  - The outline carries a per-section `Status` (`outlined → sketched → drafted → approved`)
+    and each approved sketch. A long chapter now survives context compaction and a two-week
+    break — the agreements are on disk, not in the chat history. It is also what you revise
+    against after peer review.
+  - The `drafter` subagent takes **the approved sketch as its contract** and reports a
+    **deviations-from-sketch** line, which the parent surfaces verbatim. An unreported
+    deviation is exactly the drift the stages exist to catch. Dispatch is now sequential —
+    one section, after its sketch is approved — never a fan-out.
+  - All three stops are `<SOFT-GATE>`-style: a straight run stays available, but it gets named
+    and logged to `gate-overrides.log`. Repeated overrides on the section stop are a signal
+    that the loop isn't earning its cost.
+
+- **The example project and the tutorial now demonstrate Stage A** —
+  `examples/example-project/output/article/outline/main.md` is a real outline: thesis, claim
+  chain, six sections with their evidence, scope lines and budgets.
+
+  Every section sits at `Status: outlined` and none is drafted, because that project's
+  `chronology-debate.md` is `status: review` with an open `weak-support` flag — the drafting
+  SOFT-GATE, unmet and *not* overridden (`lint-wiki` confirms: "no SOFT-GATE overrides
+  recorded"). The example now shows the gate working rather than a chapter that skipped it.
+
+  It also shows what Stage A buys: the outline records that **S4, the article's load-bearing
+  section, has no citable source at all** — Cohen 1979 was never ingested. That is a finding
+  worth ~50 lines of architecture, not 1200 words of prose about an uncitable work.
+
+### Fixed
+
+- **The tutorial taught citation keys that the project's own schema rejects.** Every bibkey in
+  `docs/tutorial.md` — `cohen-1979`, `finkelstein-1999`, `finkelstein-2003`, `mazar-2011` —
+  was the bare `autor-jahr` shape that `ingest-source` explicitly forbids ("Never the
+  `autor-jahr` prefix alone") and that `lint-wiki` hard-fails on. Checked mechanically against
+  `schema/knowledge-frontmatter.schema.json`: all four failed the `bibkey` pattern. They are
+  now `surname-year-shorttitle`, and the two the example ships (`finkelstein-2003-wrong`,
+  `mazar-2011-iron`) match it exactly.
+
+  The render-failure anecdote taught the same deprecated convention: a "citation key collision"
+  between `mazar-2011` and `mazar-2011b`. Under the real shape those are distinct keys that
+  cannot collide. It now narrates the failure the shape actually prevents — two different Mazar
+  2011 papers under one key, which fails *silently* (render exits 0, one work carries the
+  other's pages) — and shows the disambiguator in the year slot: `mazar-2011b-iron-age`.
+
+- **The tutorial invited a comparison it made impossible.** It claimed the walkthrough "matches
+  `examples/example-project/`" while using different slugs (`negev-fortresses-chronology-*` vs
+  `low-chronology-*`), a different synthesis filename, and citation keys absent from the
+  example. Identifiers are aligned; the header and the closing section now state plainly how
+  far the checked-in copy runs and which artefacts exist only in the text.
+
+- The tutorial's Phase-7 SOFT-GATE listed four conditions; the skill has five. The missing one
+  (no open `review_flags`) is the condition the example project actually stops on.
+
+- `examples/example-project/README.md` was wrong about its own tree: it claimed the log shows
+  `draft` entries (there were none), called the synthesis `status: draft` (it is `review`), and
+  described one ingested source (there are three). The log's `updated:` was two ingests stale.
+
+- `scaffold-research-project` described the output tree as `output/publication/article/…` and
+  `output/publication/book/…`. The template has had no `publication/` level for some time.
+
 ## [0.30.0] — 2026-07-14
 
 ### Added

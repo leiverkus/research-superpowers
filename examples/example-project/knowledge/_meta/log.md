@@ -2,7 +2,7 @@
 title: "Workflow Log"
 type: concept
 created: 2026-04-18
-updated: 2026-04-19
+updated: 2026-05-28
 status: stable
 author: human
 ---
@@ -27,3 +27,5 @@ Events: `brainstorm` | `plan` | `ingest` | `synthesis` | `draft` | `review` |
 - 2026-05-28 · ingest · mazar-2011 · focus: «the Modified Conventional Chronology response to the Low Chronology» (stub from literature-review queue)
 - 2026-05-28 · ingest · regev-et-al-2020 · focus: «the current Tel Rehov 14C dataset and re-modelling» (stub from literature-review queue)
 - 2026-05-28 · synthesis · chronology-debate · status=review (3 sources, argument-structure mapping added)
+- 2026-05-28 · draft · low-chronology · Stage A: outline written (thesis + claim chain + 6 sections, ~6000 w) → output/article/outline/main.md
+- 2026-05-28 · draft · low-chronology · Stage B not started — SOFT-GATE unmet (chronology-debate status=review + open review_flag); NOT overridden, no gate-overrides.log entry. Blocker: Cohen 1979 un-ingested, and it is S4's only source
