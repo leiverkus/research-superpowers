@@ -107,7 +107,7 @@
     "wikidata_qid": {
       "type": "string",
       "pattern": "^Q[0-9]+$",
-      "description": "Wikidata entity ID (e.g. Q173799 for Tel Megiddo). Used on type=entity. Resolvable via dao-paper-search-mcp resolve_author / resolve_site."
+      "description": "Wikidata entity ID (e.g. Q173799 for Tel Megiddo, Q483639 for cloud computing). The PRIMARY cross-project join key on both type=entity and type=concept — Wikidata covers named entities and concepts alike, where getty_aat_id (art/architecture/heritage only) does not. Resolvable via dao-paper-search-mcp resolve_author / resolve_site, or wikidata.org."
     },
     "idai_gazetteer_id": {
       "type": "string",
@@ -127,7 +127,7 @@
     "getty_aat_id": {
       "type": "string",
       "pattern": "^300[0-9]{6}$",
-      "description": "Getty AAT (Art & Architecture Thesaurus) subject ID (e.g. 300054327 for 'archaeology'). Used mainly on type=concept to give concepts / methods a controlled-vocabulary join key — the cross-project link an authority-less concept otherwise lacks. Bare 9-digit iD (300xxxxxx). Look up at vocab.getty.edu/aat; wikidata_qid / gnd_id are alternatives where AAT has no matching term."
+      "description": "Getty AAT (Art & Architecture Thesaurus) subject ID (e.g. 300054327 for 'archaeology'). OPTIONAL on type=concept, layered on top of the wikidata_qid join key: it adds the curated art/architecture/heritage thesaurus (with its broader/narrower hierarchy) where a precise AAT term exists. AAT is heritage-only — most modern / DH / method concepts have no term (measured: 2 of 19 in one project), so wikidata_qid is the primary key and this is a bonus, not the default. Quote the bare 9-digit iD ('300xxxxxx') so YAML keeps it a string, not an integer. Look up at vocab.getty.edu/aat."
     },
     "relations": {
       "type": "array",

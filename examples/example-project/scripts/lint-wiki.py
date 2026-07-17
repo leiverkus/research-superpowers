@@ -82,9 +82,9 @@ REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation
 # reported as an advisory signal, never a hard error. orcid covers living
 # researchers (where gnd_id / wikidata_qid often do not).
 AUTHORITY_FIELDS = ("orcid", "gnd_id", "idai_gazetteer_id", "wikidata_qid")
-# Concepts have no gazetteer/ORCID identity; their controlled-vocabulary join
-# key is Getty AAT (or Wikidata / GND where AAT has no matching term).
-CONCEPT_AUTHORITY_FIELDS = ("getty_aat_id", "wikidata_qid", "gnd_id")
+# Concepts have no gazetteer/ORCID identity; their primary join key is Wikidata
+# (getty_aat_id is an optional extra where the heritage-only AAT has a term).
+CONCEPT_AUTHORITY_FIELDS = ("wikidata_qid", "getty_aat_id", "gnd_id")
 
 
 def load_schema() -> dict:
@@ -504,8 +504,8 @@ def report_authority_coverage(pages: dict[str, Path], verbose: bool = False) -> 
 
 
 def report_concept_coverage(pages: dict[str, Path], verbose: bool = False) -> list[str]:
-    """Advisory: how many `type=concept` pages carry a controlled-vocabulary
-    join key (getty_aat_id / wikidata_qid / gnd_id).
+    """Advisory: how many `type=concept` pages carry a vocabulary join key
+    (wikidata_qid primary, getty_aat_id / gnd_id optional).
 
     Concepts have no authority ID by default, so cross-project *concept* overlap
     — the deepest tissue of a methods portfolio (a method recurring across
@@ -531,9 +531,10 @@ def report_concept_coverage(pages: dict[str, Path], verbose: bool = False) -> li
     if untagged:
         report.append(
             "  Untagged concepts are invisible to cross-project concept linkage. Tag "
-            "shared methods/concepts with getty_aat_id (vocab.getty.edu/aat), or "
-            "wikidata_qid / gnd_id where AAT has no term; a project-specific concept "
-            "may legitimately have none — review the list.")
+            "shared methods/concepts with wikidata_qid (the primary key; covers "
+            "concepts as well as entities), optionally adding getty_aat_id "
+            "(vocab.getty.edu/aat) where that heritage thesaurus has a precise term; "
+            "a project-specific concept may legitimately have none — review the list.")
         if verbose:
             report.append("  Untagged concepts:")
             report.extend(f"    - {slug}" for slug in untagged)

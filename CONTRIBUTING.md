@@ -92,8 +92,9 @@ Two sets of files are duplicated and must stay identical:
 
   The repo-root `scripts/` is a **different thing**: maintainer tools
   (`build-library.py`, `lint-plugin.py`, `merge-bibs.py`, `migrate-citekeys.py`,
-  `release.py`, `rename-source-pdfs.py`, `zotero-to-bib.py`). They are
-  plugin-internal, never scaffolded into a project, and **not** mirrored.
+  `release.py`, `rename-source-pdfs.py`, `suggest-authority-ids.py`,
+  `zotero-to-bib.py`). They are plugin-internal, never scaffolded into a
+  project, and **not** mirrored.
 
 > **Adding a mirrored script? Add it to the lint.yml loop in the same commit.**
 > The loop is an allowlist, so a new script that nobody enters **fails open** —

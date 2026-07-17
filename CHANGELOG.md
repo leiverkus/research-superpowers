@@ -6,6 +6,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/suggest-authority-ids.py` — a curation aid for the authority/vocabulary
+  IDs.** It reads a project's wiki, finds the entity and concept pages that carry no
+  cross-project join key yet, and queries Wikidata for candidate matches, printing the
+  label and description you need to VERIFY each one (search returns namesakes — the
+  racehorse "Cloud Computing", a WW2 resistance group named "European Union"). It writes
+  nothing; a human or LLM confirms and enters the id. For entities it also surfaces the
+  candidate's ORCID/GND, for concepts its Getty AAT id, so you can pick the most specific
+  field. Maintainer tool (repo-root `scripts/`, not scaffolded, needs network + PyYAML).
+
+### Changed
+
+- **`wikidata_qid` is now the primary vocabulary join key for concepts; `getty_aat_id`
+  is an optional extra.** The schema, `frontmatter-schema.md`, `wiki-global-graph.py`,
+  `lint-wiki.py` and `ingest-source` previously named Getty AAT the primary concept key,
+  with Wikidata a fallback "where AAT has no matching term". Measured on a real project,
+  that fallback was the rule: only **2 of 19** concepts had an AAT term — AAT is
+  art/architecture/heritage-only, so most modern, DH and method concepts have none. The
+  recommendation is now inverted: tag concepts with `wikidata_qid` (which covers concepts
+  as well as entities, matching how entities already work), and add `getty_aat_id` only
+  where that thesaurus has a precise term. Backward compatible — existing `getty_aat_id`
+  tags stay valid; `lint-wiki.py` already counted either as coverage. The `ingest-source`
+  note now also reminds you to **quote** a `getty_aat_id` so YAML keeps the all-digit
+  value a string, not an integer.
+
 ## [0.33.0] — 2026-07-17
 
 ### Added
