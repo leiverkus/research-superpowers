@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/suggest-authority-ids.py` — a curation aid for the authority/vocabulary
+  IDs.** It reads a project's wiki, finds the entity and concept pages that carry no
+  cross-project join key yet, and queries Wikidata for candidate matches, printing the
+  label and description you need to VERIFY each one (search returns namesakes — the
+  racehorse "Cloud Computing", a WW2 resistance group named "European Union"). It writes
+  nothing; a human or LLM confirms and enters the id. For entities it also surfaces the
+  candidate's ORCID/GND, for concepts its Getty AAT id, so you can pick the most specific
+  field. Maintainer tool (repo-root `scripts/`, not scaffolded, needs network + PyYAML).
+
 ### Changed
 
 - **`wikidata_qid` is now the primary vocabulary join key for concepts; `getty_aat_id`
