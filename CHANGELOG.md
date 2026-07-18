@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.34.2] — 2026-07-18
+
 ### Changed
 
 - **`suggest-authority-ids.py` aborts under hard rate-limiting instead of tarpitting,
