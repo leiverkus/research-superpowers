@@ -38,6 +38,32 @@ that, a rate-limited query is silently miscounted as "no candidate". This is
 plugin-maintainer tooling; it is NOT mirrored into the scaffolded template/example
 and is not run by CI.
 
+WHEN THE ENVIRONMENT IS RATE-LIMITED (the WebFetch fallback)
+------------------------------------------------------------
+Some environments (CI, cloud sandboxes, shared-IP setups) get **hard** 429s from
+`wbsearchentities` — every request, immediately. The backoff then can't help: each
+query just exhausts its retries, and a 60-page run tarpits for an hour and returns
+all-empty. So this tool now ABORTS (exit 2) once a few pages in a row have every
+query rejected, rather than grinding on.
+
+If that happens, verify the ids another way — an LLM agent can query the same
+Wikidata API through its **web-fetch capability**, which uses a different, un-throttled
+network path (this is exactly how the ids were curated at scale when the tool could
+not run):
+
+    search:      https://www.wikidata.org/w/api.php?action=wbsearchentities
+                 &search=<TERM>&language=en&format=json&limit=7   → id / label / description
+    corroborate: https://www.wikidata.org/wiki/Special:EntityData/<QID>.json
+                 → check P31 (instance-of), P106 (occupation), P496 (ORCID), P227 (GND)
+
+Same discipline either way: VERIFY each candidate against its description; reject
+namesakes; for a person, confirm the field/occupation before trusting a bare
+"researcher" hit. Two caveats for whoever WRITES the verified ids back:
+  * one `wikidata_qid` must not land on two pages in the same project (it is a join
+    key — a duplicate silently asserts two pages are the same thing);
+  * a page's file may be `<slug>.md` or `entity-<slug>.md` / `concept-<slug>.md` —
+    resolve both spellings before deciding a page is missing.
+
 USAGE
 -----
     python scripts/suggest-authority-ids.py <project-root>
@@ -49,6 +75,7 @@ import json
 import re
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -110,24 +137,54 @@ def untagged_pages(root: Path, want_type: str | None) -> list[tuple[str, str, st
 
 
 def search_terms(title: str) -> list[str]:
-    """A bilingual title like 'Datensouveränität (Data Sovereignty)' searches
-    best on its English parenthetical; fall back to the whole title."""
+    """Search terms for a title, most specific first.
+
+    A bilingual title like 'Datensouveränität (Data Sovereignty)' searches best on
+    its English parenthetical; fall back to the whole title. THEN add robustness
+    variants: Wikidata's wbsearchentities is a near-literal match and quietly MISSES
+    a name carrying a middle-initial period ("Matthew A. Peeples") or a diacritic
+    ("Sánchez"), reporting a real person as "no candidate". A de-periodised and a
+    diacritic-folded form recover those. Variants only add a query when they differ
+    from a base term (dedup), so a plain title costs nothing extra.
+    """
     title = title.strip().strip('"')
-    terms = []
+    base = []
     m = re.search(r"\(([^)]+)\)", title)
     if m:
-        terms.append(m.group(1).strip())
-    terms.append(re.sub(r"\s*\([^)]*\)", "", title).strip())
-    seen, uniq = set(), []
-    for t in terms:
+        base.append(m.group(1).strip())
+    base.append(re.sub(r"\s*\([^)]*\)", "", title).strip())
+
+    seen, terms = set(), []
+
+    def add(t: str) -> None:
+        t = t.strip()
         if t and t.lower() not in seen:
-            seen.add(t.lower()); uniq.append(t)
-    return uniq
+            seen.add(t.lower())
+            terms.append(t)
+
+    for t in base:
+        add(t)
+        add(t.replace(".", ""))                                     # "Matthew A. Peeples" → "…A Peeples"
+        add("".join(c for c in unicodedata.normalize("NFKD", t)     # "Sánchez" → "Sanchez"
+                    if not unicodedata.combining(c)))
+    return terms
 
 
 # Transient HTTP statuses worth retrying: 429 is Wikidata throttling a burst; the
 # 5xx family is a server hiccup. Anything else is a real error and is raised at once.
 _RETRIABLE = {429, 500, 502, 503, 504}
+
+# When THIS many pages in a row have EVERY query rejected with 429 (after _get's
+# backoff has already exhausted its retries), the IP is hard-throttled, not just
+# bursty — grinding on would tarpit for ~an hour and return all-empty. Abort instead.
+_THROTTLE_DEAD_PAGES = 3
+
+
+class WikidataThrottled(RuntimeError):
+    """Raised when Wikidata rate-limits this IP so hard the run cannot proceed.
+
+    Carries an actionable message (query the API via web-fetch instead, or run from
+    an unthrottled network) — see the module docstring's WebFetch-fallback section."""
 
 
 def _retry_after(err: urllib.error.HTTPError) -> float | None:
@@ -194,11 +251,19 @@ def wd_props(qid: str, props: list[tuple[str, str]]) -> dict[str, str]:
 def suggest(root: Path, want_type: str | None, limit: int) -> list[dict]:
     pages = untagged_pages(root, want_type)
     results = []
+    dead_streak = 0                    # consecutive pages whose EVERY query was a 429
     for ptype, slug, title in pages:
         cands = []
+        got_ok = got_429 = False
         for term in search_terms(title):
             try:
                 hits = wd_search(term, limit)
+                got_ok = True
+            except urllib.error.HTTPError as e:
+                hits = []
+                if e.code == 429:
+                    got_429 = True
+                print(f"  ! Wikidata search failed for «{term}»: {e}", file=sys.stderr)
             except Exception as e:
                 hits = []
                 print(f"  ! Wikidata search failed for «{term}»: {e}", file=sys.stderr)
@@ -207,6 +272,23 @@ def suggest(root: Path, want_type: str | None, limit: int) -> list[dict]:
                     cands.append({"qid": h["id"], "label": h.get("label", ""),
                                   "description": h.get("description", "")})
             time.sleep(0.4)
+        # A page where every query 429'd and none succeeded is "dead". A run of them
+        # means the IP is hard-throttled — stop rather than tarpit through the rest.
+        if got_429 and not got_ok:
+            dead_streak += 1
+            if dead_streak >= _THROTTLE_DEAD_PAGES:
+                raise WikidataThrottled(
+                    "Wikidata is rate-limiting this IP (HTTP 429) too hard to run here — "
+                    f"every query on the last {_THROTTLE_DEAD_PAGES} pages was rejected "
+                    "even after the backoff retries.\n"
+                    "    Verify the ids another way: an agent can query the same Wikidata "
+                    "API via its web-fetch capability\n"
+                    "    (wbsearchentities for candidates + Special:EntityData/<QID>.json to "
+                    "corroborate), which uses a\n"
+                    "    different network path; or run this tool from an unthrottled network. "
+                    "See the module docstring.")
+        else:
+            dead_streak = 0
         # extra ids only for the top candidate (keeps the request count sane)
         if cands:
             try:
@@ -233,7 +315,11 @@ def main() -> int:
         print(f"  ✗ no knowledge/ under {args.root}", file=sys.stderr)
         return 1
 
-    results = suggest(args.root, args.type, args.limit)
+    try:
+        results = suggest(args.root, args.type, args.limit)
+    except WikidataThrottled as e:
+        print(f"  ✗ {e}", file=sys.stderr)
+        return 2
 
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))

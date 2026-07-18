@@ -86,7 +86,9 @@ class Untagged(unittest.TestCase):
 
 class SearchTerms(unittest.TestCase):
     def test_bilingual_title_prefers_the_english_parenthetical(self):
-        self.assertEqual(sa.search_terms("Datensouveränität (Data Sovereignty)"),
+        # First two are the meaningful terms, English parenthetical first; a folded
+        # variant of the German may be appended after (see SearchTermVariants).
+        self.assertEqual(sa.search_terms("Datensouveränität (Data Sovereignty)")[:2],
                          ["Data Sovereignty", "Datensouveränität"])
 
     def test_a_plain_title_yields_just_itself(self):
@@ -164,6 +166,76 @@ class RetryWithBackoff(unittest.TestCase):
     def test_an_absurd_retry_after_is_capped(self):
         _, slept = self._run([self._err(429, retry_after="99999"), self._ok({"search": []})])
         slept.assert_called_once_with(60.0)
+
+
+class SearchTermVariants(unittest.TestCase):
+    """wbsearchentities is a near-literal match: a middle-initial period or a
+    diacritic makes it miss a real person and report 'no candidate'. The variant
+    terms recover those — without inflating queries for a plain title."""
+
+    def test_a_middle_initial_period_yields_a_deperiodised_variant(self):
+        # This exact case (Matthew A. Peeples) was a real miss.
+        self.assertIn("Matthew A Peeples", sa.search_terms("Matthew A. Peeples"))
+
+    def test_a_diacritic_yields_a_folded_variant(self):
+        self.assertIn("Antonio Sanchez", sa.search_terms("Antonio Sánchez"))
+
+    def test_a_plain_title_adds_no_variants(self):
+        self.assertEqual(sa.search_terms("Alan Turing"), ["Alan Turing"])
+
+    def test_the_english_parenthetical_still_comes_first(self):
+        self.assertEqual(sa.search_terms("Datensouveränität (Data Sovereignty)")[0],
+                         "Data Sovereignty")
+
+
+class ThrottleAbort(unittest.TestCase):
+    """A hard-throttled IP (every wbsearchentities call 429s) must ABORT with
+    guidance, not tarpit through every page and return all-empty. `wd_search` is
+    mocked to isolate the streak logic; time.sleep is patched so it is instant."""
+
+    def _wiki(self, d, n):
+        for i in range(n):
+            _page(d, "concepts", f"c{i}", [f"title: Concept {i}", "type: concept"])
+
+    def _always_429(self, term, limit):
+        raise urllib.error.HTTPError("http://x", 429, "Too Many Requests", None, None)
+
+    def test_a_run_of_dead_pages_aborts(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._wiki(d, 5)
+            with mock.patch.object(sa, "wd_search", self._always_429), \
+                 mock.patch.object(sa.time, "sleep"):
+                with self.assertRaises(sa.WikidataThrottled):
+                    sa.suggest(pathlib.Path(d), None, 3)
+
+    def test_below_the_threshold_does_not_abort(self):
+        # Only 2 dead pages (< _THROTTLE_DEAD_PAGES) → no abort; both surface as
+        # empty-candidate results, exactly the old behaviour for a couple of blips.
+        with tempfile.TemporaryDirectory() as d:
+            self._wiki(d, 2)
+            with mock.patch.object(sa, "wd_search", self._always_429), \
+                 mock.patch.object(sa.time, "sleep"):
+                out = sa.suggest(pathlib.Path(d), None, 3)
+            self.assertEqual(len(out), 2)
+            self.assertTrue(all(r["candidates"] == [] for r in out))
+
+    def test_a_working_api_never_aborts(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._wiki(d, 6)
+            with mock.patch.object(sa, "wd_search", lambda term, limit: []), \
+                 mock.patch.object(sa.time, "sleep"):
+                out = sa.suggest(pathlib.Path(d), None, 3)          # must not raise
+            self.assertEqual(len(out), 6)
+
+    def test_a_non_429_error_does_not_count_toward_the_streak(self):
+        # A 500 or a parse error is a blip, not throttling — must not trip the abort.
+        def boom(term, limit):
+            raise urllib.error.HTTPError("http://x", 500, "Server Error", None, None)
+        with tempfile.TemporaryDirectory() as d:
+            self._wiki(d, 5)
+            with mock.patch.object(sa, "wd_search", boom), mock.patch.object(sa.time, "sleep"):
+                out = sa.suggest(pathlib.Path(d), None, 3)          # must not raise
+            self.assertEqual(len(out), 5)
 
 
 if __name__ == "__main__":

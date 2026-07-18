@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`suggest-authority-ids.py` aborts under hard rate-limiting instead of tarpitting,
+  and its search is more robust.** Some environments (CI, cloud sandboxes, shared IPs)
+  get an immediate 429 on every `wbsearchentities` call; the 429 backoff then can't
+  help, and a large run would grind for ~an hour and return all-empty. The tool now
+  stops (exit 2) once a few pages in a row have every query rejected, with a message
+  pointing to the fallback: an agent can query the same Wikidata API via **web-fetch**
+  (`wbsearchentities` + `Special:EntityData`), which uses an un-throttled path — this
+  is how ~270 ids were curated across the projects when the tool could not run. Search
+  now also tries de-periodised and diacritic-folded variants so a middle-initial period
+  ("Matthew A. Peeples") or a diacritic ("Sánchez") no longer misses a real person.
+  `ingest-source` documents the web-fetch fallback and the two write-back rules (one
+  `wikidata_qid` per page per project; resolve `<slug>.md` and `entity-`/`concept-`
+  prefixed filenames). Maintainer tooling — not shipped, not mirrored.
+
 ## [0.34.1] — 2026-07-17
 
 ### Added
