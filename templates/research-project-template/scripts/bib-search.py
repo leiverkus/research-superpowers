@@ -451,6 +451,13 @@ def main() -> int:
                 print(f"      {k}")
             if len(st["no_text"]) > 15:
                 print(f"      … and {len(st['no_text']) - 15} more (--json for the full list)")
+        big = sorted(p.name for p in (library / "pdf").glob("*.pdf")
+                     if p.stat().st_size >= 40 * 1024 * 1024)
+        if big:
+            print(f"\n  ℹ {len(big)} PDF(s) exceed 40 MB — some are bloated "
+                  "(over-resolution / uncompressed images), not genuinely large.")
+            print("    Check, and shrink reading-lossless, with optimize-pdf.py:")
+            print("      python scripts/optimize-pdf.py scan .")
         if st["failed"]:
             print(f"\n  ✗ {len(st['failed'])} PDF(s) could not be read at all:")
             for k, e in st["failed"][:10]:

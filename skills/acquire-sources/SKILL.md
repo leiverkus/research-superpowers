@@ -49,7 +49,8 @@ Before closing acquisition, check:
 (2) every `downloaded`/`already-present` file exists in the library as `<library>/pdf/<bibkey>.pdf` AND passed PDF validation (not an HTML page),
 (3) `input/bibliography/acquisition-todo.md` lists every `manual` item (or states "none — all sources acquired"),
 (4) `input/bibliography/acquisition-log-<date>.json` is written,
-(5) `knowledge/_meta/log.md` has a new `acquire` entry.
+(5) `knowledge/_meta/log.md` has a new `acquire` entry,
+(6) `optimize-pdf.py scan <library>` was run over the freshly downloaded files — a bulk acquisition is where publisher bloat enters in quantity; anything clearly oversized is optimised (reading-lossless, self-verifying) before it settles into the shared library and its sync/LFS history, or a reason is logged.
 
 Report counts: "Acquired N of M A+B sources. K need manual download — see `acquisition-todo.md`, fetch via VPN into `<library>/pdf/` under the exact `<bibkey>.pdf` filenames, then re-run acquire-sources (or proceed to ingest the present ones)." If a condition is unmet: name it, ask for a one-line reason, write it to `knowledge/_meta/gate-overrides.log`, and close.
 </SOFT-GATE>
