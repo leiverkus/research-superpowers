@@ -6,6 +6,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`optimize-pdf.py` — a reading-lossless PDF shrinker for the shared library, with
+  a visibility signal and gate hooks.** Every import path (`add-to-library`,
+  `acquire-sources`, manual VPN download) wrote `pdf/<bibkey>.pdf` byte-for-byte as it
+  arrived, and nothing looked at the size; publishers ship figures at absurd resolutions
+  (a 25-page article at 1877 ppi = 118 MB), so a live corpus carried ~1.4 GB of pure
+  byte-bloat. The new tool has three sub-commands: `scan` reports bloated candidates and
+  an estimated floor (no changes), `check` diagnoses one file, `optimize` re-distills via
+  Ghostscript (downsample >450 ppi to 300, CMYK→sRGB, JPEG q90) and **self-verifies** —
+  the page count must match and the text layer must survive, otherwise the optimised copy
+  is discarded and the original kept. It is reading-lossless, not archival: page numbers
+  (and thus printed-page citations) are preserved, and the pristine file stays re-fetchable
+  by DOI. `bib-search.py status` now flags PDFs over 40 MB and points here; the
+  `add-to-library` and `acquire-sources` SOFT-GATES gained a soft check so bloat is caught
+  at import instead of accumulating in everyone's sync (and in LFS history) forever.
+  Ghostscript is a new soft dependency, reported-and-skipped when absent, like `ocrmypdf`.
+
 ## [0.34.2] — 2026-07-18
 
 ### Changed

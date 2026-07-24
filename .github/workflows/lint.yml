@@ -137,6 +137,7 @@ jobs:
                      scripts/graph_mcp.py scripts/wiki-global-graph.py \
                      scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
                      scripts/check-pdf-version.py scripts/add-to-library.py \
+                     scripts/optimize-pdf.py \
                      scripts/vendor/cytoscape.min.js; do
             if ! diff -q "templates/research-project-template/$rel" \
                          "examples/example-project/$rel"; then
