@@ -146,3 +146,27 @@ python3.12 -m venv venv && ./venv/bin/pip install sentence-transformers
 
 They read `~/.cache/research-superpowers/index-*.sqlite` directly and hard-code the Choros
 bibkeys; they are tied to that library, not general tools.
+
+## Addendum (2026-07-25) — what changed since, what was deliberately not tested
+
+Prompted by a comparison with [tobi/qmd](https://github.com/tobi/qmd), whose hybrid
+pipeline shares this record's FTS5 foundation but adds three model-driven stages:
+
+- **The "outranked, not unnamed" case is now closed lexically.** `carreropazos` — reachable
+  but pushed below `--limit` by broad stems — is what `bib-search.py --q` (multi-query
+  reciprocal rank fusion, adopted from qmd) addresses: one alias per query, ranks fused,
+  no BM25 comparison across queries. That was the only lexically reachable miss; nothing
+  about it reopens the vector question.
+- **Cross-encoder reranking is the one qmd stage this measurement did not test** — the
+  probes measured bi-encoder *retrieval*, and the dilution diagnosis (a page's mean vector
+  drowns one method sentence) does not apply to a reranker, which reads query and passage
+  jointly. It would still not change the verdict: a reranker only reorders candidates the
+  lexical arm already retrieved, and `rabunal` — the paper the vector arm existed for —
+  never enters any lexical candidate set. Recall, not ranking, is the binding constraint;
+  ranking is now handled by RRF, and in agent-driven sessions the agent reading the top
+  hits *is* the reranker. If this question is ever reopened anyway, test reranking over
+  FTS top-30, not bi-encoder retrieval — and note qmd's default embedder
+  (EmbeddingGemma-300M) is smaller than the Qwen3-0.6B that set the (losing) best mark here.
+- **qmd's LLM query expansion** is likewise already covered in this setup: the alias
+  recipe in `drafting-manuscript` has the session agent do the expanding, with discipline
+  (spelling variants, stems, other fields' names) a generic 1.7B expander does not have.

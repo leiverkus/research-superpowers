@@ -345,25 +345,29 @@ A single terse wiki bullet typically becomes a **developed passage**, not a sing
 
    It returns the **physical** PDF page — right for opening the file, wrong for citing. Take the printed page number from the page itself.
 
-   **Search for the concept, not the string.** `bib-search` is lexical: it matches the characters you typed and nothing else. A method is written differently by every discipline that borrowed it, so a single-string query measures your vocabulary, not the library. Name the method, list its aliases, `OR` them into one query, and **say which alias hit** — see [Searching for a concept](#searching-for-a-concept-not-a-string).
+   **Search for the concept, not the string.** `bib-search` is lexical: it matches the characters you typed and nothing else. A method is written differently by every discipline that borrowed it, so a single-string query measures your vocabulary, not the library. Name the method, list its aliases, run them as rank-fused `--q` variants, and **say which alias hit** (the `via:` line reports it) — see [Searching for a concept](#searching-for-a-concept-not-a-string).
 4. Cite whatever you use. If the source genuinely lacks the needed depth, say so plainly or narrow the claim — do **not** fill the gap from memory.
 
 ### Searching for a concept, not a string
 
 Before a concept search, run `python scripts/bib-search.py index` — it is incremental and costs about a second. A stale index answers about the library you had, not the one you have.
 
-Then build **one** query out of the method's aliases:
+Then run the method's aliases as **several narrow queries, rank-fused** — one alias per `--q`:
 
 ```bash
-python scripts/bib-search.py '"random labelling" OR "random labeling" OR relabel* OR shuffl*
-   OR "mark permutation" OR "permutation of marks" OR "toroidal shift" OR "random thinning"' --limit 40
+python scripts/bib-search.py '"random labelling"' \
+    --q '"random labeling"' --q 'relabel* OR shuffl*' \
+    --q '"mark permutation" OR "permutation of marks"' \
+    --q '"toroidal shift"' --q '"random thinning"' --limit 40
 ```
+
+Every query runs separately and the page lists are merged by **reciprocal rank fusion** (RRF): a page's score is Σ 1/(60 + rank-in-list) over the lists it appears in. Two consequences, both deliberate: a page that several aliases agree on rises above any single list's top hit, and an alias's best hit can never be flooded out of its own list by a noisy sibling — the failure mode of the old single-OR-query form, where every alias competed inside one BM25 ranking. BM25 scores are never compared across queries (they are not on one scale); only ranks cross the boundary. Each hit's `via:` line reports which queries matched it — the "say which alias hit" discipline below, mechanised.
 
 What belongs in the alias list, in order of how often it is the one that pays:
 
 - **Spelling variants first.** `labelling` / `labeling`, `modelling` / `modeling`, `analyse` / `analyze`. Measured on the real library: `"random labelling"` found one paper, `"random labeling"` found a different one — a 311-page dissertation that makes the technique its explicit default. **One letter, and it was invisible.** This is the cheapest alias and the most neglected.
 - **Word stems, not exact forms — `relabel*`, not `relabelling`.** A paper writes *relabeled*, *permuted*, *shuffling*; an exact-form alias list matches none of those. This is not hypothetical: adding `relabel*` and `shuffl*` to the query above takes it from **two of five** hand-checked papers to **three**, because one of them names the procedure four times over — "randomly relabeled", "randomly permuted", "shuffling only the labels" — in inflections no exact form catches.
-- **Keep the stem rare.** Check selectivity before adding one; a stem that matches half the library buys nothing and costs a paper you already had. On this library `relabel*` matches 5 pages, `shuffl*` 21 — both precise. `permut*` matches 116 and `random*` matches 2,126: adding `permut*` surfaced a new paper and **dropped one the narrower query had found**, because FTS5 ranks by BM25 and a broad stem floods the ranking with pages that merely use the word. Prefer several narrow queries over one broad one.
+- **Keep the stem rare.** Check selectivity before adding one; a stem that matches half the library buys nothing and costs a paper you already had. On this library `relabel*` matches 5 pages, `shuffl*` 21 — both precise. `permut*` matches 116 and `random*` matches 2,126: adding `permut*` surfaced a new paper and **dropped one the narrower query had found**, because FTS5 ranks by BM25 and a broad stem floods the ranking with pages that merely use the word. Inside one query that trade is real; as its own `--q` variant a broad stem is harmless to its siblings (each query keeps its own top-`limit`) — though it still buys little if it matches half the library.
 - **The other disciplines' names for it.** Ecology, statistics and archaeology rename each other's methods. In the same measurement `"mark permutation"` surfaced three papers that a purely archaeological vocabulary never reaches.
 - **German / French / Spanish forms** where the field publishes in them.
 
@@ -371,7 +375,7 @@ What belongs in the alias list, in order of how often it is the one that pays:
 
 > **Know the ceiling — and don't overstate it.** On a hand-checked set of five papers that the wiki says use random labelling, the stem query above finds **three**. The two it misses fail for different reasons, and telling them apart is the whole lesson:
 >
-> - **One is outranked, not unnamed.** It writes "permutation" on two pages and "shuffl" on a third. A lexical query *can* reach it — but only a stem broad enough to cost another paper its place. That is a **ranking** limit, and re-querying more narrowly (one alias per query) is the fix.
+> - **One is outranked, not unnamed.** It writes "permutation" on two pages and "shuffl" on a third. A lexical query *can* reach it — but only a stem broad enough to cost another paper its place. That is a **ranking** limit, and the rank-fused `--q` form above is exactly the fix: one alias per query, so the broad stem competes only inside its own list.
 > - **One is genuinely unnamed.** It calls the procedure "random type assignment to the points in the pattern" and carries no alias on any page. **No lexical query reaches it**, and adding synonyms cannot change that.
 >
 > When a concept search comes back thin, that is evidence about *naming*, not about absence — go to the source pages and the wiki's concept page, which record what the paper *does* rather than what it calls it. Do not report "not found in the library" from a lexical miss.

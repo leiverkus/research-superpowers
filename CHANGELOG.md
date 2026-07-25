@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.35.1] — 2026-07-25
+
+### Added
+
+- **`bib-search.py --q` — multi-query search merged by reciprocal rank fusion (RRF),
+  adopted from [tobi/qmd](https://github.com/tobi/qmd).** A concept search needs
+  aliases (`labelling`/`labeling`, `relabel*`, "mark permutation" …), and packing them
+  into one OR-query makes every alias compete inside a single BM25 ranking — measured
+  on the real library, adding `permut*` to such a query surfaced one paper and
+  *dropped* one the narrower query had found. `drafting-manuscript` already prescribed
+  the fix ("several narrow queries, one alias per query"); `--q` mechanises it: every
+  query runs separately, page lists merge by rank (score = Σ 1/(60 + rank), never by
+  BM25 scores, which are incomparable across queries), and each hit's `via:` line
+  reports which queries matched it — the skill's "say which alias hit" discipline,
+  carried by the tool. Unlike qmd, all queries weigh equally: qmd double-weights the
+  user's query over machine-generated expansions, but here every variant is
+  hand-written and deliberate. Fusion changes ranking only, never recall — the
+  prose-only gap still belongs to curated keywords, and the 2026-07-17 measurement's
+  "do not build a vector index" verdict is unchanged (see its new addendum).
+  Single-query behaviour is byte-for-byte untouched.
+
 ## [0.35.0] — 2026-07-24
 
 ### Added

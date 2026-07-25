@@ -129,7 +129,17 @@ Git is already the sync — the cloud carries only what git cannot hold.
   python scripts/bib-search.py index               # build / update (incremental)
   python scripts/bib-search.py "copper smelting"   # search every source, all projects
   python scripts/bib-search.py "shasu" --key tebes-2021-archaeology   # inside one source
+  python scripts/bib-search.py '"random labelling"' --q '"random labeling"' \
+      --q 'relabel* OR shuffl*'                    # concept search: one alias per --q,
+                                                   # rank-fused (RRF); hits report which
+                                                   # query matched them (via:)
   ```
+
+  For a **concept** (which every discipline names differently), do not pack the
+  aliases into one broad OR-query — run one alias per `--q`: the queries are
+  merged by reciprocal rank fusion, so no alias can flood another's hits out of
+  the ranking. The alias-building recipe lives in `drafting-manuscript`
+  ("Searching for a concept, not a string").
 
   The page it reports is the **physical** PDF page — exactly what you need to *open*
   the file, and exactly what you must **not** cite. Read the printed page number off

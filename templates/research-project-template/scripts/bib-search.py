@@ -63,6 +63,28 @@ always, no separate flag — a keyword hit is microseconds and, being curated, c
 only ADD a result, never rank an exact lookup worse. Keyword hits carry
 `page: None` (they describe the whole document, not a passage) and print first.
 
+SEVERAL NARROW QUERIES, FUSED BY RANK — NOT ONE BROAD OR-QUERY (--q)
+--------------------------------------------------------------------
+A concept search needs aliases (`labelling`/`labeling`, `relabel*`, "mark
+permutation" …), and packing them into ONE OR-query makes every alias compete
+inside a single BM25 ranking: a broad stem floods it. Measured on the real
+library: adding `permut*` to such a query surfaced one paper and DROPPED one the
+narrower query had found. The drafting skill's answer — several narrow queries,
+one alias each — is what `--q` mechanises:
+
+    bib-search '"random labelling"' --q '"random labeling"' --q 'relabel* OR shuffl*'
+
+Each query runs separately; the page lists are merged by reciprocal rank fusion
+(RRF, Cormack et al. 2009): score(page) = Σ over lists 1/(60 + rank-in-list).
+Ranks, never BM25 scores, cross a query boundary — scores from different queries
+are not on a comparable scale (the same reason keyword and page hits are never
+score-fused, below). A page several aliases agree on rises; an alias's best hit
+cannot be flooded out of its own list by a noisy sibling. All queries carry equal
+weight — unlike qmd's RRF, which double-weights the user's query over
+machine-generated expansions, every variant here is hand-written and deliberate.
+Fusion changes RANKING only, never recall: a passage no query matches stays
+invisible — that gap belongs to curated keywords (above), not to more aliases.
+
 USAGE
 -----
     python scripts/bib-search.py index            # build / update (incremental)
@@ -72,6 +94,8 @@ USAGE
     python scripts/bib-search.py "edom NEAR/5 yhwh" --limit 30
     python scripts/bib-search.py "shasu" --key tebes-2021-archaeology
     python scripts/bib-search.py "shasu" --json
+    python scripts/bib-search.py '"random labelling"' --q '"random labeling"' \
+        --q 'relabel* OR shuffl*'                 # alias variants, rank-fused (RRF)
 
 The query is FTS5 syntax: bare words are AND-ed, `"..."` is a phrase, `OR`/`NOT`/
 `NEAR(a b, 5)` work, a trailing `*` is a prefix search. Punctuation that FTS5 would
@@ -319,6 +343,11 @@ def build(library: Path, *, rebuild: bool = False, quiet: bool = False) -> dict:
 
 _FTS_SAFE = re.compile(r'^[\w\s"*^]+$', re.UNICODE)
 
+# RRF damping (Cormack et al. 2009). At 60, rank 1 vs rank 2 inside one list
+# barely differ — presence in SEVERAL lists is what pays, which is the point:
+# consensus across aliases over position within any single alias's ranking.
+RRF_K = 60
+
 
 def _fallback_query(q: str) -> str:
     """Quote every token so FTS5 treats punctuation as literal.
@@ -331,39 +360,22 @@ def _fallback_query(q: str) -> str:
     return " ".join('"' + t.replace('"', '""') + '"' for t in toks)
 
 
-def search(library: Path, query: str, *, limit: int = 20, key: str | None = None) -> list[dict]:
-    """`limit` bounds page hits only. Keyword hits (capped separately by
-    KEYWORD_HIT_CAP, a safety valve — curated sets are normally a handful) are
-    always returned in full and listed first.
-
-    The two are never rank-fused: a keyword table and a page table are two
-    different FTS5 corpora, and their BM25 scores are not on a comparable scale
-    — the same reason a prototyped semantic index was never merged into this
-    search by score (see docs/measurements/2026-07-17-semantic-search/README.md).
-    Two independent queries, each sorted by its own rank, concatenated instead.
-    """
-    db = index_path(library)
-    if not db.exists():
-        raise FileNotFoundError(
-            f"No index yet for {library}.\n"
-            f"    Build it:  python scripts/bib-search.py index")
-    con = connect(db)
-
-    kw_sql = "SELECT bibkey, keyword, rank FROM keywords WHERE keywords MATCH ?"
-    kw_params: list = [query]
+def _keyword_rows(con: sqlite3.Connection, query: str, key: str | None) -> list:
+    sql = "SELECT bibkey, keyword, rank FROM keywords WHERE keywords MATCH ?"
+    params: list = [query]
     if key:
-        kw_sql += " AND bibkey = ?"
-        kw_params.append(key)
-    kw_sql += " ORDER BY rank LIMIT ?"
-    kw_params.append(KEYWORD_HIT_CAP)
+        sql += " AND bibkey = ?"
+        params.append(key)
+    sql += " ORDER BY rank LIMIT ?"
+    params.append(KEYWORD_HIT_CAP)
     try:
-        kw_rows = con.execute(kw_sql, kw_params).fetchall()
+        return con.execute(sql, params).fetchall()
     except sqlite3.OperationalError:
-        kw_params[0] = _fallback_query(query)
-        kw_rows = con.execute(kw_sql, kw_params).fetchall()
-    keyword_hits = [{"bibkey": b, "page": None, "snippet": kw, "matched": "keyword"}
-                     for b, kw, _ in kw_rows]
+        params[0] = _fallback_query(query)
+        return con.execute(sql, params).fetchall()
 
+
+def _page_rows(con: sqlite3.Connection, query: str, limit: int, key: str | None) -> list:
     sql = ("SELECT bibkey, page, snippet(pages, 2, '«', '»', ' … ', 14) AS s, rank"
            " FROM pages WHERE pages MATCH ?")
     params: list = [query]
@@ -373,14 +385,82 @@ def search(library: Path, query: str, *, limit: int = 20, key: str | None = None
     sql += " ORDER BY rank LIMIT ?"
     params.append(limit)
     try:
-        rows = con.execute(sql, params).fetchall()
+        return con.execute(sql, params).fetchall()
     except sqlite3.OperationalError:
         params[0] = _fallback_query(query)
-        rows = con.execute(sql, params).fetchall()
-    con.close()
-    page_hits = [{"bibkey": b, "page": p, "snippet": " ".join(s.split()), "matched": "text"}
-                 for b, p, s, _ in rows]
+        return con.execute(sql, params).fetchall()
 
+
+def search(library: Path, query: str, *, limit: int = 20, key: str | None = None,
+           variants: list[str] | None = None) -> list[dict]:
+    """`limit` bounds page hits only. Keyword hits (capped separately by
+    KEYWORD_HIT_CAP, a safety valve — curated sets are normally a handful) are
+    always returned in full and listed first.
+
+    Keyword and page hits are never rank-fused: a keyword table and a page table
+    are two different FTS5 corpora, and their BM25 scores are not on a comparable
+    scale — the same reason a prototyped semantic index was never merged into this
+    search by score (see docs/measurements/2026-07-17-semantic-search/README.md).
+    Two independent queries, each sorted by its own rank, concatenated instead.
+
+    `variants` (each its own FTS5 query) turns on reciprocal rank fusion across
+    the PAGE lists — see the module docstring. RRF crosses the query boundary on
+    ranks, never on scores, so it does not reopen the incomparable-scale problem
+    above. Fused page hits carry a `queries` field naming the queries that
+    matched that page; a single-query search returns exactly what it always did.
+    Keyword hits are unioned over all queries, deduped, still listed first.
+    """
+    db = index_path(library)
+    if not db.exists():
+        raise FileNotFoundError(
+            f"No index yet for {library}.\n"
+            f"    Build it:  python scripts/bib-search.py index")
+    con = connect(db)
+
+    queries = [query]
+    for v in variants or []:
+        if v.strip() and v not in queries:
+            queries.append(v)
+
+    seen_kw: set = set()
+    keyword_hits = []
+    for q in queries:
+        for b, kw, _ in _keyword_rows(con, q, key):
+            if (b, kw) not in seen_kw:
+                seen_kw.add((b, kw))
+                keyword_hits.append({"bibkey": b, "page": None, "snippet": kw,
+                                     "matched": "keyword"})
+
+    if len(queries) == 1:
+        rows = _page_rows(con, query, limit, key)
+        con.close()
+        page_hits = [{"bibkey": b, "page": p, "snippet": " ".join(s.split()),
+                      "matched": "text"} for b, p, s, _ in rows]
+        return keyword_hits + page_hits
+
+    # ── reciprocal rank fusion over the per-query page lists ────────────────
+    # Every query contributes its own top-`limit`, so an alias's best hit is in
+    # the pool no matter how a sibling ranks — the cap below can reorder it out
+    # only by rank consensus, never by a noisy sibling's BM25 flood. The snippet
+    # shown is the one from the list where the page ranked best (ties: the
+    # earlier query).
+    score: dict = {}
+    best: dict = {}
+    hit_queries: dict = {}
+    for qi, q in enumerate(queries):
+        for rank, (b, p, s, _) in enumerate(_page_rows(con, q, limit, key), 1):
+            pid = (b, p)
+            score[pid] = score.get(pid, 0.0) + 1.0 / (RRF_K + rank)
+            hit_queries.setdefault(pid, []).append(q)
+            if pid not in best or (rank, qi) < best[pid][0]:
+                best[pid] = ((rank, qi), s)
+    con.close()
+
+    ordered = sorted(score, key=lambda pid: (-score[pid], pid))[:limit]
+    page_hits = [{"bibkey": b, "page": p,
+                  "snippet": " ".join(best[(b, p)][1].split()),
+                  "matched": "text", "queries": hit_queries[(b, p)]}
+                 for b, p in ordered]
     return keyword_hits + page_hits
 
 
@@ -415,6 +495,10 @@ def main() -> int:
     ap.add_argument("--rebuild", action="store_true", help="index: from scratch")
     ap.add_argument("--limit", type=int, default=20)
     ap.add_argument("--key", help="restrict the search to one bibkey")
+    ap.add_argument("--q", action="append", default=[], dest="variants", metavar="VARIANT",
+                    help="an additional query variant (repeatable) — one alias per --q; "
+                         "all queries are merged by reciprocal rank fusion and each hit "
+                         "reports which queries matched it")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -491,7 +575,8 @@ def main() -> int:
         return 1
 
     try:
-        hits = search(library, args.query, limit=args.limit, key=args.key)
+        hits = search(library, args.query, limit=args.limit, key=args.key,
+                      variants=args.variants)
     except (FileNotFoundError, IndexSchemaMismatch) as e:
         print(f"  ✗ {e}", file=sys.stderr)
         return 1
@@ -500,15 +585,21 @@ def main() -> int:
         print(json.dumps(hits, indent=2, ensure_ascii=False))
         return 0
     if not hits:
-        print(f"  no hits for: {args.query}")
+        queries = " | ".join([args.query] + args.variants)
+        print(f"  no hits for: {queries}")
         return 1
-    print(f"  {len(hits)} hit(s) — page numbers are PHYSICAL PDF pages, not printed ones\n")
+    fused = f", rank-fused over {1 + len(args.variants)} queries" if args.variants else ""
+    print(f"  {len(hits)} hit(s){fused} — page numbers are PHYSICAL PDF pages, not printed ones\n")
     for h in hits:
         if h["matched"] == "keyword":
             print(f"  {h['bibkey']} · keyword: \"{h['snippet']}\"")
         else:
             print(f"  {h['bibkey']} · p. {h['page']}")
             print(f"      {h['snippet']}")
+            # which alias hit which source is the drafting skill's reporting
+            # discipline — surface it instead of leaving it to be reconstructed
+            if "queries" in h:
+                print(f"      via: {' · '.join(h['queries'])}")
     return 0
 
 

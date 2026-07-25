@@ -376,5 +376,98 @@ class Keywords(unittest.TestCase):
             self.assertEqual(st["keyword_terms"], 3)
 
 
+class Fusion(unittest.TestCase):
+    """`--q` variants: several narrow queries, merged by reciprocal rank fusion.
+
+    The failure this fixes is measured (see drafting-manuscript's concept-search
+    section): one broad OR-query makes every alias compete inside a single BM25
+    ranking, and a broad stem floods it — adding `permut*` to such a query
+    surfaced one paper and DROPPED one the narrower query had found. Fusing
+    per-query rank lists cannot lose a hit that way: each alias contributes its
+    own top-`limit`, and only ranks — never BM25 scores, which are incomparable
+    across queries — cross a query boundary.
+    """
+
+    def test_a_single_query_search_is_byte_for_byte_what_it_always_was(self):
+        # No `queries` field, no behaviour change — fusion is opt-in via variants.
+        with _Fixture({"a-2020-x": ["copper smelting"]}) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "copper")
+            self.assertEqual(len(hits), 1)
+            self.assertNotIn("queries", hits[0])
+
+    def test_a_variant_equal_to_the_main_query_is_a_single_query_search(self):
+        with _Fixture({"a-2020-x": ["copper smelting"]}) as f:
+            bs.build(f.library, quiet=True)
+            self.assertEqual(bs.search(f.library, "copper", variants=["copper", ""]),
+                             bs.search(f.library, "copper"))
+
+    def test_a_variants_top_hit_survives_a_limit_the_broad_query_would_crowd(self):
+        # The "outranked, not unnamed" case: two alpha-heavy documents fill a
+        # limit of 2, but the beta paper tops its OWN list and so stays in.
+        with _Fixture({"a1-2020-x": ["alpha alpha alpha"],
+                       "a2-2020-y": ["alpha alpha"],
+                       "b-2021-z": ["beta"]}) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "alpha", variants=["beta"], limit=2)
+            self.assertLessEqual(len(hits), 2)
+            self.assertIn("b-2021-z", {h["bibkey"] for h in hits})
+
+    def test_a_page_two_queries_agree_on_outranks_a_single_lists_top_hit(self):
+        # Consensus beats single-list rank: d1 is only SECOND for "alpha" but
+        # also matches "beta"; d2 tops the "alpha" list and matches nothing else.
+        with _Fixture({"d1-2020-x": ["alpha beta"],
+                       "d2-2020-y": ["alpha alpha alpha alpha"]}) as f:
+            bs.build(f.library, quiet=True)
+            # pin the premise: BM25 alone puts d2 first
+            single = [h["bibkey"] for h in bs.search(f.library, "alpha")]
+            self.assertEqual(single, ["d2-2020-y", "d1-2020-x"])
+            fused = bs.search(f.library, "alpha", variants=["beta"])
+            self.assertEqual(fused[0]["bibkey"], "d1-2020-x")
+
+    def test_hits_report_which_queries_matched(self):
+        # "Say which alias hit" is the drafting skill's reporting discipline —
+        # the tool carries it so nobody reconstructs it from N separate runs.
+        with _Fixture({"d1-2020-x": ["alpha beta"], "d2-2020-y": ["alpha"]}) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "alpha", variants=["beta", "gamma"])
+            by_key = {h["bibkey"]: h for h in hits}
+            self.assertEqual(by_key["d1-2020-x"]["queries"], ["alpha", "beta"])
+            self.assertEqual(by_key["d2-2020-y"]["queries"], ["alpha"])
+
+    def test_keyword_hits_are_deduped_across_queries_and_still_come_first(self):
+        with _Fixture(
+            {"a-2020-x": ["a page mentioning labelling in prose"]},
+            bib_text="@article{a-2020-x,\n  keywords = {random labelling}\n}\n",
+        ) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, '"random labelling"', variants=["labelling"])
+            kw = [h for h in hits if h["matched"] == "keyword"]
+            self.assertEqual(len(kw), 1)          # both queries matched the same row
+            self.assertEqual(hits[0]["matched"], "keyword")
+
+    def test_punctuation_fallback_applies_to_each_variant(self):
+        with _Fixture({"a-2020-x": ["ben-yosef reports 14C-dating"]}) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "reports", variants=["ben-yosef", '"14C'])
+            self.assertEqual(hits[0]["queries"], ["reports", "ben-yosef", '"14C'])
+
+    def test_key_restricts_the_fused_search_too(self):
+        with _Fixture({"a-2020-x": ["alpha"], "b-2021-y": ["alpha beta"]}) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "alpha", variants=["beta"], key="a-2020-x")
+            self.assertEqual({h["bibkey"] for h in hits}, {"a-2020-x"})
+
+    def test_fused_order_is_deterministic_under_score_ties(self):
+        # Two documents each hit by exactly one query at rank 1 → equal RRF
+        # score. The tie-break is (bibkey, page), so repeated runs agree.
+        with _Fixture({"x-2020-a": ["alpha"], "y-2020-b": ["beta"]}) as f:
+            bs.build(f.library, quiet=True)
+            for _ in range(3):
+                hits = bs.search(f.library, "alpha", variants=["beta"])
+                self.assertEqual([h["bibkey"] for h in hits],
+                                 ["x-2020-a", "y-2020-b"])
+
+
 if __name__ == "__main__":
     unittest.main()
