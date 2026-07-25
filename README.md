@@ -23,7 +23,7 @@ LLM-assisted research is fast but easy to get wrong:
 
 `research-superpowers` makes the discipline structural:
 
-- **16 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
+- **17 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
 - **7 subagents** for context-isolated heavy lifting (ingest, acquire, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
@@ -198,7 +198,7 @@ research-superpowers/
 │   ├── knowledge-frontmatter.schema.json
 │   └── README.md
 ├── hooks/                        # SessionStart hook injects the skill index
-├── skills/                       # 16 SKILL.md files (the SOT for each workflow)
+├── skills/                       # 17 SKILL.md files (the SOT for each workflow)
 ├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline
