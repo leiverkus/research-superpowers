@@ -181,6 +181,7 @@ Phase graph with hermeneutic back-edges and SOFT-GATE semantics: [`docs/phase-fl
 | [`docs/phase-flow.md`](docs/phase-flow.md) | Graph of phases with back-edges and SOFT-GATEs |
 | [`docs/skill-contract.md`](docs/skill-contract.md) | SOT pattern + `inputs:` / `outputs:` frontmatter |
 | [`docs/skill-authoring.md`](docs/skill-authoring.md) | How to add or change a skill |
+| [`docs/skill-pressure-testing.md`](docs/skill-pressure-testing.md) | How to find out whether a HARD-STOP or SOFT-GATE actually holds — RED/GREEN scenarios in `tests/pressure/` |
 | [`CHANGELOG.md`](CHANGELOG.md) | Full version history |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute (language convention, PR checklist) |
 

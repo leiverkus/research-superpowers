@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Pressure-testing harness for the discipline-critical skills** (method adopted
+  from [obra/superpowers](https://github.com/obra/superpowers), the plugin this one
+  was inspired by). Every HARD-STOP, SOFT-GATE and red-flag row exists because a
+  model under pressure would otherwise do the wrong thing — but none had ever been
+  tested, and the failure mode is invisible: a gate that silently fails to hold looks
+  exactly like a gate that was never needed. The method is TDD applied to process
+  documentation: RED (run the scenario **without** the skill, watch it fail, record
+  the rationalisation verbatim) → GREEN (run it with the skill inlined) → REFACTOR
+  (each new rationalisation becomes a red-flag row). `scripts/pressure-test.py`
+  generates both prompts — RED carries the scenario alone, GREEN inlines the whole
+  SKILL.md so a pass cannot be explained by the skill never having loaded — and
+  neither prompt leaks the frontmatter that states the rule. Five scenarios ship in
+  `tests/pressure/`, covering the substitute-original HARD-STOP (`ingest-source`),
+  depth-from-memory and the stable-synthesis gate (`drafting-manuscript`),
+  unverified metadata into the shared master (`add-to-library`), and skipping the
+  adversarial pass (`requesting-peer-review`). Scoring is against each scenario's
+  declared `compliant:`/`violation:` outcomes, never against general helpfulness —
+  in this domain "stop and ask the user" is frequently the *correct* answer, unlike
+  in the coding-agent setting the method comes from. CI validates scenario shape;
+  12 tests pin the harness. Procedure: `docs/skill-pressure-testing.md`.
+
 ## [0.36.1] — 2026-07-25
 
 ### Fixed
