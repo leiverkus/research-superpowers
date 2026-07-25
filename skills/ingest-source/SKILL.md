@@ -82,6 +82,8 @@ Create TodoWrite tasks for each:
 9. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible.
 10. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
 11. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug. On first ingest, include a `keywords` field: 3–8 terms — the method/topic's canonical name plus known synonyms and aliases (spelling variants, other disciplines' names, stems — the same discipline `drafting-manuscript`'s "Searching for a concept, not a string" documents). This is the one field that changes on re-ingest: union any newly-recognized terms in, deduped case-insensitively (see "BibTeX Entry Convention" below). Every other field is fixed at first ingest and does not change.
+
+    Keywords are the **recall** arm of the library search; `bib-search.py`'s rank-fused alias queries (`--q`) are the **ranking** arm. Fusion can only reorder pages that some alias literally matches — a source that describes its method in prose without ever naming it is invisible to every alias query, and the keywords you write *now, having just read the source*, are its only path into a later search result. Write them for the searcher who does not yet know this paper's vocabulary.
 12. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
 13. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
 14. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
@@ -398,6 +400,14 @@ Key = slug exactly. Example:
 
 `keywords` is semicolon-separated (the Zotero / Better-BibTeX export convention): 3–8 terms, the canonical name plus known synonyms and aliases — this is what `bib-search.py` searches when a source describes a method in prose without ever naming it (see that script's module docstring and `drafting-manuscript`'s "Searching for a concept, not a string").
 
+A quick self-test before moving on: run the concept search a later drafter would run —
+
+```bash
+python scripts/bib-search.py '"<canonical name>"' --q '<alias 1>' --q '<alias 2>'
+```
+
+If the alias queries alone would find this source on the pages that matter, the keywords are a bonus. If they would not — the prose-only case — the keywords you just wrote are the *only* mechanism that will surface it (`--q` fusion changes ranking, never recall), and a keyword hit prints first, ahead of every page hit. That asymmetry is why thin-but-honest keywords beat none, and why terms the paper itself never uses are exactly the ones worth recording.
+
 If a key collides (e.g. two Finkelstein 2003 papers), append a letter: `finkelstein-2003a`, `finkelstein-2003b`. Update the source-page filename accordingly. On re-ingest with a new focus, the BibTeX entry is **not** changed — it's the same source — **except `keywords`: newly-recognized terms are unioned in, deduped case-insensitively.**
 
 ## Log Entry Convention
@@ -423,6 +433,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 | "The default focus from project-description.md is good enough" | Sometimes yes, often no — the project's research question is usually too broad to be a useful per-source focus. Refine for this specific source. |
 | "I'll fill in entities later" | Then they stay unlinked. Create them now (only the focus-relevant ones; rest stays in the PDF). |
 | "I'll do BibTeX at the end of the day" | The source key IS the BibTeX key — without the entry, lint fails. |
+| "Skipping keywords is fine — `bib-search`'s `--q` fusion will find this source later" | No — fusion re-ranks what some alias literally matches; it adds zero recall. A source that names its method only in prose is invisible to every alias query, and the ingest moment — source just read, vocabulary fresh — is the one chance to record the terms that make it findable. |
 | "Re-ingest means I should overwrite the old focus block" | No — append. The old focus is still valid (the project still needs that aspect). New focus = new block. |
 | "If two focuses are similar I'll just pick one" | The skill warns at similar-focus detection but the user decides. Don't pretend two focus questions are the same when they aren't. |
 | "I'll just leave the contradiction as a `[[wikilink]]`" | Then the graph sees a generic edge and loses the stance. Mirror every confirms / contradicts / builds-on / cites into a typed `relations:` entry — that is the whole point of the typed-edge layer. |
