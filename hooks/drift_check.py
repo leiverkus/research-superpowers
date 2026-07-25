@@ -111,6 +111,28 @@ def is_research_project(p: Path) -> bool:
     return (p / "knowledge").is_dir() and (p / "scripts" / "lint-wiki.py").is_file()
 
 
+def plugin_cmd(script: str) -> str:
+    """A runnable command for a PLUGIN-ONLY script.
+
+    `merge-bibs.py` and `migrate-citekeys.py` live in the plugin, NOT in the
+    template — so a project has no `scripts/merge-bibs.py`, and a finding that
+    says to run one gets 'No such file or directory'. Always emit the absolute
+    plugin path for these; template-mirrored tools (bib-search, optimize-pdf,
+    lint-wiki) keep their project-relative form, which is what the user types.
+    """
+    return f"python3 {PLUGIN_ROOT / 'scripts' / script}"
+
+
+def registry_expansion() -> str:
+    """A copy-pasteable expansion of the project registry.
+
+    Command substitution word-splits in both bash and zsh (verified), unlike
+    an unquoted parameter expansion, which zsh leaves as ONE argument — the
+    trap that makes `--roots $ROOTS` silently pass a single path.
+    """
+    return f'$(grep -v "^#" {registry_path()})'
+
+
 def scripts_dir_for(cwd: Path) -> Path:
     """The project's own scripts when inside a project, else the plugin's
     template copy — identical files, kept in sync by the release process."""
@@ -345,8 +367,9 @@ def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str],
                         f"merge drift: {len(d['missing_keys'])} bibkey(s) and "
                         f"{len(d['keys_with_new_terms'])} keyword set(s) live in project "
                         f"bibs but not in the master (e.g. {ex})\n"
-                        f"→ review, then: python scripts/merge-bibs.py --roots … --out "
-                        f"{lib / 'references.bib'} --report-only")
+                        f"→ review first: {plugin_cmd('merge-bibs.py')} "
+                        f"--roots {registry_expansion()} "
+                        f"--out {lib / 'references.bib'} --report-only")
             except Exception as e:
                 info.append(f"merge-drift check failed to run: {e}")
         if len(registry) >= 2:
@@ -357,7 +380,8 @@ def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str],
                              if "COLLISION" in ln or "SPLIT" in ln][:6]
                     act.append("cross-project bibkey audit FAILED:\n"
                                + "\n".join(lines)
-                               + "\n→ python scripts/migrate-citekeys.py (see audit output)")
+                               + f"\n→ {plugin_cmd('migrate-citekeys.py')} "
+                                 f"(see the audit output for which key, in which projects)")
             except Exception as e:
                 info.append(f"bibkey audit failed to run: {e}")
 

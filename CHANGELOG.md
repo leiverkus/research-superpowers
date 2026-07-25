@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.36.1] — 2026-07-25
+
+### Fixed
+
+- **Drift findings named commands that do not exist in a project.** `merge-bibs.py`
+  and `migrate-citekeys.py` operate *across* projects and live in the plugin only —
+  they are deliberately not mirrored into the template — but the 0.36.0 findings
+  suggested the project-relative `python scripts/merge-bibs.py`, which fails with
+  "No such file or directory" (hit on the first real run). Both hints now carry the
+  absolute plugin path, and the `--roots` argument is emitted as a command
+  substitution over the registry rather than a bare variable: `$VAR` does **not**
+  word-split in zsh and arrives as one path, which the tools reject with "Need at
+  least two project roots". `drift-report` and `ingest-source` document the
+  plugin-side/project-side split. Four tests pin it, including that the named files
+  actually exist and are absent from the template.
+
 ## [0.36.0] — 2026-07-25
 
 ### Added
