@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`ingest-source` documents the keywords ↔ `--q`-fusion division of labour.** The
+  skill's keyword step now names why it cannot be skipped: RRF fusion (0.35.1) is the
+  *ranking* arm and adds zero recall, so the curated `keywords` written at ingest —
+  source just read, vocabulary fresh — remain the only path by which a prose-only
+  source surfaces in search. Adds a self-test (run the concept search a later drafter
+  would run, with `--q` aliases) to the BibTeX Entry Convention, and a red-flag row
+  against "fusion will find it later".
+
 ## [0.35.1] — 2026-07-25
 
 ### Added
