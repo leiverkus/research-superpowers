@@ -59,6 +59,7 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 
 - **add-to-library** — add one PDF directly to the shared master library (verify metadata + keywords), outside the project ingest flow
 - **wiki-lint** — run scripts/lint-wiki.py (structural, deterministic)
+- **drift-report** — deterministic maintenance findings across library + all projects (index, scans, bloat, merge drift, bibkey collisions); auto-runs state-triggered at session start
 - **wiki-graph** — build/query the knowledge graph (god nodes, bridges, communities; CLI + MCP)
 - **semantic-wiki-review** — LLM content audit (contradictions, stale syntheses)
 - **grant-finder** — funding programmes parallel to publication

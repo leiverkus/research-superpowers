@@ -23,7 +23,7 @@ LLM-assisted research is fast but easy to get wrong:
 
 `research-superpowers` makes the discipline structural:
 
-- **16 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
+- **17 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
 - **7 subagents** for context-isolated heavy lifting (ingest, acquire, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
@@ -158,6 +158,7 @@ Cross-cutting (context-triggered, no phase binding):
 |---|---|
 | `add-to-library` | Add one standalone PDF straight to the shared master library — verifies metadata against Crossref/OpenAlex, derives keywords cheaply from docinfo + abstract, computes the bibkey, places the PDF + appends the entry. Outside the project ingest flow |
 | `wiki-lint` | Structural validation (frontmatter, wikilinks, override rate) — runs `scripts/lint-wiki.py` |
+| `drift-report` | Deterministic maintenance findings across library + all registered projects (index, scans, bloat, merge drift, bibkey collisions). Runs automatically at session start, **state-triggered**: fingerprints of library/bibs/wiki are compared against the last look — nothing changed, nothing runs, nothing is said |
 | `wiki-graph` | Structure analysis — runs `scripts/wiki-to-graph.py`; god nodes, bridges, clusters; exports graph.json / graph.graphml |
 | `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, aggregator citations) |
 | `grant-finder` | DFG / ERC / VolkswagenStiftung / Henkel / Thyssen funding-landscape mapping |
@@ -197,7 +198,7 @@ research-superpowers/
 │   ├── knowledge-frontmatter.schema.json
 │   └── README.md
 ├── hooks/                        # SessionStart hook injects the skill index
-├── skills/                       # 16 SKILL.md files (the SOT for each workflow)
+├── skills/                       # 17 SKILL.md files (the SOT for each workflow)
 ├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# SessionStart drift check for research-superpowers.
+#
+# Thin launcher: finds a Python and runs hooks/drift_check.py (stdlib only).
+# Everything interesting — state fingerprints, what runs, what is reported —
+# lives in the Python file; read its module docstring.
+#
+# Deliberately NOT `set -e`: a failing drift check must never break session
+# start. No Python on PATH → silent no-op (the plugin degrades, it does not
+# nag from a hook).
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+PY="$(command -v python3 || command -v python || true)"
+if [ -z "${PY}" ]; then
+  exit 0
+fi
+
+"${PY}" "${SCRIPT_DIR}/drift_check.py" || exit 0

@@ -50,7 +50,8 @@ Before closing acquisition, check:
 (3) `input/bibliography/acquisition-todo.md` lists every `manual` item (or states "none — all sources acquired"),
 (4) `input/bibliography/acquisition-log-<date>.json` is written,
 (5) `knowledge/_meta/log.md` has a new `acquire` entry,
-(6) `optimize-pdf.py scan <library>` was run over the freshly downloaded files — a bulk acquisition is where publisher bloat enters in quantity; anything clearly oversized is optimised (reading-lossless, self-verifying) before it settles into the shared library and its sync/LFS history, or a reason is logged.
+(6) `optimize-pdf.py scan <library>` was run over the freshly downloaded files — a bulk acquisition is where publisher bloat enters in quantity; anything clearly oversized is optimised (reading-lossless, self-verifying) before it settles into the shared library and its sync/LFS history, or a reason is logged,
+(7) `bib-search.py index` was re-run (checklist step 8) and any no-text-layer scans it surfaced are on the worklist.
 
 Report counts: "Acquired N of M A+B sources. K need manual download — see `acquisition-todo.md`, fetch via VPN into `<library>/pdf/` under the exact `<bibkey>.pdf` filenames, then re-run acquire-sources (or proceed to ingest the present ones)." If a condition is unmet: name it, ask for a one-line reason, write it to `knowledge/_meta/gate-overrides.log`, and close.
 </SOFT-GATE>
@@ -79,7 +80,8 @@ Create TodoWrite tasks for each:
 5. **Regenerate `acquisition-todo.md`** — only the `manual` items, with the instruction header. Resolved items drop out automatically on each run.
 6. **Write `acquisition-log-<date>.json`** — the audit (see below).
 7. **Append to `knowledge/_meta/log.md`** — one `acquire` entry.
-8. **Gate & report** per the SOFT-GATE.
+8. **Re-index the search** — `python scripts/bib-search.py index`. Incremental (seconds); this is the moment new PDFs become searchable, and the index run is what surfaces scans with no text layer (`status` lists them) while the acquisition context is still loaded. Skipping this leaves the drift for the session-start check to find later — acquiring is the action that caused it, so acquiring pays for it.
+9. **Gate & report** per the SOFT-GATE.
 
 ## Download mechanism — concrete and validated (the core)
 
