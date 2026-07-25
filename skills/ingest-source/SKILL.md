@@ -87,6 +87,9 @@ Create TodoWrite tasks for each:
 12. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
 13. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
 14. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
+15. **Post-round drift checks** — after the LAST ingest of a round, not per source. The round just created drift by design, and this is the cheapest moment to name it, while the context is loaded (the state-triggered session hook — see the `drift-report` skill — would only catch it at the NEXT session start):
+    - **Pending merge:** the new bibkeys/keywords live in the project bib only; every *other* project's `bib-search` is blind to them until `merge-bibs.py` folds them into the master. Report it: "N new keyword term(s) / key(s) pending master merge — run `merge-bibs.py --report-only` when convenient." Do not run the merge unasked (FACTUAL conflicts need a human verdict).
+    - **Bibkey audit:** if `~/.config/research-superpowers/projects` lists ≥ 2 projects, run `python scripts/wiki-global-graph.py bibkeys <roots…>` — a new bibkey is exactly when a COLLISION or SPLIT can appear, and no single project's CI can see it.
 
 ## Re-ingest detection
 

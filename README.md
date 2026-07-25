@@ -158,6 +158,7 @@ Cross-cutting (context-triggered, no phase binding):
 |---|---|
 | `add-to-library` | Add one standalone PDF straight to the shared master library — verifies metadata against Crossref/OpenAlex, derives keywords cheaply from docinfo + abstract, computes the bibkey, places the PDF + appends the entry. Outside the project ingest flow |
 | `wiki-lint` | Structural validation (frontmatter, wikilinks, override rate) — runs `scripts/lint-wiki.py` |
+| `drift-report` | Deterministic maintenance findings across library + all registered projects (index, scans, bloat, merge drift, bibkey collisions). Runs automatically at session start, **state-triggered**: fingerprints of library/bibs/wiki are compared against the last look — nothing changed, nothing runs, nothing is said |
 | `wiki-graph` | Structure analysis — runs `scripts/wiki-to-graph.py`; god nodes, bridges, clusters; exports graph.json / graph.graphml |
 | `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, aggregator citations) |
 | `grant-finder` | DFG / ERC / VolkswagenStiftung / Henkel / Thyssen funding-landscape mapping |

@@ -125,7 +125,9 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
     ```
     If Bash is not available or the user declines, skip — note that git can be initialised later.
 
-12. **Confirm completion.** Tell the user:
+12. **Register the project and audit its join keys.** Append the new project's absolute path to `~/.config/research-superpowers/projects` (one path per line; create the file if missing — the session-start drift check also auto-registers, but only once a session starts *in* the project). If the registry now lists ≥ 2 projects, run `python scripts/wiki-global-graph.py bibkeys <all registry roots>` — a new project is exactly when its own doc says to run the audit, because no single project's CI can see a cross-project COLLISION or SPLIT.
+
+13. **Confirm completion.** Tell the user:
     > "Project created at `<parent_directory>/<project_name>/`.
     > Next steps:
     > - Open `CLAUDE.md` to see the project's conventions

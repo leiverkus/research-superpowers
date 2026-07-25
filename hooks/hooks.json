@@ -10,6 +10,16 @@
             "async": false
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" drift-check",
+            "async": false
+          }
+        ]
       }
     ]
   }

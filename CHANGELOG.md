@@ -6,6 +6,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **State-triggered drift check at session start + `drift-report` skill** (idea seeded
+  by gbrain's "dream cycle", rebuilt on this plugin's principles). Every kind of drift
+  here is caused by an *action*, not by elapsed time — so there is no nightly cron and
+  no daily report. In-session actions already pay for their own drift (`ingest-source`
+  lints; `add-to-library` re-indexes); the new `hooks/drift_check.py` covers the
+  out-of-band rest: at session start it compares cheap fingerprints (library PDF
+  count/mtimes, master-bib hash, registered projects' bib hashes, current wiki tree)
+  against the last look. **Nothing changed → nothing runs, nothing is injected —
+  silence is the report.** On drift it runs only the affected deterministic checks
+  (incremental index update — the sole permitted mutation, a derived cache — plus
+  no-text-layer scans, bloat, merge drift project-bibs→master, cross-project
+  COLLISION/SPLIT audit, lint after out-of-band wiki edits) and injects a findings
+  report with ready-to-run fixes, executing none of them. First run is a silent
+  baseline; registry auto-fills at `~/.config/research-superpowers/projects`; kill
+  switch `RESEARCH_SUPERPOWERS_NO_DRIFT_CHECK=1`. The `drift-report` skill is the
+  manual trigger (`--force --human`) and the interpretation guide.
+- **Post-action drift checks in the causing skills**: `acquire-sources` re-runs
+  `bib-search.py index` as a checklist step and SOFT-GATE item (acquisition is when
+  new PDFs and scans arrive); `ingest-source` gains step 15 — after the last ingest of
+  a round, report the pending master merge and run the cross-project bibkey audit;
+  `scaffold-research-project` registers the new project and runs the audit its own
+  documentation asks for. LLM-driven checks (semantic review) stay out of hooks by
+  design; the sampled-and-cached contradiction pattern was evaluated and rejected
+  (small wikis, cache-invalidation hazard, gate needs completeness — not sampling).
+
 ## [0.35.2] — 2026-07-25
 
 ### Changed
