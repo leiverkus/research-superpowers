@@ -285,6 +285,48 @@ class MergeDriftPure(unittest.TestCase):
             self.assertTrue(d["unreadable"])
 
 
+class SuggestedCommandsAreRunnable(unittest.TestCase):
+    """A finding that names a command the user cannot run is worse than no
+    finding: it sends them to 'No such file or directory' and costs the report
+    its credibility. `merge-bibs.py` / `migrate-citekeys.py` are plugin-only —
+    they operate ACROSS projects and are deliberately not mirrored into the
+    template — so their hints must carry the absolute plugin path, never the
+    project-relative `scripts/` form that works for template-mirrored tools.
+    """
+
+    def test_plugin_only_scripts_are_named_with_an_absolute_plugin_path(self):
+        for script in ("merge-bibs.py", "migrate-citekeys.py"):
+            with self.subTest(script=script):
+                cmd = dc.plugin_cmd(script)
+                self.assertNotIn(" scripts/", cmd)          # not project-relative
+                path = pathlib.Path(cmd.split(" ", 1)[1])
+                self.assertTrue(path.is_absolute())
+                self.assertTrue(path.is_file(), f"{path} does not exist")
+
+    def test_those_scripts_really_are_absent_from_the_template(self):
+        # Pins the premise: if a future release mirrors them into the template,
+        # this test fails and the absolute-path handling can be reconsidered.
+        tpl = ROOT / "templates" / "research-project-template" / "scripts"
+        for script in ("merge-bibs.py", "migrate-citekeys.py"):
+            self.assertFalse((tpl / script).exists(), f"{script} is in the template now")
+
+    def test_the_registry_is_passed_by_command_substitution_not_a_variable(self):
+        # `--roots $VAR` does not word-split in zsh (the user's shell) and
+        # arrives as ONE path; $(...) splits in both bash and zsh.
+        exp = dc.registry_expansion()
+        self.assertTrue(exp.startswith("$("), exp)
+        self.assertIn(str(dc.registry_path()), exp)
+
+    def test_a_merge_drift_finding_carries_the_runnable_command(self):
+        with _Sandbox() as s:
+            s.run_main()
+            (s.project / "output" / "bibtex" / "references.bib").write_text(
+                "@article{neu-2026-key,\n  keywords = {x}\n}\n", encoding="utf-8")
+            code, out = s.run_main("--human")
+            self.assertIn("merge drift", out)
+            self.assertIn(str(ROOT / "scripts" / "merge-bibs.py"), out)
+
+
 class HookOutput(unittest.TestCase):
     def test_claude_env_gets_hookSpecificOutput_json(self):
         with _Sandbox() as s:

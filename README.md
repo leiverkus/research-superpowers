@@ -1,7 +1,7 @@
 # research-superpowers
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.36.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.36.1-blue.svg)](CHANGELOG.md)
 [![Plugin for: Claude Code + OpenCode](https://img.shields.io/badge/plugin-Claude%20Code%20%2B%20OpenCode-purple.svg)](#installation)
 [![Lint](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/leiverkus/research-superpowers/actions/workflows/lint.yml)
 
