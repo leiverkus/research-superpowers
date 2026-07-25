@@ -15,6 +15,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   source surfaces in search. Adds a self-test (run the concept search a later drafter
   would run, with `--q` aliases) to the BibTeX Entry Convention, and a red-flag row
   against "fusion will find it later".
+- **`add-to-library` gets the same division of labour, tuned for its no-full-read
+  situation.** The abstract's vocabulary is in the full-text index with or without the
+  keyword step, so its value is named precisely: the aliases the abstract does *not*
+  use — fusion re-ranks what an alias literally matches and adds zero recall. Step 7
+  closes the loop with a fused self-test (`'"<canonical>"' --q '<alias>' --key
+  <bibkey>` — the keyword hit must print first), the SOFT-GATE's searchability check
+  now includes it, and a red-flag row counters "the abstract names the method, so
+  keywords are redundant".
 
 ## [0.35.1] — 2026-07-25
 

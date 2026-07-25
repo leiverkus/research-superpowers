@@ -45,7 +45,7 @@ Before closing, check:
 (2) the PDF is placed at `<library>/pdf/<bibkey>.pdf` and the bibkey follows `autor-jahr-kurztitel`,
 (3) the entry is in `<library>/references.bib` with that exact key,
 (4) `keywords` carries 3–8 curated terms (canonical name + aliases),
-(5) `bib-search.py index` was re-run so the source is searchable,
+(5) `bib-search.py index` was re-run and the fused self-test (step 7: canonical name `--q` alias `--key <bibkey>`) surfaced the entry, keyword hit first,
 (6) `knowledge/_meta/log.md` has an `add-to-library` line,
 (7) the PDF is not egregiously oversized — `optimize-pdf.py check <pdf>` reports it unflagged, or it was optimised (`optimize-pdf.py optimize --replace`) and re-indexed. Publishers ship figures at absurd resolutions; the whole library syncs to everyone (and every LFS version is kept forever), so a bloated file is a standing cost. The shrink is reading-lossless and self-verifying (page count + text layer); the pristine file stays re-fetchable by DOI.
 
@@ -79,6 +79,8 @@ Create TodoWrite tasks for each:
 
 4. **Derive keywords cheaply.** From the docinfo `Keywords`/`Subject` fields (often empty or boilerplate — treat as hints) **plus** the first-page abstract text from step 2, curate **3–8** terms: the canonical name plus known synonyms and aliases across spellings and disciplines (the same discipline as `drafting-manuscript`'s "Searching for a concept, not a string"). **No full read.** Thin keywords are acceptable — they accrete later at `ingest-source` time. Never let weak keywords justify skipping step 3.
 
+   Where the value sits: the abstract's own vocabulary is already in the full-text index — a later rank-fused alias search (`bib-search.py --q`, the *ranking* arm) will match those words with or without you. What only this step can add is the *recall* arm: terms the abstract does **not** use — the other disciplines' names, the spelling the field you come from doesn't — because fusion re-ranks what some alias literally matches and adds zero recall. One alias the abstract omits is worth more than three it repeats.
+
 5. **Choose the kurztitel.** One to three significant title words — a judgement, not the first three words of the title (*"The Low Chronology and the Problem of…"* → `low chronology`, not `low-chronology-problem`). `add-to-library.py` proposes one via `library.propose_shorttitle`; refine it.
 
 6. **Commit — dry-run first, then write.**
@@ -99,6 +101,11 @@ Create TodoWrite tasks for each:
    ```bash
    python scripts/bib-search.py index
    ```
+   Then close the loop with the search a later drafter would run — canonical name plus your aliases, rank-fused:
+   ```bash
+   python scripts/bib-search.py '"<canonical name>"' --q '<alias>' --key <bibkey>
+   ```
+   The keyword hit should print first (ahead of any page hit, `page: null`). If nothing comes back, the entry is invisible to exactly the query it exists for — fix the keywords now, while the abstract is still in front of you.
 
 8. **Log.** Append one line to `knowledge/_meta/log.md`:
    ```
@@ -109,7 +116,7 @@ Create TodoWrite tasks for each:
 
 ## BibTeX & keyword convention
 
-Same as `ingest-source`'s BibTeX Entry Convention. `keywords` is semicolon-separated, 3–8 terms, canonical name plus synonyms/aliases — it is what `bib-search.py` matches when a source describes a method in prose without naming it. The bibkey is `autor-jahr-kurztitel`, all lowercase ASCII (umlauts → `ae`/`oe`/`ue`, `ß` → `ss`; Turkish `ı` → `i`, Polish `ł` → `l`; particles/spaces removed), letter suffix **after the year** for a genuine clash. `bibkey == PDF filename stem` is the cross-project join key — the script enforces the shape.
+Same as `ingest-source`'s BibTeX Entry Convention. `keywords` is semicolon-separated, 3–8 terms, canonical name plus synonyms/aliases — it is what `bib-search.py` matches when a source describes a method in prose without naming it; the rank-fused `--q` alias search changes ranking only, never recall, so this field is the sole non-text-derived path into a search result (see `ingest-source`'s keyword step for the full division of labour). The bibkey is `autor-jahr-kurztitel`, all lowercase ASCII (umlauts → `ae`/`oe`/`ue`, `ß` → `ss`; Turkish `ı` → `i`, Polish `ł` → `l`; particles/spaces removed), letter suffix **after the year** for a genuine clash. `bibkey == PDF filename stem` is the cross-project join key — the script enforces the shape.
 
 ## Red flags
 
@@ -119,4 +126,5 @@ Same as `ingest-source`'s BibTeX Entry Convention. `keywords` is semicolon-separ
 | "curl returned 200, so the DOI is right." | A 200 only means the DOI resolves. Check the returned **record** matches the PDF's title/author/year. |
 | "No DOI, but I'll infer the year from the filename." | That is guessing bibliographic data. **Stop and ask** (step 3). |
 | "The keywords look thin, so I'll skip verification and just file it." | Keywords are never a reason to skip step 3. Verification gates the write; keywords do not. |
+| "The abstract names the method — `--q` fusion will find this entry, keywords are redundant." | The abstract's words are in the index either way; fusion only re-ranks what an alias literally matches. Keywords earn their keep as the aliases the abstract does *not* use — and without a full read, nobody has recorded those yet. |
 | "The base bibkey already exists — I'll just overwrite it." | If it's the same work, keywords union in automatically. If it's different, take the disambiguation letter. Never overwrite a live key. |
