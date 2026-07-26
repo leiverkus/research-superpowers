@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`PAGE-OUT-OF-RANGE` is counted, not accused, when the page declares a substitute.**
+  The check exists because a page number outside the printed range is a false statement
+  about a source — but only if the page claims to describe the version of record.
+  `based_on: preprint|review|prior-version` says it does not, and an author version's
+  pagination legitimately differs from the `.bib`'s published range while remaining
+  checkable against the PDF on disk. Measured before the change: 12 such pages across
+  three projects, every one a genuine author version, none cited with a page number in
+  any manuscript — left hard, they parked three projects on a permanent red nobody could
+  clear, which is how a linter loses its authority. Declared substitutes now appear as a
+  counted advisory that names the risk ("those anchors must not be copied into a
+  manuscript as page references"); undeclared ones stay hard and the finding now points
+  at the escape hatch. Same shape as `original_unavailable` for `NO-ORIGINAL`.
+
 ## [0.38.1] — 2026-07-26
 
 ### Fixed

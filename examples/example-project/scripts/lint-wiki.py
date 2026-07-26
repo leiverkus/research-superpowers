@@ -1002,6 +1002,16 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
     # Only checked where the .bib gives a real page RANGE. Article-number journals
     # (PLOS, Entangled Religions) print no range, and a book chapter may legitimately
     # omit one — those are skipped, not guessed at.
+    # DECLARED SUBSTITUTES ARE COUNTED, NOT ACCUSED
+    # `based_on: preprint|review|prior-version` says the text read is not the version
+    # of record. Its pagination then legitimately differs from the .bib's published
+    # range, and the anchors are checkable against the PDF that is actually on disk —
+    # so the mismatch is explained, not false. Measured on the live corpus: 12 such
+    # pages across three projects, every one a genuine author version, none cited with
+    # a page number in any manuscript. Left hard, they would park three projects on a
+    # permanent red that no one can clear, which is how a linter loses its authority.
+    # Reported and counted instead — the same shape as `original_unavailable`.
+    declared: dict[str, int] = {}
     for slug, path in sorted(pages.items()):
         fm = parse_frontmatter(path)
         key = str(fm.get("bibkey")) if isinstance(fm, dict) and fm.get("bibkey") else None
@@ -1014,12 +1024,23 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         bad = sorted({n for n in _cited_pages(text)
                       if not any(a <= n <= b for a, b in spans)})
         if bad:
+            based = str(fm.get("based_on") or "original") if isinstance(fm, dict) else "original"
+            if based != "original":
+                declared[based] = declared.get(based, 0) + 1
+                continue
             shown = ", ".join(str(n) for n in bad[:8]) + (" …" if len(bad) > 8 else "")
             printed = ", ".join(f"{a}–{b}" for a, b in spans)
             hard.append(
                 f"  PAGE-OUT-OF-RANGE: {path} → cites p. {shown}, but '{key}' is printed "
                 f"on {printed}. The PDF may be an author's manuscript, not the published "
-                f"article — check scripts/check-pdf-version.py.")
+                f"article — check scripts/check-pdf-version.py. If it is, record "
+                f"`based_on: preprint` and say so on the page.")
+    if declared:
+        detail = ", ".join(f"{b}: {n}" for b, n in sorted(declared.items()))
+        advisory.append(
+            f"  {sum(declared.values())} page(s) cite outside the published range but declare "
+            f"a substitute ({detail}) — pagination follows the version actually read. "
+            f"Those anchors must not be copied into a manuscript as page references.")
 
     if not hard and not advisory:
         advisory.append(f"  {len(defined)} citekeys, all resolving.")
