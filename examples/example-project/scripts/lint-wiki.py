@@ -203,19 +203,39 @@ def gate_originals_present(pages: dict, lib_pdfs: Path | None) -> list[str]:
         return ["  library not configured — original-present gate skipped."]
     stems = {p.stem for p in lib_pdfs.glob("*.pdf")}
     missing = []
+    declared: dict[str, int] = {}
     for slug, path in sorted(pages.items()):
         fm = parse_frontmatter(path) or {}
         if fm.get("type") != "source":
             continue
         key = fm.get("bibkey")
-        if key and key not in stems:
-            missing.append(f"  NO-ORIGINAL: {path} — bibkey '{key}' has no "
-                           f"<library>/pdf/{key}.pdf")
-    if not missing:
-        return ["  Every source page's bibkey has its original in the library."]
-    missing.append("    → acquire the original, or correct the bibkey if it is wrong. "
-                   "A source page without its original cannot be re-checked.")
-    return missing
+        if not key or key in stems:
+            continue
+        # `original_unavailable` declares that no PDF CAN exist (a printed
+        # monograph, an HTML-only publication) — not that one has not been
+        # fetched. It exempts the page, but never silently: declared exceptions
+        # are counted below, because forty of them is a fact about the wiki's
+        # evidence base that should stay on screen.
+        exempt = fm.get("original_unavailable")
+        if isinstance(exempt, dict) and str(exempt.get("note", "")).strip():
+            form = str(exempt.get("form", "?"))
+            declared[form] = declared.get(form, 0) + 1
+            continue
+        missing.append(f"  NO-ORIGINAL: {path} — bibkey '{key}' has no "
+                       f"<library>/pdf/{key}.pdf")
+    lines = []
+    if missing:
+        lines += missing
+        lines.append("    → acquire the original, or correct the bibkey if it is wrong. "
+                     "If no PDF of this work can exist, declare it: "
+                     "`original_unavailable: {form: physical|html-only, note: …}`.")
+    else:
+        lines.append("  Every source page's bibkey has its original in the library.")
+    if declared:
+        detail = ", ".join(f"{f}: {n}" for f, n in sorted(declared.items()))
+        lines.append(f"  {sum(declared.values())} page(s) declare no original can exist "
+                     f"({detail}) — known exceptions, not findings.")
+    return lines
 
 
 def gate_stable_synthesis_before_draft(pages: dict, root: Path) -> list[str]:

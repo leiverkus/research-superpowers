@@ -449,6 +449,47 @@ class DisciplineGates(unittest.TestCase):
             self.assertIn("absent-2020-work", out)
             self.assertNotIn("present-2020-work", out)
 
+    def test_a_declared_physical_original_is_exempt_but_still_counted(self):
+        # The escape hatch for works where no PDF CAN exist. Exempt, never
+        # silent: a wiki carrying forty exceptions is saying something about
+        # its evidence base, and that has to stay on screen.
+        with tempfile.TemporaryDirectory() as d:
+            lib = pathlib.Path(d) / "lib" / "pdf"
+            lib.mkdir(parents=True)
+            _write(d, "knowledge/sources/book.md",
+                   "---\ntitle: B\ntype: source\ncreated: 2026-04-15\n"
+                   "updated: 2026-04-15\nstatus: review\nauthor: llm\n"
+                   "bibkey: stalder-2016-kultur\noriginal_unavailable:\n"
+                   "  form: physical\n  note: Suhrkamp print copy; ch. 2 scanned\n---\nB.\n")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_originals_present(pages, lib))
+            self.assertNotIn("NO-ORIGINAL", out)
+            self.assertIn("1 page(s) declare no original can exist", out)
+            self.assertIn("physical: 1", out)
+
+    def test_a_declaration_without_a_note_does_not_exempt(self):
+        # An unjustified escape hatch is just a way to silence the gate.
+        with tempfile.TemporaryDirectory() as d:
+            lib = pathlib.Path(d) / "lib" / "pdf"
+            lib.mkdir(parents=True)
+            _write(d, "knowledge/sources/book.md",
+                   "---\ntitle: B\ntype: source\ncreated: 2026-04-15\n"
+                   "updated: 2026-04-15\nstatus: review\nauthor: llm\n"
+                   "bibkey: stalder-2016-kultur\noriginal_unavailable:\n"
+                   "  form: physical\n  note: \"  \"\n---\nB.\n")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_originals_present(pages, lib))
+            self.assertIn("NO-ORIGINAL", out)
+
+    def test_the_finding_names_the_escape_hatch(self):
+        with tempfile.TemporaryDirectory() as d:
+            lib = pathlib.Path(d) / "lib" / "pdf"
+            lib.mkdir(parents=True)
+            self._page(d, "knowledge/sources/a.md", bibkey="absent-2020-work")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_originals_present(pages, lib))
+            self.assertIn("original_unavailable", out)
+
     def test_an_unconfigured_library_skips_rather_than_accuses(self):
         # CI and fresh contributors have no library; "missing PDF" there would be
         # a lie about the wiki rather than a fact about it.

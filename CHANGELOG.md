@@ -6,6 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`original_unavailable` — an escape hatch for the `NO-ORIGINAL` gate, for works
+  where no PDF *can* exist.** Working the first backlog of gate findings surfaced a
+  gap in the gate itself: it assumes every bibkey resolves to a PDF, which is right
+  for articles and systematically wrong for a printed monograph on the shelf or an
+  HTML-only publication (Internet Archaeology issues no PDF). Four of five findings
+  in one project were German monographs — a category, not an accident. A source page
+  may now declare `original_unavailable: {form: physical|html-only, note: …}`, where
+  the note must say how the cited passages stay checkable. Three guards keep it from
+  becoming a universal silencer: the note is required and must be non-empty (an
+  unjustified exemption is just a way to mute the linter), the field means *no PDF
+  can exist* rather than *not fetched yet* (that stays on `acquisition-todo.md`) and
+  is distinct from `based_on` (which records reading a substitute), and declared
+  exceptions are **counted and reported** — a wiki carrying forty of them is saying
+  something about its evidence base that should stay on screen.
+
 ## [0.37.0] — 2026-07-26
 
 ### Added
