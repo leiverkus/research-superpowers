@@ -226,6 +226,32 @@ def cmd_commit(args, lib) -> int:
         print(f"  ✗ no such PDF: {pdf}", file=sys.stderr)
         return 1
 
+    # ── verification gate ───────────────────────────────────────────────────
+    # `add-to-library`'s SOFT-GATE carries one condition with no override path:
+    # metadata must be verified against a real record, never taken from the PDF's
+    # docinfo or from someone's recollection. That was skill prose only, so the
+    # script would happily mint a bibkey from asserted fields — and the bibkey is
+    # the cross-project join key, written into a SHARED master that syncs to
+    # every project and every colleague. A wrong one cannot be recalled from
+    # other people's drafts.
+    #
+    # So: a DOI (the verified path) or an explicit, recorded reason. The reason
+    # is not a formality — it lands in the entry's `note` field, where it stays
+    # visible to everyone who ever reads that record, and in the run log. Silence
+    # is what is no longer available.
+    unverified = getattr(args, "unverified_reason", None)
+    if not norm_doi(args.doi) and not unverified:
+        print("  ✗ no --doi, so this entry's metadata is unverified.\n"
+              "    Verify it against Crossref/OpenAlex and pass --doi, or, if the work\n"
+              "    genuinely has none, say so explicitly:\n"
+              "      --unverified-reason \"pre-1990 monograph, no DOI; verified against "
+              "the title page\"\n"
+              "    The reason is written into the entry's note field and the log. The\n"
+              "    bibkey is a cross-project join key in a shared bibliography — an\n"
+              "    unrecorded guess propagates to every project and cannot be recalled.",
+              file=sys.stderr)
+        return 2
+
     try:
         library = lib.find_library(args.root.resolve())
     except lib.LibraryNotConfigured as e:
@@ -305,9 +331,17 @@ def cmd_commit(args, lib) -> int:
     pdf_target = library / "pdf" / f"{bibkey}.pdf"
     fields = {f: getattr(args, f, None) for f in ENTRY_FIELDS if getattr(args, f, None)}
     fields["keywords"] = "; ".join(new_terms) if new_terms else ""
+    # The unverified reason travels WITH the record, not in a side log: whoever
+    # reads this entry in five years — in another project, on someone else's
+    # machine — has to be able to see that its metadata was never verified.
+    if unverified:
+        marker = f"UNVERIFIED: {unverified}"
+        fields["note"] = f"{fields['note']}. {marker}" if fields.get("note") else marker
     entry = lib.emit_entry(args.etype, bibkey, fields)
 
     print(f"  + new entry '{bibkey}'  ({args.etype})")
+    if unverified:
+        print(f"    ⚠ UNVERIFIED — recorded in the entry's note: {unverified}")
     print(f"    PDF  → {pdf_target}")
     if pdf_target.is_file() and sha(pdf_target) != sha(pdf):
         print(f"    ⚠ a DIFFERENT file already sits at that path — needs --force")
@@ -407,6 +441,11 @@ def main() -> int:
     pc.add_argument("--kurztitel", default=None,
                     help="the chosen short-title word(s) for the bibkey (judgement, not the full title)")
     pc.add_argument("--bibkey", default=None, help="override the computed bibkey")
+    pc.add_argument("--unverified-reason", default=None,
+                    help="required when no --doi is given: why this entry cannot be verified "
+                         "against Crossref/OpenAlex. Recorded in the entry's note field and "
+                         "in the run output — an unverified bibkey in a shared bibliography "
+                         "must at least say that it is one.")
     pc.add_argument("--write", action="store_true", help="actually write (default: dry run)")
     pc.add_argument("--force", action="store_true", help="overwrite a different PDF at the target path")
     pc.add_argument("--json", action="store_true")

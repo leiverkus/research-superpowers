@@ -254,6 +254,12 @@ jobs:
         # stdlib-only, so no install step needed.
         run: python scripts/lint-plugin.py
 
+      - name: Pressure-test scenarios are well-formed (scripts/pressure-test.py)
+        # Scenarios score a skill's gates, so a scenario naming a skill that was
+        # renamed away, or carrying fewer than three combined pressures, is a
+        # test that measures nothing. See docs/skill-pressure-testing.md.
+        run: python scripts/pressure-test.py validate
+
       - name: Skill frontmatter is valid YAML
         run: |
           python <<'PY'

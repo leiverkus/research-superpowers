@@ -16,6 +16,16 @@ Weak signals (consider not authoring):
 - A one-off preference
 - A code pattern
 
+## Does it hold?
+
+A skill that enforces discipline — a HARD-STOP, a SOFT-GATE, a "never cite from
+memory" — is a claim about what a model will do under pressure, and until it has
+been tested it is only a claim. [`skill-pressure-testing.md`](skill-pressure-testing.md)
+is the procedure: run the scenario without the skill (watch it fail, record the
+rationalisation verbatim), then with it, then turn each new rationalisation into
+a red-flag row. Scenarios live in `tests/pressure/<skill>/`; CI validates their
+shape. Reach for it whenever you add or weaken a gate.
+
 ## SOT pattern
 
 Workflow logic lives in exactly one file. The Skill is that SOT. Agents and Commands reference the Skill — they do not duplicate its content. See [`skill-contract.md`](skill-contract.md) for the full pattern.

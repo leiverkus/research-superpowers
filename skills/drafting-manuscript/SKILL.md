@@ -49,7 +49,7 @@ And the wiki tells you *what is claimed* — never *what this chapter argues*. T
 
 <SOFT-GATE>
 Before drafting, check:
-(1) At least one `knowledge/synthesis/*.md` with `status: stable` exists AND is referenced by the draft task
+(1) At least one `knowledge/synthesis/*.md` with `status: stable` exists AND is referenced by the draft task — *`lint-wiki.py`'s `UNSTABLE-DRAFT` gate checks the first half of this mechanically (a drafted manuscript with no stable synthesis anywhere). Only the user promotes a page to `stable`; an agent that edits that field to clear the gate has forged an attestation, not satisfied it.*
 (2) Every source cited in the target section exists as `knowledge/sources/*.md` AND has a BibTeX entry
 (3) `wiki-lint` is green on the knowledge tree
 (4) The research plan `<slug>-plan.md` contains an explicit Draft task for this output file

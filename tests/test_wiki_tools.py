@@ -412,3 +412,114 @@ class WikilinkResolution(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DisciplineGates(unittest.TestCase):
+    """Rules the skills state in prose, checked in code.
+
+    Measured before these were written: 17 source pages across the live corpus
+    have no PDF, and 9 of 18 projects carry drafted manuscripts with zero stable
+    synthesis pages. So they REPORT by default and only fail under
+    --strict-gates — a check that breaks half the portfolio on day one teaches
+    people to ignore the linter, which costs more than it buys.
+    """
+
+    def _page(self, d, rel, **fm):
+        base = {"title": "P", "type": "source", "created": "2026-04-15",
+                "updated": "2026-04-15", "status": "review", "author": "llm"}
+        base.update(fm)
+        body = "---\n" + "".join(f"{k}: {v}\n" for k, v in base.items()) + "---\nBody.\n"
+        return _write(d, rel, body)
+
+    def _qmd(self, d, rel, n_citekeys):
+        keys = " ".join(f"@author-20{10+i:02d}-work{i}" for i in range(n_citekeys))
+        return _write(d, rel, f"# Chapter\n\nProse citing {keys}.\n")
+
+    # ── gate 1: the original is on disk ────────────────────────────────────
+    def test_a_source_page_without_its_original_is_a_finding(self):
+        with tempfile.TemporaryDirectory() as d:
+            lib = pathlib.Path(d) / "lib" / "pdf"
+            lib.mkdir(parents=True)
+            (lib / "present-2020-work.pdf").write_bytes(b"%PDF")
+            self._page(d, "knowledge/sources/a.md", bibkey="present-2020-work")
+            self._page(d, "knowledge/sources/b.md", bibkey="absent-2020-work")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_originals_present(pages, lib))
+            self.assertIn("NO-ORIGINAL", out)
+            self.assertIn("absent-2020-work", out)
+            self.assertNotIn("present-2020-work", out)
+
+    def test_an_unconfigured_library_skips_rather_than_accuses(self):
+        # CI and fresh contributors have no library; "missing PDF" there would be
+        # a lie about the wiki rather than a fact about it.
+        with tempfile.TemporaryDirectory() as d:
+            self._page(d, "knowledge/sources/a.md", bibkey="whatever-2020-x")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_originals_present(pages, None))
+            self.assertIn("skipped", out)
+            self.assertNotIn("NO-ORIGINAL", out)
+
+    # ── what counts as a drafted manuscript ────────────────────────────────
+    def test_template_scaffolds_do_not_count_as_a_manuscript(self):
+        # The shipped template carries .qmd files of 2-3 kB with 0-1 citekeys.
+        # A size threshold fires on a project that has drafted nothing — the
+        # fastest way to train someone to ignore the linter.
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 1)
+            self.assertEqual(lw._substantive_qmds(pathlib.Path(d)), [])
+
+    def test_a_drafted_chapter_counts(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            self.assertEqual(len(lw._substantive_qmds(pathlib.Path(d))), 1)
+
+    # ── gate 2: stable synthesis before drafting ───────────────────────────
+    def test_drafting_without_a_stable_synthesis_is_a_finding(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            self._page(d, "knowledge/synthesis/s.md", type="synthesis", status="review")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_stable_synthesis_before_draft(pages, pathlib.Path(d)))
+            self.assertIn("UNSTABLE-DRAFT", out)
+
+    def test_one_stable_synthesis_clears_the_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            self._page(d, "knowledge/synthesis/s.md", type="synthesis", status="stable")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_stable_synthesis_before_draft(pages, pathlib.Path(d)))
+            self.assertNotIn("UNSTABLE-DRAFT", out)
+
+    def test_no_manuscript_means_the_gate_does_not_apply(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._page(d, "knowledge/synthesis/s.md", type="synthesis", status="draft")
+            pages = lw.collect_pages(pathlib.Path(d) / "knowledge")
+            out = "\n".join(lw.gate_stable_synthesis_before_draft(pages, pathlib.Path(d)))
+            self.assertIn("not applicable", out)
+
+    # ── gate 3: both review passes ─────────────────────────────────────────
+    def test_a_manuscript_with_no_logged_review_is_a_finding(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            _write(d, "knowledge/_meta/log.md", "## [2026-07-01] draft | chapter 3\n")
+            out = "\n".join(lw.gate_two_stage_review(pathlib.Path(d)))
+            self.assertIn("HALF-REVIEW", out)
+
+    def test_only_the_constructive_pass_is_still_half_a_review(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            _write(d, "knowledge/_meta/log.md",
+                   "## [2026-07-01] review | constructive | no major objections\n")
+            out = "\n".join(lw.gate_two_stage_review(pathlib.Path(d)))
+            self.assertIn("HALF-REVIEW", out)
+            self.assertIn("adversarial", out)
+            self.assertNotIn("constructive review pass", out)
+
+    def test_both_passes_logged_clears_the_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            _write(d, "knowledge/_meta/log.md",
+                   "## [2026-07-01] review | constructive | three minor points\n"
+                   "## [2026-07-02] review | adversarial | survey-data objection\n")
+            out = "\n".join(lw.gate_two_stage_review(pathlib.Path(d)))
+            self.assertNotIn("HALF-REVIEW", out)
