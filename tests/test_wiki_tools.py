@@ -575,3 +575,53 @@ class DisciplineGates(unittest.TestCase):
                    "## [2026-07-02] review | adversarial | survey-data objection\n")
             out = "\n".join(lw.gate_two_stage_review(pathlib.Path(d)))
             self.assertNotIn("HALF-REVIEW", out)
+
+
+class PageRangeVsDeclaredSubstitute(unittest.TestCase):
+    """PAGE-OUT-OF-RANGE is a false-statement check — but only when the page
+    claims to describe the version of record. `based_on: preprint` says it does
+    not, and an author version's pagination legitimately differs from the .bib's
+    published range. Measured before this was written: 12 such pages across three
+    projects, all genuine author versions. Left hard, they park three projects on
+    a permanent red nobody can clear."""
+
+    def _bib(self, d):
+        _write(d, "output/bibtex/references.bib",
+               "@article{lake-2003-visibility,\n  author = {Lake, M},\n"
+               "  title = {Visibility},\n  year = {2003},\n  pages = {689--707},\n}\n")
+
+    def _page(self, d, based=None):
+        extra = f"based_on: {based}\n" if based else ""
+        _write(d, "knowledge/sources/lake.md",
+               "---\ntitle: L\ntype: source\ncreated: 2026-04-15\nupdated: 2026-04-15\n"
+               "status: review\nauthor: llm\nbibkey: lake-2003-visibility\n" + extra +
+               "---\n\n### Direct quotes\n\n> \"A review of studies.\" (p. 1)\n")
+
+    def test_an_undeclared_page_outside_the_range_is_hard(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._bib(d); self._page(d)
+            import os
+            cwd = os.getcwd(); os.chdir(d)
+            try:
+                hard, adv = lw.lint_citekeys(lw.collect_pages(pathlib.Path("knowledge")),
+                                             lw.load_schema() if False else {})
+            finally:
+                os.chdir(cwd)
+            self.assertTrue(any("PAGE-OUT-OF-RANGE" in h for h in hard))
+            self.assertTrue(any("based_on: preprint" in h for h in hard),
+                            "the finding should name the escape hatch")
+
+    def test_a_declared_preprint_is_counted_not_accused(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._bib(d); self._page(d, based="preprint")
+            import os
+            cwd = os.getcwd(); os.chdir(d)
+            try:
+                hard, adv = lw.lint_citekeys(lw.collect_pages(pathlib.Path("knowledge")), {})
+            finally:
+                os.chdir(cwd)
+            self.assertFalse(any("PAGE-OUT-OF-RANGE" in h for h in hard))
+            joined = "\n".join(adv)
+            self.assertIn("declare a substitute", joined)
+            self.assertIn("preprint: 1", joined)
+            self.assertIn("must not be copied into a manuscript", joined)
