@@ -142,6 +142,133 @@ def _validate_value(value, spec: dict, path: Path, label: str, issues: list[str]
                 _validate_value(sub_value, sub_props[key], path, f"{label}.{key}", issues)
 
 
+# ── discipline gates ─────────────────────────────────────────────────────────
+#
+# Rules the SKILLS state in prose, checked here in code.
+#
+# WHY THEY LIVE IN THE LINTER AND NOT ONLY IN THE SKILL
+# A rule that exists only as skill text is a claim about what a model does under
+# pressure. A rule the linter checks is a fact about the repository, and no
+# amount of deadline or user insistence argues it away. Three of the plugin's
+# four mechanisable gates are implemented here; the fourth (never write prose
+# from memory) is irreducibly textual and stays a skill rule — you cannot detect
+# mechanically that a sentence was recalled rather than read.
+#
+# WHY THEY DO NOT FAIL THE BUILD BY DEFAULT
+# Measured across 18 live projects before this was written: 17 source pages have
+# no PDF, and 9 of 18 projects carry drafted manuscripts with zero stable
+# synthesis pages. Flipping these to blocking overnight would break half the
+# portfolio and teach everyone to ignore the linter. They report by default and
+# fail only under `--strict-gates`, which a project turns on once its backlog is
+# clear — and which CI should then keep on.
+
+# What counts as "a manuscript exists". NOT file size: the template ships
+# scaffolds of 2–3 kB, so a byte threshold fires on a project that has drafted
+# nothing, which is the fastest way to teach people to ignore a linter. Measured
+# on the real corpus: template scaffolds carry 0–1 distinct citekeys, a genuinely
+# drafted chapter carries 19. Citations are also the semantically right signal —
+# `drafting-manuscript` produces prose with inline citations, so a file that
+# cites nothing has not been drafted from the wiki.
+GATE_MIN_CITEKEYS = 5
+
+_CITEKEY = re.compile(r"@([a-z][a-z0-9]*(?:-[a-z0-9]+)+)")
+
+
+def _substantive_qmds(root: Path) -> list[Path]:
+    out = root / "output"
+    if not out.is_dir():
+        return []
+    found = []
+    for q in sorted(out.glob("**/*.qmd")):
+        if not _not_build(q):
+            continue
+        try:
+            text = _strip_code(q.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
+        if len(set(_CITEKEY.findall(text))) >= GATE_MIN_CITEKEYS:
+            found.append(q)
+    return found
+
+
+def gate_originals_present(pages: dict, lib_pdfs: Path | None) -> list[str]:
+    """GATE: every source page's bibkey resolves to a PDF in the shared library.
+
+    This is the mechanised half of `ingest-source`'s HARD-STOP. It cannot prove a
+    page was written from the original, but it does catch the case the hard-stop
+    exists for: a source page describing a work whose original is not on disk —
+    ingested from a review, a preprint, or a filename.
+    """
+    if lib_pdfs is None:
+        return ["  library not configured — original-present gate skipped."]
+    stems = {p.stem for p in lib_pdfs.glob("*.pdf")}
+    missing = []
+    for slug, path in sorted(pages.items()):
+        fm = parse_frontmatter(path) or {}
+        if fm.get("type") != "source":
+            continue
+        key = fm.get("bibkey")
+        if key and key not in stems:
+            missing.append(f"  NO-ORIGINAL: {path} — bibkey '{key}' has no "
+                           f"<library>/pdf/{key}.pdf")
+    if not missing:
+        return ["  Every source page's bibkey has its original in the library."]
+    missing.append("    → acquire the original, or correct the bibkey if it is wrong. "
+                   "A source page without its original cannot be re-checked.")
+    return missing
+
+
+def gate_stable_synthesis_before_draft(pages: dict, root: Path) -> list[str]:
+    """GATE: drafting runs off `status: stable` synthesis pages.
+
+    `drafting-manuscript`'s SOFT-GATE condition (1). Only the user promotes a page
+    to stable, so this is the one gate an agent structurally cannot clear alone.
+    """
+    qmds = _substantive_qmds(root)
+    if not qmds:
+        return ["  No substantive manuscript yet — stable-synthesis gate not applicable."]
+    syntheses = [(s, parse_frontmatter(p) or {}) for s, p in pages.items()
+                 if (parse_frontmatter(p) or {}).get("type") == "synthesis"]
+    stable = [s for s, fm in syntheses if fm.get("status") == "stable"]
+    if stable:
+        return [f"  {len(stable)} of {len(syntheses)} synthesis page(s) are stable "
+                f"({len(qmds)} manuscript file(s) drafted)."]
+    return [f"  UNSTABLE-DRAFT: {len(qmds)} manuscript file(s) drafted, but none of "
+            f"{len(syntheses)} synthesis page(s) is `status: stable`.",
+            "    → the user promotes a page to stable once they have checked it; "
+            "or record a SOFT-GATE override with a reason."]
+
+
+_REVIEW_LINE = re.compile(r"^##\s*\[[\d-]+\]\s*review\s*\|.*?\b(constructive|adversarial)\b",
+                          re.MULTILINE | re.IGNORECASE)
+
+
+def gate_two_stage_review(root: Path) -> list[str]:
+    """GATE: a manuscript has been through BOTH review passes.
+
+    `requesting-peer-review` runs constructive then adversarial. The convention
+    this reads is `## [YYYY-MM-DD] review | constructive|adversarial | …` in
+    knowledge/_meta/log.md — the skill writes it; without a written record the
+    two-stage claim is unverifiable, which is the point.
+    """
+    qmds = _substantive_qmds(root)
+    if not qmds:
+        return ["  No substantive manuscript yet — review gate not applicable."]
+    log = root / "knowledge" / "_meta" / "log.md"
+    seen = set()
+    if log.is_file():
+        seen = {m.group(1).lower()
+                for m in _REVIEW_LINE.finditer(log.read_text(encoding="utf-8", errors="replace"))}
+    if {"constructive", "adversarial"} <= seen:
+        return ["  Both review passes are logged."]
+    # named in the order the skill runs them, not alphabetically
+    missing = [p for p in ("constructive", "adversarial") if p not in seen]
+    return [f"  HALF-REVIEW: {len(qmds)} manuscript file(s) drafted; "
+            f"no logged {' or '.join(missing)} review pass.",
+            "    → run it, or log the skip with the deciding reason. A positive "
+            "constructive pass is not evidence the adversarial pass finds nothing."]
+
+
 def validate_frontmatter(fm: dict, schema: dict, path: Path) -> list[str]:
     """Draft-07 validator covering the subset our schema uses: required, type,
     enum, format=date, pattern, array items, nested objects (required /
@@ -950,6 +1077,12 @@ def main():
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Also list files that pass"
     )
+    parser.add_argument(
+        "--strict-gates", action="store_true",
+        help="Fail on discipline-gate findings (missing original, drafting without a "
+             "stable synthesis, half-finished review) instead of only reporting them. "
+             "Turn this on in CI once the project's gate backlog is clear."
+    )
     args = parser.parse_args()
 
     if not WIKI_DIR.exists():
@@ -1010,8 +1143,25 @@ def main():
     print("\n=== Gate overrides ===")
     print("\n".join(report_gate_overrides()))
 
+    # ── discipline gates ────────────────────────────────────────────────────
+    # The rules the skills state in prose, checked in code. Reported by default,
+    # blocking under --strict-gates (see the module's gate section for why).
+    print("\n=== Discipline gates ===")
+    root = Path(".")
+    gate_lines = (gate_originals_present(pages, _library_pdf_dir())
+                  + gate_stable_synthesis_before_draft(pages, root)
+                  + gate_two_stage_review(root))
+    print("\n".join(gate_lines))
+    gate_findings = [l for l in gate_lines
+                     if re.search(r"\b(NO-ORIGINAL|UNSTABLE-DRAFT|HALF-REVIEW):", l)]
+    if gate_findings and not args.strict_gates:
+        print(f"\n  {len(gate_findings)} gate finding(s) — reported, not blocking. "
+              f"Re-run with --strict-gates to fail on them.")
+
     total_issues = (len(fm_issues) + len(broken) + len(orphans) + len(rel_issues)
                     + len(dups) + len(cite_issues))
+    if args.strict_gates:
+        total_issues += len(gate_findings)
     print(f"\n{'=' * 40}")
     print(f"Total: {total_issues} issue(s) found")
 

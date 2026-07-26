@@ -103,6 +103,25 @@ class Prompts(unittest.TestCase):
             self.assertIn("as you actually reasoned it",
                           _run("prompt", self.ID, "--phase", phase))
 
+    def test_both_prompts_forbid_inspecting_the_repository(self):
+        """Round 1 of the 2026-07-25 run was invalidated by the absence of this
+        clause: subagents inherit the dispatching session's working directory —
+        the plugin repo — and read the skill, the schema, and the scenario
+        file's own `compliant:` criteria before answering. A clean prompt in a
+        dirty room is not a baseline."""
+        for phase in ("red", "green"):
+            with self.subTest(phase=phase):
+                text = _run("prompt", self.ID, "--phase", phase)
+                self.assertIn("Do not inspect the filesystem", text)
+                self.assertIn("skills, schemas", text)
+
+    def test_the_isolation_clause_gives_away_no_part_of_the_rule(self):
+        # It must constrain where the model may look, never hint at the answer.
+        clause = pt.ISOLATION.lower()
+        for leak in ("hard-stop", "substitut", "forbidden", "must not ingest",
+                     "verify", "stable", "adversarial"):
+            self.assertNotIn(leak, clause)
+
     def test_an_unknown_id_lists_the_known_ones_instead_of_crashing(self):
         err = io.StringIO()
         with contextlib.redirect_stderr(err):

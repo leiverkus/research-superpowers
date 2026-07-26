@@ -50,6 +50,8 @@ Before closing, check:
 (7) the PDF is not egregiously oversized — `optimize-pdf.py check <pdf>` reports it unflagged, or it was optimised (`optimize-pdf.py optimize --replace`) and re-indexed. Publishers ship figures at absurd resolutions; the whole library syncs to everyone (and every LFS version is kept forever), so a bloated file is a standing cost. The shrink is reading-lossless and self-verifying (page count + text layer); the pristine file stays re-fetchable by DOI.
 
 If a condition is unmet: name it, ask for a one-line reason, write it to `knowledge/_meta/gate-overrides.log`, and close. **Exception — never soft-gate past (1):** if the metadata cannot be verified, do not write; stop and ask.
+
+**(1) is enforced by the script, not by your resolve.** `add-to-library.py commit` refuses without `--doi` unless you pass `--unverified-reason "…"`, and that reason is written into the entry's `note` field as `UNVERIFIED: …` — visible to everyone who ever reads that record, in every project. You cannot write an unverified entry silently.
 </SOFT-GATE>
 
 ## Checklist

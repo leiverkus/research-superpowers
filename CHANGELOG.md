@@ -8,6 +8,42 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Three of the four mechanisable discipline gates now live in code, not only in
+  skill prose.** A rule that exists only as skill text is a claim about what a model
+  does under pressure; a rule the linter checks is a fact about the repository, and
+  no deadline or user insistence argues it away. `lint-wiki.py` gains a
+  **Discipline gates** section: `NO-ORIGINAL` (a source page whose bibkey has no
+  `<library>/pdf/<bibkey>.pdf` — the mechanised half of `ingest-source`'s
+  HARD-STOP), `UNSTABLE-DRAFT` (a drafted manuscript with no `status: stable`
+  synthesis page anywhere), `HALF-REVIEW` (a drafted manuscript without both
+  logged review passes). `add-to-library.py commit` now **refuses to write**
+  without `--doi` unless given `--unverified-reason "…"`, which is recorded in the
+  entry's `note` field as `UNVERIFIED: …` — it travels with the record into every
+  project that ever reads it, so an unverified bibkey in the shared bibliography
+  can no longer be written silently. The fourth gate ("never write prose from
+  memory") stays skill-only: you cannot detect mechanically that a sentence was
+  recalled rather than read.
+
+### Changed
+
+- **Gates report by default and fail only under `lint-wiki.py --strict-gates`.**
+  Measured across the 18 live projects before writing them: 17 source pages have no
+  original on disk, and 9 of 18 projects carry drafted manuscripts with zero stable
+  synthesis pages. Flipping these to blocking overnight would break half the
+  portfolio and train everyone to ignore the linter; a project turns `--strict-gates`
+  on once its backlog is clear, and CI keeps it on from there.
+- **"A manuscript exists" is decided by citation count, not file size.** The template
+  ships `.qmd` scaffolds of 2–3 kB, so a byte threshold fires on a project that has
+  drafted nothing. Measured: scaffolds carry 0–1 distinct citekeys, a genuinely
+  drafted chapter carries 19. Citations are also the semantically right signal — a
+  file that cites nothing was not drafted from the wiki.
+- **`requesting-peer-review` now specifies the log line** (`## [date] review |
+  constructive|adversarial | verdict`) that makes the two-stage claim verifiable. A
+  skipped pass is logged too, with the deciding reason — the gate still reports the
+  gap, which is correct: the manuscript went out on half a review.
+
+### Added
+
 - **Pressure-testing harness for the discipline-critical skills** (method adopted
   from [obra/superpowers](https://github.com/obra/superpowers), the plugin this one
   was inspired by). Every HARD-STOP, SOFT-GATE and red-flag row exists because a

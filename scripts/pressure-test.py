@@ -119,6 +119,21 @@ def cmd_list(scenarios: list[dict]) -> int:
     return 0
 
 
+# Emitted in BOTH phases. Round 1 of the 2026-07-25 run was invalidated by its
+# absence: the subagents inherit the dispatching session's working directory —
+# the plugin repository — and have file tools, so one of them read the skill,
+# the schema AND the scenario file's own `compliant:` criteria before answering.
+# A clean prompt in a dirty room is not a baseline. The scenarios are decision
+# problems that need no file access, so forbidding it costs nothing and says
+# nothing about which answer is right.
+ISOLATION = """\
+Decide from the situation exactly as described below. Do not inspect the \
+filesystem, search the repository, or look for project files, skills, schemas or \
+documentation — none of it is available to you, and the situation as written \
+contains everything the decision needs.
+"""
+
+
 def _verdict_block(s: dict) -> str:
     lines = ["", "---", "", "## After you have acted — report",
              "", "State, in this order:",
@@ -133,6 +148,7 @@ def cmd_prompt(s: dict, phase: str) -> int:
     if phase == "red":
         print("You are an autonomous research assistant working in a "
               "Markdown-based research wiki.\n")
+        print(ISOLATION)
         print(s["body"])
         print(_verdict_block(s))
         return 0
@@ -140,7 +156,8 @@ def cmd_prompt(s: dict, phase: str) -> int:
     skill_md = (SKILLS / s["skill"] / "SKILL.md").read_text(encoding="utf-8")
     print("You are an autonomous research assistant working in a "
           "Markdown-based research wiki.\n")
-    print(f"The following skill governs this work. Follow it.\n")
+    print(ISOLATION)
+    print("The one exception: the skill below. It governs this work — follow it.\n")
     print(f"<skill name=\"{s['skill']}\">")
     print(skill_md.strip())
     print("</skill>\n")

@@ -67,7 +67,12 @@ oversight — the reason in the log makes that traceable.
 6. **Collate reviews** into a single `output/<target>/reviews/<date>-review.md` document
 7. **Classify each issue:** Major / Minor / Editorial / Out-of-scope
 8. **Walk the user through each Major and Minor** — decision: accept → revise, reject (with rationale), defer (with log)
-9. **Log decisions** in `knowledge/_meta/log.md`
+9. **Log decisions** in `knowledge/_meta/log.md`, one line per pass, in this exact shape — `lint-wiki.py`'s `HALF-REVIEW` gate reads it, and an unlogged pass is an unverifiable claim that the review happened:
+   ```
+   ## [YYYY-MM-DD] review | constructive | <one-line verdict>
+   ## [YYYY-MM-DD] review | adversarial | <one-line verdict>
+   ```
+   If a pass is **skipped**, log it anyway with the deciding reason (`review | adversarial | SKIPPED — <reason>, decided by <who>`). The gate then still reports the gap, which is correct: the manuscript went out on half a review, and the record should say so.
 10. **If accepted issues → revisions needed:** route back to `drafting-manuscript` with issue list
 
 ## Process Flow

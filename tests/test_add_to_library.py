@@ -179,7 +179,8 @@ class CommitNewEntry(unittest.TestCase):
             pdf = _pdf(d)
             with _Env(root):
                 rc = atl.cmd_commit(_ns(pdf=pdf, author="", year="2003",
-                                        kurztitel="low", write=True), lib)     # no surname
+                                        kurztitel="low", doi="10.1/verified",
+                                        write=True), lib)     # no surname
             self.assertEqual(rc, 1)
             self.assertEqual((root / "references.bib").read_text(encoding="utf-8"), "")
 
@@ -190,7 +191,8 @@ class CommitNewEntry(unittest.TestCase):
             pdf = _pdf(d)
             with _Env(root):
                 atl.cmd_commit(_ns(pdf=pdf, author="Mazar, A", year="2011",
-                                   title="Iron Age", kurztitel="iron age", write=True), lib)
+                                   title="Iron Age", kurztitel="iron age",
+                                   doi="10.1/verified", write=True), lib)
             bib = (root / "references.bib").read_text(encoding="utf-8")
             self.assertIn("}\n\n@article{mazar-2011-iron-age,", bib)
 
@@ -262,3 +264,65 @@ class Inspect(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VerificationGate(unittest.TestCase):
+    """The one SOFT-GATE condition with no override path, moved out of skill prose
+    and into the script: metadata must be verified against a real record.
+
+    The bibkey is a cross-project join key written into a SHARED bibliography. A
+    wrong one propagates to every project and every colleague and cannot be
+    recalled from their drafts — so 'the user was sure' is not a path, and
+    silence is no longer available."""
+
+    def test_no_doi_and_no_reason_refuses_to_write(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = _mklib(d)
+            pdf = _pdf(d)
+            with _Env(root):
+                rc = atl.cmd_commit(_ns(pdf=pdf, author="Stern, I", year="2008",
+                                        title="Idumea", kurztitel="idumea",
+                                        write=True), lib)
+            self.assertEqual(rc, 2)
+            self.assertEqual((root / "references.bib").read_text(encoding="utf-8"), "")
+            self.assertFalse(list((root / "pdf").glob("*.pdf")))
+
+    def test_a_doi_is_the_verified_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = _mklib(d)
+            pdf = _pdf(d)
+            with _Env(root):
+                rc = atl.cmd_commit(_ns(pdf=pdf, author="Kloner, A", year="2007",
+                                        title="Idumea", kurztitel="idumea",
+                                        doi="10.1515/9781575065809-009", write=True), lib)
+            self.assertEqual(rc, 0)
+            self.assertIn("@article{kloner-2007-idumea,",
+                          (root / "references.bib").read_text(encoding="utf-8"))
+
+    def test_an_explicit_reason_is_allowed_but_travels_with_the_record(self):
+        # A side log would be lost the moment the entry is read in another
+        # project. Whoever reads this record must see that it is unverified.
+        with tempfile.TemporaryDirectory() as d:
+            root = _mklib(d)
+            pdf = _pdf(d)
+            with _Env(root):
+                rc = atl.cmd_commit(_ns(pdf=pdf, author="Kloner, A", year="2007",
+                                        title="Idumea", kurztitel="idumea",
+                                        unverified_reason="1962 monograph, no DOI exists",
+                                        write=True), lib)
+            self.assertEqual(rc, 0)
+            bib = (root / "references.bib").read_text(encoding="utf-8")
+            self.assertIn("UNVERIFIED: 1962 monograph, no DOI exists", bib)
+
+    def test_the_reason_does_not_clobber_an_existing_note(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = _mklib(d)
+            pdf = _pdf(d)
+            with _Env(root):
+                atl.cmd_commit(_ns(pdf=pdf, author="Kloner, A", year="2007",
+                                   title="Idumea", kurztitel="idumea",
+                                   note="offprint", unverified_reason="no DOI",
+                                   write=True), lib)
+            bib = (root / "references.bib").read_text(encoding="utf-8")
+            self.assertIn("offprint", bib)
+            self.assertIn("UNVERIFIED: no DOI", bib)
