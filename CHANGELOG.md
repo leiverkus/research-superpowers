@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.38.1] — 2026-07-26
+
 ### Fixed
 
 - **The `HALF-REVIEW` gate missed a two-pass review logged on one line.** The pass
