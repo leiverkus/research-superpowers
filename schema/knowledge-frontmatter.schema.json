@@ -87,6 +87,30 @@
       "default": "original",
       "description": "Provenance of the ingested text for type=source. original = the cited work itself (default; field may be omitted); review/preprint/prior-version = a user-approved substitute ingested because the original could not be acquired. Replace with original on re-ingest of the original. Set by ingest-source; see its 'Provenance of substitutes' section."
     },
+    "original_unavailable": {
+      "type": "object",
+      "required": [
+        "form",
+        "note"
+      ],
+      "additionalProperties": false,
+      "description": "Optional, type=source only. Declares that NO PDF OF THIS WORK CAN EXIST — not that one has not been acquired yet. It exempts the page from lint-wiki.py's NO-ORIGINAL gate, which otherwise assumes every bibkey resolves to <library>/pdf/<bibkey>.pdf. That assumption is right for articles and wrong for a printed monograph on the shelf or an HTML-only publication. The exemption is NOT silence: the linter counts and reports declared exceptions, because a wiki carrying forty of them is telling you something about its evidence base. Do NOT use it for a paywalled PDF you have not fetched (that belongs in input/bibliography/acquisition-todo.md), for a forthcoming work (the page is premature), or for a substitute you actually read (that is `based_on`).",
+      "properties": {
+        "form": {
+          "type": "string",
+          "enum": [
+            "physical",
+            "html-only"
+          ],
+          "description": "physical = a print work read from a physical copy (monograph, offprint) with no digital edition available to you. html-only = published online in HTML with no PDF issued by the publisher (e.g. Internet Archaeology) — note that a browser print-to-PDF does not carry the publication's pagination, so cite by section, not by printed page."
+        },
+        "note": {
+          "type": "string",
+          "pattern": "\\S",
+          "description": "Why no PDF can exist, and how the cited passages remain checkable — e.g. which edition you read, whether the used chapters were scanned, or which section numbers the citations use. A bare 'is a book' is not enough: the point of the original is that someone can re-check a quotation."
+        }
+      }
+    },
     "hypothesis": {
       "type": "string",
       "description": "Linked hypothesis slug from the research plan. Used on type = synthesis."

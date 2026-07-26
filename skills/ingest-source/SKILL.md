@@ -68,6 +68,13 @@ Create TodoWrite tasks for each:
 2. **Locate the acquired original** — the PDF lives in the **shared library**, not in the project: `<library>/pdf/<bibkey>.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). Resolve the library with `python scripts/library.py`, or from Python: `from library import pdf_for; pdf_for("<bibkey>")`.
    **If it is missing → HARD-STOP.**
    *(Mechanised: `lint-wiki.py`'s `NO-ORIGINAL` gate reports every source page whose bibkey has no `<library>/pdf/<bibkey>.pdf`. The rule no longer depends on this paragraph being read.)*
+   **When no PDF *can* exist** — a printed monograph you read from the shelf, an HTML-only publication (Internet Archaeology issues no PDF) — declare it in the source page's frontmatter instead of leaving a standing finding:
+   ```yaml
+   original_unavailable:
+     form: physical        # or: html-only
+     note: "Suhrkamp print edition; page numbers follow it. Cited chapters scanned."
+   ```
+   This is **not** a way to close the finding for a PDF you simply have not fetched — that belongs on `input/bibliography/acquisition-todo.md`, and neither is it `based_on` (which records that you read a *substitute*). The note must say how the cited passages stay checkable; the linter exempts the page but keeps counting the declaration, because a wiki full of them is a fact about its evidence base.
    Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
    **Distinguish the two failures — they need different answers:**
    - *The library is not configured on this machine* (`library.py` says so): the user must point this project at it — one line in `.research-library`. Do not report this as "PDF missing"; the file may well exist.
