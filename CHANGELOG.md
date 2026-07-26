@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `HALF-REVIEW` gate missed a two-pass review logged on one line.** The pass
+  name sat inside the line regex, so `finditer` stopped at the first keyword and a
+  collated entry — `## [date] review | constructive + adversarial | …`, which is
+  exactly how a two-pass run is recorded when both reports are merged into one file
+  — registered only the constructive half. The gate then reported a gap that did not
+  exist, on a project that had done everything right. Line and pass are now matched
+  separately. Found while working the first HALF-REVIEW backlog against the live
+  corpus, not by review; a test pins the collated form.
+
 ## [0.38.0] — 2026-07-26
 
 ### Added

@@ -259,8 +259,15 @@ def gate_stable_synthesis_before_draft(pages: dict, root: Path) -> list[str]:
             "or record a SOFT-GATE override with a reason."]
 
 
-_REVIEW_LINE = re.compile(r"^##\s*\[[\d-]+\]\s*review\s*\|.*?\b(constructive|adversarial)\b",
+# Two regexes on purpose: find the review LINES first, then scan each whole line
+# for pass names. A single `finditer` with the pass name inside the pattern stops
+# at the first keyword, so a collated entry — "review | constructive + adversarial",
+# which is how a two-pass run is actually logged when both reports are merged into
+# one file — would register only the constructive half and keep reporting a gap
+# that does not exist.
+_REVIEW_LINE = re.compile(r"^##\s*\[[\d-]+\]\s*review\s*\|.*$",
                           re.MULTILINE | re.IGNORECASE)
+_REVIEW_PASS = re.compile(r"\b(constructive|adversarial)\b", re.IGNORECASE)
 
 
 def gate_two_stage_review(root: Path) -> list[str]:
@@ -277,8 +284,10 @@ def gate_two_stage_review(root: Path) -> list[str]:
     log = root / "knowledge" / "_meta" / "log.md"
     seen = set()
     if log.is_file():
-        seen = {m.group(1).lower()
-                for m in _REVIEW_LINE.finditer(log.read_text(encoding="utf-8", errors="replace"))}
+        text = log.read_text(encoding="utf-8", errors="replace")
+        seen = {p.lower()
+                for line in _REVIEW_LINE.findall(text)
+                for p in _REVIEW_PASS.findall(line)}
     if {"constructive", "adversarial"} <= seen:
         return ["  Both review passes are logged."]
     # named in the order the skill runs them, not alphabetically

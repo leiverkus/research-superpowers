@@ -556,6 +556,17 @@ class DisciplineGates(unittest.TestCase):
             self.assertIn("adversarial", out)
             self.assertNotIn("constructive review pass", out)
 
+    def test_one_line_naming_both_passes_clears_the_gate(self):
+        # How a two-pass run is actually logged when the reports are collated
+        # into one file. Matching the pass name inside the line regex stops at
+        # the first keyword and reports a gap that does not exist.
+        with tempfile.TemporaryDirectory() as d:
+            self._qmd(d, "output/article/article.qmd", 8)
+            _write(d, "knowledge/_meta/log.md",
+                   "## [2026-07-01] review | constructive + adversarial | collated report\n")
+            out = "\n".join(lw.gate_two_stage_review(pathlib.Path(d)))
+            self.assertNotIn("HALF-REVIEW", out)
+
     def test_both_passes_logged_clears_the_gate(self):
         with tempfile.TemporaryDirectory() as d:
             self._qmd(d, "output/article/article.qmd", 8)
