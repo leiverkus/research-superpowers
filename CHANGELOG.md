@@ -6,6 +6,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.39.0] — 2026-08-14
+
+Minor, not patch: `merge-bibs.py` gains an entry point, and two maintainer scripts
+now **exit non-zero** on a project root they previously read as empty. Anything
+scripted around them can trip over that, so it should not arrive as a patch.
+
+### Added
+
+- **`merge-bibs.py --from-registry`** — reads the project registry itself instead of
+  taking the roots through a shell expansion. Preferred over `--roots` for "all
+  registered projects"; see the fix below for why the shell form cannot be made safe.
+
+### Changed
+
+- **A project root that does not exist is now a hard error** in `merge-bibs.py` and
+  `build-library.py plan` (exit 2, every bad path named), where both previously
+  globbed it as empty and carried on.
+
 ### Fixed
 
 - **The merge-drift command dropped every project whose path contains a space.**
