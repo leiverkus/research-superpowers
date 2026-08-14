@@ -13,8 +13,11 @@ Stdlib unittest. Run: python -m unittest discover -s tests
 import contextlib
 import importlib.util
 import io
+import os
 import pathlib
 import re
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -174,6 +177,114 @@ class MasterOnlyFold(unittest.TestCase):
             f = _fields(out.read_text(encoding="utf-8"), "direct-2099-z")
             self.assertIn("alpha", f["keywords"])
             self.assertIn("beta", f["keywords"])
+
+
+def _cli(*argv, config_home=None):
+    """Run the script as the user runs it — argv straight through, no shell."""
+    env = dict(os.environ)
+    if config_home:
+        env["XDG_CONFIG_HOME"] = str(config_home)
+    p = subprocess.run([sys.executable, str(SCRIPT), *argv],
+                       capture_output=True, text=True, env=env)
+    return p.returncode, p.stdout, p.stderr
+
+
+class RootsAreValidated(unittest.TestCase):
+    """`(root / "output").glob(...)` on a root that does not exist returns EMPTY
+    WITHOUT raising — which is why a shell-mangled path was invisible: the merge
+    reported "0 FACTUAL conflicts" over a set that silently lacked a project. The
+    merge is the release gate for the shared master, so a root that cannot be read
+    must stop it, not shrink it."""
+
+    def test_a_nonexistent_root_stops_the_run_and_names_the_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{x-2020-y,\n  title = {T}\n}\n")
+            code, _out, err = _cli("--roots", str(a), str(root / "typo"),
+                                   "--out", str(root / "m.bib"), "--report-only")
+            self.assertNotEqual(code, 0)
+            self.assertIn("typo", err)
+            self.assertFalse((root / "m.bib").exists())
+
+    def test_a_root_without_a_bib_warns_but_does_not_stop(self):
+        # Legitimate for a freshly scaffolded project — must not block the merge.
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{x-2020-y,\n  title = {T}\n}\n")
+            empty = root / "fresh"
+            (empty / "output").mkdir(parents=True)
+            code, out, _err = _cli("--roots", str(a), str(empty),
+                                   "--out", str(root / "m.bib"), "--report-only")
+            self.assertEqual(code, 0)
+            self.assertIn("1 without a .bib", out)
+            self.assertIn("fresh", out)
+
+    def test_the_header_reports_how_many_roots_were_read(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            a = _project(root, "a", "@article{x-2020-y,\n  title = {T}\n}\n")
+            b = _project(root, "b", "@article{z-2021-q,\n  title = {Q}\n}\n")
+            _code, out, _err = _cli("--roots", str(a), str(b),
+                                    "--out", str(root / "m.bib"), "--report-only")
+            self.assertIn("2 project root(s) read", out)
+
+
+class FromRegistry(unittest.TestCase):
+    """--from-registry exists so the registry never passes through the shell.
+    `--roots $(grep …)` word-splits INSIDE a path (iCloud: "Mobile Documents"),
+    `--roots $ROOTS` does not split at all in zsh — both drop projects silently."""
+
+    def _registry(self, cfg, *paths):
+        d = cfg / "research-superpowers"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "projects").write_text(
+            "# registered projects\n\n" + "".join(f"{p}\n" for p in paths), encoding="utf-8")
+
+    def test_a_registered_path_with_spaces_is_read_as_ONE_root(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            cfg = root / "config"
+            a = _project(root, "Mobile Documents project a",
+                         "@article{x-2020-y,\n  title = {T}\n}\n")
+            self._registry(cfg, a)
+            code, out, err = _cli("--from-registry", "--out", str(root / "m.bib"),
+                                  "--report-only", config_home=cfg)
+            self.assertEqual(code, 0, err)
+            self.assertIn("1 distinct bibkeys from 1 project root(s) read", out)
+
+    def test_comments_and_blank_lines_are_not_roots(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            cfg = root / "config"
+            a = _project(root, "a", "@article{x-2020-y,\n  title = {T}\n}\n")
+            b = _project(root, "b", "@article{z-2021-q,\n  title = {Q}\n}\n")
+            self._registry(cfg, a, b)
+            _code, out, _err = _cli("--from-registry", "--out", str(root / "m.bib"),
+                                    "--report-only", config_home=cfg)
+            self.assertIn("2 project root(s) read", out)
+
+    def test_a_stale_registry_line_stops_the_run(self):
+        # The registry is edited by hand; a typo there must not shrink the merge
+        # any more quietly than a mangled command line does.
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            cfg = root / "config"
+            a = _project(root, "a", "@article{x-2020-y,\n  title = {T}\n}\n")
+            self._registry(cfg, a, root / "retired-last-year")
+            code, _out, err = _cli("--from-registry", "--out", str(root / "m.bib"),
+                                   "--report-only", config_home=cfg)
+            self.assertNotEqual(code, 0)
+            self.assertIn("retired-last-year", err)
+
+    def test_roots_and_from_registry_are_mutually_exclusive(self):
+        code, _out, err = _cli("--from-registry", "--roots", "/tmp", "--out", "/tmp/m.bib")
+        self.assertNotEqual(code, 0)
+        self.assertIn("not allowed with", err)
+
+    def test_one_of_the_two_is_required(self):
+        code, _out, err = _cli("--out", "/tmp/m.bib")
+        self.assertNotEqual(code, 0)
+        self.assertIn("required", err)
 
 
 if __name__ == "__main__":

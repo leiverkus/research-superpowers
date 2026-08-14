@@ -20,6 +20,8 @@ import io
 import json
 import os
 import pathlib
+import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -310,12 +312,47 @@ class SuggestedCommandsAreRunnable(unittest.TestCase):
         for script in ("merge-bibs.py", "migrate-citekeys.py"):
             self.assertFalse((tpl / script).exists(), f"{script} is in the template now")
 
-    def test_the_registry_is_passed_by_command_substitution_not_a_variable(self):
-        # `--roots $VAR` does not word-split in zsh (the user's shell) and
-        # arrives as ONE path; $(...) splits in both bash and zsh.
-        exp = dc.registry_expansion()
-        self.assertTrue(exp.startswith("$("), exp)
-        self.assertIn(str(dc.registry_path()), exp)
+    def test_the_registry_is_never_expanded_by_the_shell(self):
+        # Both shell expansions lose projects SILENTLY, in opposite directions:
+        # `--roots $ROOTS` does not word-split in zsh and arrives as one path,
+        # `--roots $(grep …)` splits in bash AND zsh — including inside a path
+        # with spaces. The script reads the registry itself instead.
+        self.assertEqual(dc.registry_arg(), "--from-registry")
+        with _Sandbox() as s:
+            _code, out = s.run_main("--force", "--human")
+            self.assertNotIn("$(", out)
+            self.assertNotIn("--roots", out)
+
+    def test_the_suggested_merge_command_RUNS_over_a_project_path_with_spaces(self):
+        # The regression this replaces: an iCloud project ("Mobile Documents")
+        # fell out of the merge, and the only visible trace was a project count
+        # that was too HIGH — so it looked plausible. Run the command the report
+        # prints, in every shell available, and count the roots that arrive.
+        with _Sandbox() as s:
+            s.run_main()                                  # baseline
+            spaced = s.project.parent / "Mobile Documents" / "reisefuehrer altes israel"
+            (spaced / "output" / "bibtex").mkdir(parents=True)
+            (spaced / "output" / "bibtex" / "references.bib").write_text(
+                "@article{spaced-2026-key,\n  title = {Only In The Spaced Project}\n}\n",
+                encoding="utf-8")
+            reg = dc.registry_path()
+            reg.write_text(reg.read_text(encoding="utf-8") + f"{spaced}\n", encoding="utf-8")
+
+            _code, out = s.run_main("--force", "--human")
+            cmd = next((ln.split("→ review first: ", 1)[1] for ln in out.splitlines()
+                        if "→ review first:" in ln), None)
+            self.assertIsNotNone(cmd, out)
+
+            shells = [sh for sh in ("bash", "zsh") if shutil.which(sh)]
+            self.assertTrue(shells, "no shell to verify the suggested command in")
+            for sh in shells:
+                with self.subTest(shell=sh):
+                    p = subprocess.run([sh, "-c", cmd], capture_output=True, text=True)
+                    self.assertEqual(p.returncode, 0, p.stderr)
+                    self.assertIn("2 project root(s) read", p.stdout)
+                    # the spaced project's key really was absorbed, not just counted
+                    self.assertIn("2 distinct bibkeys", p.stdout)
+                    self.assertNotIn("do not exist", p.stderr)
 
     def test_a_merge_drift_finding_carries_the_runnable_command(self):
         with _Sandbox() as s:

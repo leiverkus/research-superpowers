@@ -54,6 +54,7 @@ the wiki-lint scope only exists there.
 | PDFs > 40 MB | publisher bloat syncing to everyone, forever | `optimize-pdf.py scan .` → `optimize` after review |
 | merge drift | ingests wrote bibkeys/keywords into project bibs that the master lacks — new keywords are invisible to every OTHER project's `bib-search` until merged | `merge-bibs.py --report-only` first, review FACTUAL conflicts, then merge |
 | bibkey COLLISION / SPLIT | one key names two works (a false cross-project join) or one work has two keys (a silently missed join) | `migrate-citekeys.py`, guided by the audit output |
+| index updated (info) | the one permitted mutation — derived cache, incremental | nothing to do |
 
 **Two of these tools live in the plugin, not in the project.** `merge-bibs.py` and
 `migrate-citekeys.py` are maintainer tools operating *across* projects, so they are
@@ -63,12 +64,15 @@ fails with "No such file or directory". Run them from the plugin:
 already carry the absolute path. Everything else in the table (`bib-search.py`,
 `optimize-pdf.py`, `lint-wiki.py`) is template-mirrored and runs project-relative.
 
-**Passing the registry as `--roots`:** use command substitution, not a variable —
-`--roots $(grep -v "^#" ~/.config/research-superpowers/projects)`. Command
-substitution word-splits in bash *and* zsh; an unquoted variable (`--roots $ROOTS`)
-does **not** split in zsh and arrives as one long path, which the tools reject with
-"Need at least two project roots".
-| index updated (info) | the one permitted mutation — derived cache, incremental | nothing to do |
+**Never expand the registry in the shell.** Pass `--from-registry` and let
+`merge-bibs.py` read `~/.config/research-superpowers/projects` itself. Both shell
+forms lose projects *silently*, in opposite directions: `--roots $ROOTS` does not
+word-split in zsh and arrives as one nonexistent path, while
+`--roots $(grep -v "^#" …)` splits in bash *and* zsh — including inside a path, so
+a project under `…/Mobile Documents/…` arrives as several nonexistent fragments.
+A dropped project makes the report say "0 FACTUAL conflicts" about a set that never
+contained it, and inflates the master-only count. `--roots <p1> <p2> …` stays for
+explicitly named projects; quote every path.
 
 ## Registry
 

@@ -6,6 +6,35 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **The merge-drift command dropped every project whose path contains a space.**
+  The drift report suggested `merge-bibs.py --roots $(grep -v "^#" <registry>) …`, and
+  the unquoted command substitution word-splits *inside* a path: the author's registry
+  holds an iCloud project under `…/Mobile Documents/…`, which arrived as five
+  nonexistent fragments. `glob()` on a nonexistent root returns empty without raising,
+  so the project vanished from the merge in silence — the run reported **22 projects
+  instead of 19**, a number too *high* to look wrong, and "0 FACTUAL conflicts" about a
+  set that did not contain the project. `--report-only` is the release gate for the
+  shared master bib; a conflict inside that project would have been waved through.
+  (No damage: the merge that followed was verified clean, 923 → 938 entries, 0 lost.)
+
+  **Both** shell forms are wrong, in opposite directions, and a fix that only avoids one
+  reintroduces the other — this replaced an earlier fix that had done exactly that.
+  `--roots $ROOTS` does *not* word-split in zsh and arrives as one nonexistent path;
+  `--roots $(grep …)` splits in bash *and* zsh, including inside a path. Both fail
+  silently. So the registry no longer passes through a shell at all: `merge-bibs.py
+  --from-registry` reads `~/.config/research-superpowers/projects` itself, and that is
+  what the report now prints. `--roots` remains for explicitly named projects.
+
+- **`merge-bibs.py` and `build-library.py` no longer treat an unreadable project root
+  as an empty one.** A root that does not exist is now a hard stop naming the path —
+  a typo in the registry shrinks the merge exactly as quietly as a mangled command line
+  did, and this is the check that catches the whole class regardless of how the roots
+  were passed. A root that exists but holds no `.bib` warns and continues (legitimate
+  for a freshly scaffolded project), and the merge header now reports `N root(s) read,
+  M without a .bib` so the count can be checked against the registry at a glance.
+
 ## [0.38.2] — 2026-07-26
 
 ### Changed
