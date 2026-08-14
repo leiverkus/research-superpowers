@@ -323,6 +323,10 @@ class SuggestedCommandsAreRunnable(unittest.TestCase):
             self.assertNotIn("$(", out)
             self.assertNotIn("--roots", out)
 
+    @unittest.skipIf(os.name == "nt",
+                     "POSIX-shell word-splitting test; the emitted command is "
+                     "`python3 <posix path>`, which git-bash on Windows cannot run "
+                     "anyway — asserting on it there tests the runner, not the fix")
     def test_the_suggested_merge_command_RUNS_over_a_project_path_with_spaces(self):
         # The regression this replaces: an iCloud project ("Mobile Documents")
         # fell out of the merge, and the only visible trace was a project count
