@@ -121,6 +121,18 @@ def choose(cands: list[Path]) -> tuple[Path, str, list[dict]]:
 
 
 def cmd_plan(roots: list[Path], map_out: Path) -> int:
+    # A root that does not exist globs to nothing WITHOUT an error, so a path the
+    # shell mangled (word-splitting inside a directory name with spaces) would
+    # just shrink the plan invisibly. Same failure the merge had; same hard stop.
+    missing = [r for r in roots if not r.is_dir()]
+    if missing:
+        print(f"  ✗ {len(missing)} of {len(roots)} project root(s) do not exist:",
+              file=sys.stderr)
+        for m in missing:
+            print(f"      {m}", file=sys.stderr)
+        print("    Quote paths that contain spaces.", file=sys.stderr)
+        return 2
+
     by_key = collect(roots)
     if not by_key:
         print("  ✗ no PDFs found under any <root>/input/bibliography/", file=sys.stderr)

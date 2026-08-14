@@ -123,14 +123,18 @@ def plugin_cmd(script: str) -> str:
     return f"python3 {PLUGIN_ROOT / 'scripts' / script}"
 
 
-def registry_expansion() -> str:
-    """A copy-pasteable expansion of the project registry.
+def registry_arg() -> str:
+    """How a suggested command asks for "all registered projects".
 
-    Command substitution word-splits in both bash and zsh (verified), unlike
-    an unquoted parameter expansion, which zsh leaves as ONE argument — the
-    trap that makes `--roots $ROOTS` silently pass a single path.
+    Never expand the registry in the shell. BOTH ways of doing it lose projects
+    silently, in opposite directions: `--roots $ROOTS` does not word-split in
+    zsh and arrives as ONE nonexistent path, while `--roots $(grep …)` splits in
+    both shells — including INSIDE a path, so an iCloud project whose name has
+    spaces arrives as five nonexistent fragments. A dropped project makes the
+    merge report "0 conflicts" over a set that never contained it. The script
+    reads the registry itself; that is what this flag is for.
     """
-    return f'$(grep -v "^#" {registry_path()})'
+    return "--from-registry"
 
 
 def scripts_dir_for(cwd: Path) -> Path:
@@ -360,7 +364,8 @@ def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str],
     if (bibs_changed or master_changed) and not (baseline and not force):
         if lib:
             try:
-                d = merge_drift(lib / "references.bib", registry)
+                master = lib / "references.bib"
+                d = merge_drift(master, registry)
                 if d["missing_keys"] or d["keys_with_new_terms"]:
                     ex = ", ".join((d["missing_keys"] + d["keys_with_new_terms"])[:3])
                     info.append(
@@ -368,8 +373,10 @@ def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str],
                         f"{len(d['keys_with_new_terms'])} keyword set(s) live in project "
                         f"bibs but not in the master (e.g. {ex})\n"
                         f"→ review first: {plugin_cmd('merge-bibs.py')} "
-                        f"--roots {registry_expansion()} "
-                        f"--out {lib / 'references.bib'} --report-only")
+                        f"{registry_arg()} "
+                        # quoted: a shared library on iCloud/Nextcloud can sit
+                        # under a path with spaces just as a project can
+                        f'--out "{master}" --report-only')
             except Exception as e:
                 info.append(f"merge-drift check failed to run: {e}")
         if len(registry) >= 2:

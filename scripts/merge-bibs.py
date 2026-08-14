@@ -33,13 +33,20 @@ same discipline the citekey migration uses. Two are known:
 
 USAGE
 -----
-    python scripts/merge-bibs.py --roots <p1> <p2> … --out ~/UOLcloud/Bibliothek/references.bib
-    python scripts/merge-bibs.py --roots … --out … --overrides overrides.json
-    python scripts/merge-bibs.py --roots … --out … --report-only
+    python scripts/merge-bibs.py --from-registry --out ~/UOLcloud/Bibliothek/references.bib
+    python scripts/merge-bibs.py --roots <p1> <p2> … --out …
+    python scripts/merge-bibs.py --from-registry --out … --overrides overrides.json
+    python scripts/merge-bibs.py --from-registry --out … --report-only
+
+``--from-registry`` reads ~/.config/research-superpowers/projects itself. Prefer it:
+handing the registry to ``--roots`` through the shell needs quoting that is correct
+in bash AND zsh, and every way of getting it wrong FAILS SILENTLY — a project drops
+out of the merge and only the project count betrays it. See read_registry().
 """
 
 import argparse
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -137,15 +144,74 @@ def richer(a: str, b: str) -> str:
     return a if len(a) >= len(b) else b
 
 
+def registry_path() -> Path:
+    base = os.environ.get("XDG_CONFIG_HOME")
+    return (Path(base) if base else Path.home() / ".config") / "research-superpowers" / "projects"
+
+
+def read_registry() -> list[Path]:
+    """Every non-comment line of the registry, one path per line.
+
+    UNFILTERED on purpose: a line that is not a directory is an error to report
+    (see resolve_roots), not an entry to quietly skip. The hook's own
+    read_registry() does skip them — it runs at every session start and must not
+    die on one stale line — which is why this is 8 lines here rather than an
+    import: same file, opposite duty.
+
+    Reading the registry HERE rather than expanding it in the shell is the point.
+    `--roots $(grep -v "^#" REG)` word-splits inside a path, so an iCloud project
+    with spaces in its name arrives as five nonexistent fragments; `--roots $REG`
+    does not split at all in zsh and arrives as one nonexistent path. Both drop
+    projects silently.
+    """
+    try:
+        lines = registry_path().read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        sys.exit(f"  ✗ cannot read the project registry {registry_path()}: {e}")
+    return [Path(ln.strip()).expanduser() for ln in lines
+            if ln.strip() and not ln.strip().startswith("#")]
+
+
+def resolve_roots(roots: list[Path], source: str) -> list[Path]:
+    """Every root must exist. A missing one means a typo in the registry or a
+    path mangled by the shell — both silently shrink the merge, and the merge is
+    the release gate for the master bib: reporting "0 conflicts" over a set that
+    is missing a project is worse than not reporting at all."""
+    if not roots:
+        sys.exit(f"  ✗ no project roots {source}")
+    missing = [r for r in roots if not r.is_dir()]
+    if missing:
+        print(f"  ✗ {len(missing)} of {len(roots)} project root(s) {source} "
+              f"do not exist:", file=sys.stderr)
+        for m in missing:
+            print(f"      {m}", file=sys.stderr)
+        print("    Fix the path, or — if this came from the shell — pass "
+              "--from-registry instead of expanding the registry yourself.",
+              file=sys.stderr)
+        return []
+    return roots
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1],
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--roots", nargs="+", type=Path, required=True)
+    src = ap.add_mutually_exclusive_group(required=True)
+    src.add_argument("--roots", nargs="+", type=Path)
+    src.add_argument("--from-registry", action="store_true",
+                     help="read the project roots from ~/.config/research-superpowers/projects "
+                          "(preferred — no shell quoting to get wrong)")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--overrides", type=Path, default=None,
                     help='JSON: {"<bibkey>": {"<field>": "<verified value>"}} — verified, not guessed')
     ap.add_argument("--report-only", action="store_true")
     args = ap.parse_args()
+
+    if args.from_registry:
+        roots = resolve_roots(read_registry(), f"in {registry_path()}")
+    else:
+        roots = resolve_roots(args.roots, "given to --roots")
+    if not roots:
+        return 2
 
     overrides = json.loads(args.overrides.read_text(encoding="utf-8")) if args.overrides else {}
 
@@ -180,13 +246,19 @@ def main() -> int:
             else:
                 seen[key][f][n] = (v, [proj])
 
-    for root in args.roots:
+    bibless = []
+    for root in roots:
         proj = root.name if root.name != "paper" else root.parent.name
+        found = 0
         for bib in sorted((root / "output").glob("**/*.bib")):
             if any(d in bib.parts for d in BUILD_DIRS):
                 continue
+            found += 1
             for etype, key, body in iter_entries(bib.read_text(encoding="utf-8", errors="replace")):
                 absorb(key, etype, body, proj)
+        if not found:
+            # Legitimate for a freshly scaffolded project — a warning, not a stop.
+            bibless.append(root)
 
     # Fold in entries that live ONLY in the existing master — added there directly
     # (e.g. by the add-to-library skill), cited by no project. Without this they are
@@ -229,7 +301,13 @@ def main() -> int:
 
     hard = [c for c in conflicts if c["factual"]]
     soft = [c for c in conflicts if not c["factual"]]
-    print(f"  {len(entries)} distinct bibkeys from {len(args.roots)} projects")
+    # "root(s) read" rather than a bare project count: this number is what the
+    # user checks against the registry, and the whole failure it now guards was
+    # a count that had silently become wrong.
+    print(f"  {len(entries)} distinct bibkeys from {len(roots)} project root(s) read"
+          f" ({len(bibless)} without a .bib)")
+    for root in bibless:
+        print(f"    ⚠ no .bib under {root}/output — nothing merged from it")
     if master_only:
         print(f"  {master_only} master-only entr(ies) carried through "
               f"(added directly, cited by no project)")
