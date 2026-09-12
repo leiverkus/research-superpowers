@@ -23,6 +23,15 @@ For each field where the projects disagree:
                               like ``doi`` or ``year``, where one value is simply
                               wrong and only a human (or Crossref) can say which.
 
+WHAT NEVER TRAVELS
+------------------
+Project-local bookkeeping is dropped rather than merged (see DROP). `shortlabel`
+is the one worth naming: it holds the in-text disambiguation a manuscript chose
+for itself ("Hensel 2026e"), which is true of that book's reference list and
+false of every other project's. Keep it in the project bib, where the drafting
+tooling reads it; it must not reach the master. `note` is NOT dropped — the rest
+of what lives there (open-access status, edition notes) is shared fact.
+
 Verified corrections are applied from an override file rather than guessed — the
 same discipline the citekey migration uses. Two are known:
 
@@ -75,7 +84,14 @@ FIELD_ORDER = ["author", "editor", "title", "shorttitle", "journal", "booktitle"
 # two projects' keyword sets for the same source are both correct facts, not a
 # disagreement, and the generic "longer string wins" merge would silently drop
 # whichever project's terms lose that comparison.
-DROP = {"file", "abstract", "timestamp", "owner", "groups"}
+#
+# "shortlabel" is the in-text disambiguation a manuscript chose for itself —
+# "Hensel 2026e", the fifth of that author's 2026 titles IN THAT BOOK. It is
+# correct locally and false everywhere else: the same work is 2026b in the next
+# project, whose author wrote a different set of chapters. Left in `note`, as it
+# was until 0.40.0, it rides into the master and starts instructing every other
+# project in a numbering none of them share. It stays where it is read.
+DROP = {"file", "abstract", "timestamp", "owner", "groups", "shortlabel"}
 
 
 def iter_entries(text: str):
