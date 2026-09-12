@@ -3,6 +3,11 @@
 methodology: hermeneutic   # hermeneutic | quantitative | mixed
 discipline: ""             # e.g. "Biblical Archaeology", "Theology / Old Testament", "Digital Humanities"
 languages: [de, en]        # Preferred languages for sources and wiki prose
+plugin_version: "0.0.0"    # research-superpowers version this project was scaffolded from.
+                           # Set by scaffold-research-project; kept current by
+                           # `python scripts/sync-project.py --roots <this project> --apply`.
+                           # Do not edit by hand — it is what tells the sync check whether a
+                           # differing script is an old copy or a local patch.
 ---
 
 # Research Project Schema

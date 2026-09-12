@@ -94,8 +94,22 @@ Two sets of files are duplicated and must stay identical:
   The repo-root `scripts/` is a **different thing**: maintainer tools
   (`build-library.py`, `lint-plugin.py`, `merge-bibs.py`, `migrate-citekeys.py`,
   `release.py`, `rename-source-pdfs.py`, `suggest-authority-ids.py`,
-  `zotero-to-bib.py`). They are plugin-internal, never scaffolded into a
-  project, and **not** mirrored.
+  `sync-project.py`, `zotero-to-bib.py`). They are plugin-internal, never
+  scaffolded into a project, and **not** mirrored.
+
+> **The mirror check guards this repo, not the projects on disk.** A scaffolded
+> project holds its own copies and has no way of learning that they changed.
+> `scripts/sync-project.py` is that return channel — it compares each registered
+> project against the template, reports by default, writes on `--apply`, and
+> refuses to overwrite a locally edited file without `--force`. Its
+> `SYNCED_PATHS` and the lint.yml loop are asserted equal by
+> `tests/test_sync_project.py`, so the allowlist can no longer rot on one side
+> only.
+>
+> **Changing a mirrored file? Bump the version.** A project compares its
+> recorded `plugin_version` against the plugin's to tell an old copy from a
+> local patch; shipping a changed script under an unchanged version makes every
+> untouched project look edited.
 
 > **Adding a mirrored script? Add it to the lint.yml loop in the same commit.**
 > The loop is an allowlist, so a new script that nobody enters **fails open** —

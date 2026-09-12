@@ -107,9 +107,17 @@ Create a TodoWrite task for each. Complete in order; do not write files until al
    methodology: <user-answer>
    discipline: "<user-answer>"
    languages: <user-answer>
+   plugin_version: "<version from .claude-plugin/plugin.json>"
    ---
    ```
    Use the Edit tool with the original placeholder block as `old_string`.
+
+   **`plugin_version` is not a user answer** — read it from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json`
+   and copy the `version` string verbatim. It records which plugin version this project's copied
+   `schema/` and `scripts/` came from, and it is what lets `scripts/sync-project.py` tell an **old
+   copy** from a **local patch** later. Leaving it at `0.0.0` is not fatal — the project is then
+   simply treated as behind — but it costs the user a false "local edit" warning on every file they
+   never touched.
 
 10. **Point the project at the shared library.** Source PDFs do not live in the project — they live in one shared folder (`<library>/pdf/<bibkey>.pdf`), so the same paper exists once across every project. Write its path into `.research-library` (one line, no trailing slash). **Without this the project has no sources: `ingest-source` will hard-stop on the very first ingest.**
     - If `~/.config/research-superpowers/library` already exists, offer its contents as the default — most users have one library for everything.

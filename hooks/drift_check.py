@@ -212,6 +212,23 @@ def fp_wiki(root: Path) -> dict:
 
 # ── check runners (module-level so tests can replace them) ───────────────────
 
+def fp_project_sync(roots: list[Path]) -> dict:
+    """Fingerprint of "are the projects on the current plugin?".
+
+    Deliberately the recorded versions and not a hash of every mirrored file:
+    twelve files times twenty-one projects is 252 reads at every session start,
+    to answer a question that only changes when a release or a sync happens.
+    """
+    current = plugin_version()
+    if not current:
+        return {}
+    # Lists, not tuples: this dict is compared against one that has been through
+    # json.load, where a tuple comes back as a list. Comparing the two shapes
+    # makes "unchanged" false every session — a check that cries wolf forever.
+    return {"plugin": current,
+            "stale": [[name, ver] for name, ver in project_sync_drift(roots)]}
+
+
 def _run(cmd: list[str], cwd: Path | None, timeout: int) -> tuple[int, str]:
     r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=timeout)
@@ -286,6 +303,70 @@ def merge_drift(master_bib: Path, roots: list[Path]) -> dict:
 
 
 # ── the check itself ─────────────────────────────────────────────────────────
+
+def plugin_version() -> str:
+    """The plugin's own version, or "" when the manifest cannot be read.
+
+    Never raises: a missing manifest must not take down a session-start hook.
+    """
+    try:
+        manifest = json.loads((PLUGIN_ROOT / ".claude-plugin" / "plugin.json")
+                              .read_text(encoding="utf-8"))
+        return str(manifest.get("version", ""))
+    except Exception:
+        return ""
+
+
+def _version_tuple(v: str) -> tuple[int, ...]:
+    """Numeric comparison — '0.9.0' must not sort above '0.10.0'."""
+    out = []
+    for part in str(v).split("."):
+        m = re.match(r"\d+", part)
+        out.append(int(m.group(0)) if m else 0)
+    return tuple(out)
+
+
+def project_plugin_version(root: Path) -> str | None:
+    """`plugin_version` from the project's CLAUDE.md frontmatter, if recorded."""
+    try:
+        text = (root / "CLAUDE.md").read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if not text.startswith("---"):
+        return None
+    end = text.find("\n---", 3)
+    if end < 0:
+        return None
+    m = re.search(r'(?m)^plugin_version:\s*"?([^"\n#]+?)"?\s*(?:#.*)?$', text[:end])
+    return m.group(1).strip() if m else None
+
+
+def project_sync_drift(roots: list[Path]) -> list[tuple[str, str]]:
+    """Projects whose recorded plugin version is behind the plugin's own.
+
+    Returns (project name, recorded version) pairs. A project that records
+    nothing counts as behind — the field was introduced for exactly those, and
+    treating "unknown" as "fine" would make the check useless on every project
+    that predates it. Reports only; `sync-project.py` does the comparing that
+    costs I/O and the writing that needs a decision.
+    """
+    current = plugin_version()
+    if not current:
+        return []
+    projects = [r for r in roots if is_research_project(r)]
+    # Nine registered projects are directories called `paper`; a bare basename
+    # names none of them. Disambiguate with the parent directory where needed.
+    names = [r.name for r in projects]
+    stale: list[tuple[str, str]] = []
+    for root in projects:
+        label = root.name if names.count(root.name) == 1 else f"{root.parent.name}/{root.name}"
+        recorded = project_plugin_version(root)
+        if recorded is None:
+            stale.append((label, "not recorded"))
+        elif _version_tuple(recorded) < _version_tuple(current):
+            stale.append((label, recorded))
+    return stale
+
 
 def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str], list[str], dict]:
     """Returns (act_now, good_to_know, new_state)."""
@@ -391,6 +472,33 @@ def collect_findings(cwd: Path, state: dict, *, force: bool) -> tuple[list[str],
                                  f"(see the audit output for which key, in which projects)")
             except Exception as e:
                 info.append(f"bibkey audit failed to run: {e}")
+
+    # ── registered projects: mirrored files vs. the plugin ──────────────────
+    # The one drift category nothing else covers. `schema/` and `scripts/` are
+    # COPIED into a project at scaffold time; CI guards the copies inside the
+    # plugin repo, nobody guards the copies that actually run. A project left on
+    # an old schema rejects frontmatter the current one allows, and the error
+    # reads like a wiki problem rather than a version problem.
+    #
+    # State-triggered like everything else here: the fingerprint is the plugin's
+    # version plus each project's recorded one — cheap, and it changes exactly
+    # when a release or a sync happens. An upgrade therefore reports once, not
+    # every session, and the first run stays silent.
+    try:
+        sync_fp = fp_project_sync(registry)
+    except Exception as e:                      # pragma: no cover - defensive
+        sync_fp = {}
+        info.append(f"project-sync check failed to run: {e}")
+    new_state["sync"] = sync_fp
+    if sync_fp and (force or state.get("sync") != sync_fp) and not (baseline and not force):
+        stale = [(n, v) for n, v in sync_fp.get("stale", [])]
+        if stale:
+            names = ", ".join(f"{n} ({v})" for n, v in stale[:3])
+            more = f" and {len(stale) - 3} more" if len(stale) > 3 else ""
+            info.append(
+                f"{len(stale)} project(s) carry schema/scripts from an older "
+                f"plugin version — {names}{more}; plugin is {sync_fp.get('plugin')}\n"
+                f"→ {plugin_cmd('sync-project.py')} {registry_arg()}")
 
     return act, info, new_state
 
