@@ -85,24 +85,27 @@ Create TodoWrite tasks for each:
    **Distinguish the two failures — they need different answers:**
    - *The library is not configured on this machine* (`library.py` says so): the user must point this project at it — one line in `.research-library`. Do not report this as "PDF missing"; the file may well exist.
    - *The library is configured but has no PDF for this bibkey*: the source was never acquired. Point the user at `input/bibliography/acquisition-todo.md` and offer to run `acquire-sources`.
-3. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
-4. **Derive `bibkey` and slug — they are NOT the same thing.**
+3. **Settle the depth** — read the project's **Ingest depth** block in `CLAUDE.md` (if absent, `standard` applies) and set `depth:` in the frontmatter. It decides how much of step 3a you owe: `map` = the section map only; `standard` = map + at least 10 Kernthesen; `deep` = map + at least 20, long form. A re-ingest may **raise** it, never lower it. When the user says a source matters — "this is one of the most important articles I ever wrote" — that is a `deep` instruction; record it in the frontmatter rather than in the answer, so the next session still knows.
+4. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
+5. **Write the Erschließung — what the source contains, independent of the focus.** This is the half a focus-only ingest leaves out, and it is what a *later, different* question needs. It is written **once**, on first ingest, and only extended afterwards. Three sections (see the template below): the **section map** with page ranges and a coverage column, the **Kernthesen** (the source's own theses, ausgeführt, with page anchors — *not* only those the current focus needs), and **what the source does not address**, naming where it is treated instead.
+   ⚠ **Kernthesen are the source's theses, not the project's.** The temptation is to write ten restatements of the focus; that produces a second focus block under a different name and helps nobody later. Write what the *author* argues, including the parts this project has no use for today.
+6. **Derive `bibkey` and slug — they are NOT the same thing.**
    - **`bibkey` = the whole PDF filename stem**, `<autor>-<jahr>-<kurztitel>` (e.g. `finkelstein-2003-low-chronology`, `mazar-2011b-iron-age` when disambiguating). Never the `autor-jahr` prefix alone: `bibkey` is a **cross-project join key** (`wiki-global-graph.py` matches sources across projects on it), so it must be derivable from the work's own metadata and identical in every project that cites the work. A key without the title collides — an audit of 17 wikis found three keys each denoting *two different papers*, and 17 joins lost to keys that drifted apart.
    - **slug** = the page filename, human-readable (`finkelstein-2003.md` or `source-finkelstein-2003.md` — follow whatever the project already does). It carries no cross-project meaning; nothing joins on it.
    - `lint-wiki.py` hard-fails on an off-shape bibkey and on a `bibkey` that resolves to no `.bib` entry.
-5. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
-6. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
-7. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
-8. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
-9. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible. **Never `asserted` during ingest** — that value marks an edge the project puts there on its own authority, and an ingest reads a source rather than deciding anything.
-10. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
-11. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug. On first ingest, include a `keywords` field: 3–8 terms — the method/topic's canonical name plus known synonyms and aliases (spelling variants, other disciplines' names, stems — the same discipline `drafting-manuscript`'s "Searching for a concept, not a string" documents). This is the one field that changes on re-ingest: union any newly-recognized terms in, deduped case-insensitively (see "BibTeX Entry Convention" below). Every other field is fixed at first ingest and does not change.
+7. **Check for existing source page** — if `knowledge/sources/<slug>.md` already exists, switch to **append mode** (see "Re-ingest detection" below); otherwise proceed to create a new page.
+8. **Extract bibliographic data** — authors, year, title, journal/book, pages, DOI/URL, publisher
+9. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
+10. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
+11. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible. **Never `asserted` during ingest** — that value marks an edge the project puts there on its own authority, and an ingest reads a source rather than deciding anything.
+12. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source
+13. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug. On first ingest, include a `keywords` field: 3–8 terms — the method/topic's canonical name plus known synonyms and aliases (spelling variants, other disciplines' names, stems — the same discipline `drafting-manuscript`'s "Searching for a concept, not a string" documents). This is the one field that changes on re-ingest: union any newly-recognized terms in, deduped case-insensitively (see "BibTeX Entry Convention" below). Every other field is fixed at first ingest and does not change.
 
     Keywords are the **recall** arm of the library search; `bib-search.py`'s rank-fused alias queries (`--q`) are the **ranking** arm. Fusion can only reorder pages that some alias literally matches — a source that describes its method in prose without ever naming it is invisible to every alias query, and the keywords you write *now, having just read the source*, are its only path into a later search result. Write them for the searcher who does not yet know this paper's vocabulary.
-12. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
-13. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
-14. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
-15. **Post-round drift checks** — after the LAST ingest of a round, not per source. The round just created drift by design, and this is the cheapest moment to name it, while the context is loaded (the state-triggered session hook — see the `drift-report` skill — would only catch it at the NEXT session start):
+14. **Append line to `knowledge/_meta/log.md`** — date, slug, action (`ingest` or `re-ingest`), focus, author
+15. **Run wiki-lint** — `python scripts/lint-wiki.py`. If errors, fix.
+16. **Verify wikilinks resolve** — all `[[…]]` point to existing pages
+17. **Post-round drift checks** — after the LAST ingest of a round, not per source. The round just created drift by design, and this is the cheapest moment to name it, while the context is loaded (the state-triggered session hook — see the `drift-report` skill — would only catch it at the NEXT session start):
     - **Pending merge:** the new bibkeys/keywords live in the project bib only; every *other* project's `bib-search` is blind to them until `merge-bibs.py` folds them into the master. Report it: "N new keyword term(s) / key(s) pending master merge — run `merge-bibs.py --report-only` when convenient." **`merge-bibs.py` is a plugin script, not a project one** — `python3 "$CLAUDE_PLUGIN_ROOT/scripts/merge-bibs.py"`; the project's `scripts/` does not contain it. Do not run the merge unasked (FACTUAL conflicts need a human verdict).
     - **Bibkey audit:** if `~/.config/research-superpowers/projects` lists ≥ 2 projects, run `python scripts/wiki-global-graph.py bibkeys <roots…>` — a new bibkey is exactly when a COLLISION or SPLIT can appear, and no single project's CI can see it.
 
@@ -215,6 +218,7 @@ updated: 2026-04-15
 status: review
 author: llm
 bibkey: finkelstein-2003-low-chronology
+depth: standard   # map | standard | deep — see the project's Ingest depth block
 tags: [iron-age, chronology, levant]
 relations:
   - target: low-chronology
@@ -242,15 +246,76 @@ The `relations:` block is **optional per the schema** (`scripts/lint-wiki.py` st
 ## Bibliographic Details
 <Author(s)>. <Year>. *<Title>*. <Place>: <Publisher> / *<Journal>* <Volume>: <Pages>. <DOI or URL>.
 
+<!-- ═══ ERSCHLIESSUNG — what the source contains. Focus-independent, written
+     ONCE on first ingest, extended but not rewritten afterwards. ═══ -->
+
+## Section map
+*Heading may be in the project's language — "Aufbau der Quelle", "Gliederung".
+`lint-wiki.py` matches both.*
+
+| Covered | Section | pp. |
+|---|---|---|
+| ✓ F1 | <the source's own section heading, in its own words> | 151–153 |
+| ✓ F1 F2 | <…> | 155–165 |
+| — | <…> | 173–178 |
+
+*One row per section of the source, in the source's own structure and wording.
+The **Covered** column is the point of the table: `✓ F1` = worked up under focus
+1, `—` = present in the source, not yet worked up here. That column is what turns
+"do I need to re-read this?" into something you can see. For a source without
+headings (an essay, a lexicon article), use sense units with their page ranges.*
+
+⭐ **Two consequences that pay for the effort.** A re-ingest reads the three
+sections the new question names, not forty pages — the page ranges are right
+there. And `lint-wiki.py` counts the `—` rows as a re-ingest worklist.
+
+## Kernthesen
+*Or "Core theses". At least **10** at `depth: standard`, at least **20** at
+`depth: deep`; none at `depth: map`.*
+
+### 1. ⭐⭐ <The thesis, as a statement, not a topic> (p. 154)
+
+<3–8 sentences: what the author claims, the reason given for it, the concrete
+case that carries it, and — where the wording matters — a verbatim quote with
+its page. Written out, not a bullet: this section is the reason the page is
+worth reading instead of the PDF.>
+
+### 2. <…> (pp. 155–165)
+
+*⚠ **These are the SOURCE's theses, not the project's.** Include what the current
+question has no use for — that is precisely what makes a shifted question
+findable later. The temptation is to write ten restatements of the focus, which
+produces a second focus block under another name and helps nobody.
+⭐-marking flags what is central for this project without dropping the rest.
+Minimums are floors, not quotas: a source with thirty load-bearing theses gets
+thirty.*
+
+## Figures and tables
+*Optional. An inventory with page numbers — answers "is there a map of this?"
+without opening the PDF, and feeds `knowledge/assets/`.*
+
+## What this source does not address
+*Not only **what** is missing but **where it is treated instead**: "no settlement
+archaeology, no landscape analysis — that is [[other-source]]'s subject."
+That turns the boundary into a pointer instead of a warning. Replaces the older
+per-focus `Boundary` and the older `Other content in this source`.*
+
+<!-- ═══ FOKUS — what THIS project takes, under ONE question. Accretes: one
+     block per ingest. ═══ -->
+
 ## Focus: <focus string> — <YYYY-MM-DD>
 
-### Claims relevant to this focus
-1. <Claim 1 in one sentence> (p. XX)
-2. <Claim 2> (pp. XX–YY)
-3. <Claim 3> (p. ZZ)
-*1–5 bullets max. Each one sentence. Page numbers in parentheses.*
+**Carries Kernthesen <4, 9, 14>.**
+*The focus block POINTS at the Erschließung instead of repeating it. With the
+theses written out above, restating them here would duplicate the substance and
+double the maintenance. Everything below is what the focus needs **in addition**.*
 
-### Direct quotes (supporting the above)
+### What this focus needs beyond the Kernthesen
+1. <only what is NOT in the Kernthesen — the detail that becomes relevant only under this question> (p. XX)
+*0–5 bullets. Each one sentence. Often empty, and that is a good sign: it means
+the Erschließung did its job.*
+
+### Direct quotes (for the draft)
 > "…" (p. XX)
 *Min. 1 per focus block, max ~5. Always verbatim, always with page. Prefer
 passages that carry an **explanation or an example** (why the author holds the
@@ -265,16 +330,11 @@ reaches for when a page is otherwise too thin to develop; capturing it (or at
 least its page anchor) here saves re-reading the PDF later. Omit the section if
 the source offers no examples under this focus.*
 
-### Boundary: what this source does NOT address (within this focus)
-*1–3 sentences. Explicit gaps a reader following the focus should know about.*
+### Boundary of this focus
+*1–3 sentences. What a reader following THIS question should not expect here.
+The source-wide boundary lives above, in "What this source does not address".*
 
 <!-- On re-ingest with a different focus, append another `## Focus: …` block here. -->
-
-## Other content in this source
-*One paragraph (≤ 5 sentences). Brief note on major topics this source covers
-that were not extracted under any current focus. Lets future readers know
-what else is in there if they re-read with a different lens. This section is
-REPLACED on each re-ingest, not appended — single canonical "what else is here" view.*
 
 ## Mentioned entities
 - Persons: [[finkelstein]], [[mazar]]
@@ -291,7 +351,14 @@ supplements / builds-on / cites) is mirrored by a typed entry in the
 entry is for the graph.*
 ```
 
-**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Other content in this source`). It replaces `## Other content in this source` with an updated paragraph. It unions `## Mentioned entities`, `## Connections`, and the `relations:` frontmatter block — deduplicated by `(target, type)`, keeping the **higher-confidence** entry when the same pair recurs (`extracted` > `inferred` > `ambiguous`; an existing `asserted` edge is never demoted by an ingest, because it records a decision the ingest has no standing to overturn) and merging the `because` notes. It also unions the BibTeX entry's `keywords` field with any newly-recognized terms, deduped case-insensitively — the one exception to "the bibliographic header does not change" below. It does **not** touch any other bibliographic field or earlier focus blocks.
+**On re-ingest:** the skill appends a new `## Focus: <new focus> — <date>` block immediately after the most recent existing one (before `## Mentioned entities`). The **Erschließung is not rewritten** — it describes the source, and the source has not changed:
+
+- **Section map** — only the *Covered* column is edited: the sections the new focus worked up gain its marker (`✓ F2`). Rows and page ranges stay. If the first pass missed a section entirely, add the row.
+- **Kernthesen** — appended to, never renumbered and never cut. A re-ingest that reads new parts of the source finds new theses; the existing ones keep their numbers, because focus blocks point at them by number.
+- **`depth`** — may be **raised** (`standard` → `deep`) and never lowered. Raising it means the Kernthesen must reach the higher floor in the same pass.
+- **What this source does not address** — replaced with an updated paragraph; it is a single canonical view.
+
+It unions `## Mentioned entities`, `## Connections`, and the `relations:` frontmatter block — deduplicated by `(target, type)`, keeping the **higher-confidence** entry when the same pair recurs (`extracted` > `inferred` > `ambiguous`; an existing `asserted` edge is never demoted by an ingest, because it records a decision the ingest has no standing to overturn) and merging the `because` notes. It also unions the BibTeX entry's `keywords` field with any newly-recognized terms, deduped case-insensitively — the one exception to "the bibliographic header does not change" below. It does **not** touch any other bibliographic field or earlier focus blocks.
 
 ## Typed relations
 
@@ -446,7 +513,11 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 | Thought | Reality |
 |---------|---------|
 | "I can't get the original, I'll just ingest the book review / preprint" | No — HARD-STOP. Wrong pagination, second-hand claims, silent misattribution under the original's bibkey. Point the user to `acquisition-todo.md`; ingest a substitute only with explicit consent, recorded as `based_on:` provenance. |
-| "I'll just summarise the whole source — that's safer" | No — the wiki is purpose-built, not an archive. Focus-driven extraction is the discipline. Generic summaries fill the wiki with noise that obscures what the project actually needs. |
+| "I'll just summarise the whole source — that's safer" | No. A summary is undifferentiated prose that retells the source at half length; it obscures what the project needs and answers no question. **Kernthesen are not that**: they are enumerated, page-anchored, weighted claims, and they stop. Writing twenty theses with their reasons is the opposite of retelling forty pages — it is the work of deciding what the twenty are. |
+| "The Kernthesen can just restate what the focus needs" | No — then the page has two focus blocks under different names and still cannot answer a question it was not written for. Kernthesen are the SOURCE's theses, including the ones this project has no use for today. |
+| "Ten theses is a lot; I'll write five good ones" | The floor is ten at `depth: standard`. If the source genuinely has fewer load-bearing claims, it is a `map` source or the reading was too quick — say which. |
+| "The section map is obvious, I'll skip it" | It is the cheapest section to write and the only one that answers "do I need to re-read this?". Skipping it is what made 131 of 136 pages unable to answer that. |
+| "The user said this article is important — I'll write more this time" | Write more AND set `depth: deep`. An instruction that lives only in this conversation is gone next session; the frontmatter field survives. |
 | "The abstract gives me the claims relevant to my focus" | No — claims relevant to a focus often live in a specific section, not the abstract. Full text under the focus lens. |
 | "The default focus from project-description.md is good enough" | Sometimes yes, often no — the project's research question is usually too broad to be a useful per-source focus. Refine for this specific source. |
 | "I'll fill in entities later" | Then they stay unlinked. Create them now (only the focus-relevant ones; rest stays in the PDF). |
