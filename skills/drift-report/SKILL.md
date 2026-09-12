@@ -54,10 +54,11 @@ the wiki-lint scope only exists there.
 | PDFs > 40 MB | publisher bloat syncing to everyone, forever | `optimize-pdf.py scan .` → `optimize` after review |
 | merge drift | ingests wrote bibkeys/keywords into project bibs that the master lacks — new keywords are invisible to every OTHER project's `bib-search` until merged | `merge-bibs.py --report-only` first, review FACTUAL conflicts, then merge |
 | bibkey COLLISION / SPLIT | one key names two works (a false cross-project join) or one work has two keys (a silently missed join) | `migrate-citekeys.py`, guided by the audit output |
+| project sync drift | a project's copied `schema/` + `scripts/` come from an older plugin version — its linter validates against rules the plugin has since changed, and the error reads like a wiki problem | `sync-project.py --from-registry` to see it, `--apply` to fix |
 | index updated (info) | the one permitted mutation — derived cache, incremental | nothing to do |
 
-**Two of these tools live in the plugin, not in the project.** `merge-bibs.py` and
-`migrate-citekeys.py` are maintainer tools operating *across* projects, so they are
+**Three of these tools live in the plugin, not in the project.** `merge-bibs.py`,
+`migrate-citekeys.py` and `sync-project.py` are maintainer tools operating *across* projects, so they are
 not mirrored into the template — `python scripts/merge-bibs.py` from a project root
 fails with "No such file or directory". Run them from the plugin:
 `python3 "$CLAUDE_PLUGIN_ROOT/scripts/merge-bibs.py" …`. The report's `→` lines
