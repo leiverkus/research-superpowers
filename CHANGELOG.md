@@ -6,6 +6,65 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+Minor, not patch: the frontmatter schema gains two additive fields, the linter's
+gate and inference-rate output gain lines, and `shortlabel` needs a one-time
+migration in any project that kept its in-text labels in `note`.
+
+### Added
+
+- **`confidence: asserted`** — a fourth relation confidence, for an edge the project
+  puts there on its **own authority**: a position taken while writing, a controversy
+  the work decides. The three existing values all say something false about such an
+  edge — `extracted` claims a source, `inferred` blames the model, `ambiguous` calls
+  the most deliberate edge in the wiki unclear. Reported **beside** the inference-rate,
+  never inside it: that metric answers *how much did the model add?*, and a deliberate
+  editorial act is its opposite. An `asserted` edge with no `because` is flagged —
+  otherwise the value is simply the cheapest way to avoid sourcing anything.
+  `ingest-source` never sets it; an ingest reads a source rather than deciding anything.
+
+- **`parent_bibkey`** — names the volume a chapter belongs to, for a chapter with no
+  PDF of its own because the volume has one. The NO-ORIGINAL gate assumed one work,
+  one file: true for articles, false for edited volumes, where nine chapters of one
+  handbook produced nine findings for a PDF that was in the library all along
+  (measured on a live project: **15 of 29 findings**). Unlike `original_unavailable`
+  it claims nothing about what *can* exist — it points at a file. A missing volume
+  still fails, as **one** `MISSING-VOLUME` naming the volume rather than one finding
+  per chapter, and `MISSING-VOLUME` counts as a gate finding so `--strict-gates`
+  cannot pass a wiki unable to show its evidence.
+
+- **`scripts/sync-project.py`** — the return channel from the plugin to scaffolded
+  projects. `schema/` and eleven scripts are *copied* at scaffold time; CI guarded the
+  copies inside this repo, nothing guarded the copies that actually run. Reports by
+  default, writes on `--apply`, refuses to overwrite a locally edited file without
+  `--force`. Its synced-file list and the lint.yml mirror loop are asserted equal by
+  the tests — that loop is an allowlist, so a file missing from either side was
+  mirrored by nobody while CI stayed green.
+
+- **`plugin_version` in a project's CLAUDE.md frontmatter** — set by
+  `scaffold-research-project`, kept current by `sync-project.py`. It is what lets the
+  sync check tell an **old copy** from a **local patch**; hashing alone cannot, since
+  both are merely *different*.
+
+- **A `project sync drift` finding in `drift_check.py`**, pointing at the new script.
+  State-triggered like every other check, so an upgrade reports once rather than every
+  session, and the first run stays silent.
+
+### Changed
+
+- **`merge-bibs.py` drops `shortlabel`.** The field holds the in-text disambiguation a
+  manuscript chose for itself ("Hensel 2026e") — true of that book's reference list,
+  false of every other project's. Kept in `note`, as before, it rode into the shared
+  master and began instructing every other project in a numbering none of them share;
+  one live master had picked up fourteen such lines. `note` itself keeps merging: the
+  rest of what lives there is shared fact.
+
+  **Migration** for a project that used `note` for this: move the label into
+  `shortlabel`, leave the rest of the note alone, then re-run `merge-bibs.py`. The
+  master cleans itself — keys present in a project are rebuilt from the project's
+  values rather than absorbed from the master. Check with
+  `grep -c "Im Text als" <library>/references.bib`.
+
+
 ## [0.39.0] — 2026-08-14
 
 Minor, not patch: `merge-bibs.py` gains an entry point, and two maintainer scripts
