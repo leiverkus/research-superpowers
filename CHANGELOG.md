@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.40.0] — 2026-09-12
+
 Minor, not patch: the frontmatter schema gains two additive fields, the linter's
 gate and inference-rate output gain lines, and `shortlabel` needs a one-time
 migration in any project that kept its in-text labels in `note`.
