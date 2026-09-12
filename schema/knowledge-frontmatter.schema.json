@@ -178,9 +178,10 @@
             "enum": [
               "extracted",
               "inferred",
-              "ambiguous"
+              "ambiguous",
+              "asserted"
             ],
-            "description": "extracted = explicitly supported by the source (e.g. verbatim quote with page); inferred = added by the model; ambiguous = relation unclear. The inferred+ambiguous share is reported as the inference-rate by lint-wiki.py."
+            "description": "extracted = explicitly supported by the source (e.g. verbatim quote with page); inferred = added by the model; ambiguous = relation unclear; asserted = a decision the project made, not a finding it read \u2014 the edge is grounded in an editorial act (a position taken while writing, a controversy the work decides) and in no source, so neither extracted nor inferred is true of it. Requires a `because` naming the decision. The inferred+ambiguous share is reported as the inference-rate by lint-wiki.py; asserted is counted and reported separately, because it measures something else \u2014 how much the project asserts on its own authority \u2014 and folding the two together would make both unreadable."
           },
           "because": {
             "type": "string",

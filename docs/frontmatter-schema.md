@@ -30,13 +30,14 @@ Wikilinks (`[[slug]]`) in the body already express connections, and that stays t
 relations:
   - target: finkelstein-2003   # page slug (filename without extension)
     type: cites                # free vocabulary: cites, contradicts, builds-on, mentions, supports
-    confidence: inferred       # extracted | inferred | ambiguous
+    confidence: inferred       # extracted | inferred | ambiguous | asserted
     because: "Builds on Finkelstein's Low-Chronology dates (p. 290)."  # optional rationale
 ```
 
 - **target** must resolve to an existing page (the linter checks this, like a wikilink).
-- **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal.
-- **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`. `lint-wiki.py` reports the share of relations that carry one.
+- **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear), `asserted` (a decision the project made, not a finding it read — the edge records a position taken while writing and is grounded in no source). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal; `asserted` is counted on its own line beside it, never inside it, because it answers a different question — not *how much did the model guess?* but *how much does this project assert on its own authority?*
+  > **`asserted` is for synthesis pages that record decisions**, the kind a writing phase produces: which side of a controversy the work takes, which reading it rejects and why. It is not a licence to skip sourcing — an `asserted` edge without a `because` is flagged by the linter, because an assertion that gives no reason cannot be reviewed.
+- **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`, and **required in practice for `asserted`**, where it is the only thing standing between a decision and an assertion. `lint-wiki.py` reports the share of relations that carry one.
 
 The field is additive: pages without `relations` remain valid, and plain wikilinks continue to work unchanged (the graph export treats them as `extracted` edges).
 
