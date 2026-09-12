@@ -71,7 +71,13 @@ OVERRIDES_LOG = Path("knowledge/_meta/gate-overrides.log")
 OVERRIDE_RECENT_DAYS = 30
 OVERRIDE_WARN_COUNT = 5
 
-RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous")
+# `asserted` is the project speaking in its own voice: an edge that records a
+# decision rather than a reading. It is deliberately NOT part of the
+# inference-rate — that metric asks "how much did the model add?", and a
+# deliberate editorial act is the opposite of model noise. Counted on its own
+# line instead, so it cannot quietly become the dumping ground for whatever
+# nobody wants to source.
+RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous", "asserted")
 RELATION_KEYS = {"target", "type", "confidence", "because"}
 INFERENCE_WARN_THRESHOLD = 0.50
 
@@ -475,9 +481,15 @@ def lint_relations(pages: dict[str, Path]) -> list[str]:
 def report_inference_rate(pages: dict[str, Path]) -> list[str]:
     """Report the inference-rate: share of structured relations tagged
     `inferred` or `ambiguous`. An audit signal mirroring the override-rate —
-    a high share means many edges are model-asserted rather than grounded."""
+    a high share means many edges are model-asserted rather than grounded.
+
+    `asserted` is reported beside it, never inside it: that value marks an edge
+    the project put there on its own authority, which is a different question
+    from how much the model guessed. Summing the two would hide both."""
     total = 0
     uncertain = 0
+    asserted = 0
+    asserted_unexplained = 0
     grounded = 0
     for path in pages.values():
         fm = parse_frontmatter(path)
@@ -487,19 +499,35 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
             if not isinstance(rel, dict):
                 continue
             total += 1
-            if str(rel.get("confidence", "")).lower() in ("inferred", "ambiguous"):
+            conf = str(rel.get("confidence", "")).lower()
+            has_because = bool(str(rel.get("because", "")).strip())
+            if conf in ("inferred", "ambiguous"):
                 uncertain += 1
-            if str(rel.get("because", "")).strip():
+            elif conf == "asserted":
+                asserted += 1
+                if not has_because:
+                    asserted_unexplained += 1
+            if has_because:
                 grounded += 1
 
     if total == 0:
         return ["  No structured relations yet — inference-rate n/a."]
 
     rate = uncertain / total
+    line = f"  Relations: {total} · inferred/ambiguous: {uncertain} ({rate * 100:.0f}%)"
+    if asserted:
+        line += f" · asserted: {asserted} ({100 * asserted // total}%)"
     report = [
-        f"  Relations: {total} · inferred/ambiguous: {uncertain} ({rate * 100:.0f}%)",
+        line,
         f"  With a `because` rationale: {grounded} ({100 * grounded // total}%)",
     ]
+    if asserted_unexplained:
+        # An asserted edge without a rationale is the failure mode the value
+        # invites: it claims authority and offers no reason for it.
+        report.append(
+            f"  WARNING: {asserted_unexplained} asserted relation(s) carry no `because` — "
+            f"an assertion without its reason is not reviewable."
+        )
     if rate > INFERENCE_WARN_THRESHOLD:
         report.append(
             f"  WARNING: inference-rate {rate * 100:.0f}% > "

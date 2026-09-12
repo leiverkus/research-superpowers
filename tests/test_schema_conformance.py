@@ -93,6 +93,11 @@ CASES = [
      _variant(relations=[{"target": "x", "type": "cites", "confidence": "extracted", "because": 42}]), False),
     ("relations-bad-confidence-enum",
      _variant(relations=[{"target": "x", "type": "cites", "confidence": "maybe"}]), False),
+    # `asserted` — an edge the project puts there on its own authority, added in
+    # 0.40.0 for synthesis pages that record decisions rather than readings.
+    ("relations-confidence-asserted",
+     _variant(relations=[{"target": "x", "type": "extends", "confidence": "asserted",
+                          "because": "the band takes position B on the harbour question"}]), True),
     ("relations-missing-required",
      _variant(relations=[{"target": "x", "type": "cites"}]), False),
     ("relations-unknown-key",
