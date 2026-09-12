@@ -6,6 +6,57 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+Minor, not patch: the frontmatter schema gains `depth`, `ingest-source` writes a
+visibly different source page, and every page type gains a template where three of
+them had none.
+
+### Added
+
+- **The Erschließung half of a source page** — `Section map`, `Kernthesen`, `What this
+  source does not address`. A source page recorded what the project takes under **one**
+  question; nothing recorded what the source contains **at all**, so a question that
+  shifted later could only be answered by opening the PDF again. Measured on a live
+  project: 5 of 136 pages carried a section map, 4 carried the source's own theses, and
+  the median page ran to 1.009 words against an original of 19.424.
+
+  The **section map** carries the source's own structure with page ranges and a
+  **coverage column** — `✓ F1` worked up under focus 1, `—` present but not yet worked
+  up. That column turns *"do I need to re-read this?"* into something visible, and it
+  lets a re-ingest read three named sections instead of forty pages.
+
+  **Kernthesen** are the **source's** theses, written out with page anchors — at least
+  10 at `depth: standard`, 20 at `deep`. Explicitly including what the current question
+  has no use for, because that is what makes a later question findable.
+
+- **`depth` (`map` | `standard` | `deep`)** — what makes thoroughness affordable: twenty
+  theses for a four-page note is as wrong as one paragraph for an excavation volume.
+  `map` is not a licence for thinness but an honest statement — consulted, not read — and
+  quoting from such a source means raising it first. A re-ingest may raise the depth,
+  never lower it.
+
+- **An `Ingest depth` block in the project template**, the mirror of the
+  `Manuscript style (drafting depth)` block that `drafting-manuscript` already reads.
+  It exists because *"for my own articles, write long excerpts"* is an instruction given
+  once in a conversation and gone by the next session.
+
+- **Templates for entity, concept and synthesis pages**, which had none — one line in the
+  ingest checklist and a three-word structure sketch. All page types now carry the same
+  two halves: what the thing **is**, which outlives this project's question, and what
+  **this project** takes from it, which does not.
+
+- **A `=== Source depth ===` report in `lint-wiki.py`** — the depth spread plus `NO-MAP`,
+  `THIN` and `UNCOVERED`. Headings are matched **bilingually**; the page researchers
+  actually praised says *"Aufbau des Aufsatzes"* and *"Die zwanzig Kernthesen"*, and an
+  English-only pattern reported the best page in the corpus as missing both.
+
+### Changed
+
+- **Focus blocks become pointers.** With the theses written out above, restating them in
+  the focus block would duplicate the substance and double the maintenance. A block now
+  reads *"Carries Kernthesen 4, 9, 14"* plus only what the focus needs **in addition** —
+  so the existing caps cap the addition rather than the substance.
+
+
 ## [0.40.0] — 2026-09-12
 
 Minor, not patch: the frontmatter schema gains two additive fields, the linter's
