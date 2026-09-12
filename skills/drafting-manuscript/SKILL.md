@@ -310,6 +310,15 @@ The counter-position line is not decoration. A section that cannot name what arg
 - Every citation key MUST exist in `output/bibtex/references.bib`
 - Direct quotes: inline with `>` or an em-dash, always with page number
 - No uncited claims in argumentative sections (exception: common knowledge, clearly marked)
+- **Same author, same year, several works** — citeproc disambiguates the rendered citation on its own (*2026a*, *2026b*), so the manuscript needs nothing. What a human and the next agent need is a way to look up which is which, and that goes in a `shortlabel` field on the BibTeX entry, never in `note`:
+  ```bibtex
+  @incollection{hensel-2026-obadja,
+    ...
+    shortlabel = {Hensel 2026e},
+    note       = {Open Access (CC BY-NC-ND 4.0)}
+  }
+  ```
+  The label is a fact about **this** manuscript's reference list, not about the work — the same title is 2026b in a project whose author wrote a different set of chapters. `merge-bibs.py` drops `shortlabel` on merge for exactly that reason, while `note` keeps merging because the rest of what lives there is shared fact. Putting the label in `note` sends one book's numbering into every other project.
 - **Web citations** (online databases, digital editions, research blogs without a BibTeX entry): use the `(domain — title)` form as an inline link, e.g. `[(idai.gazetteer.de — Tel Megiddo)](https://gazetteer.dainst.org/place/2048473)`. Use sparingly; group separately as "Web resources" in the references list.
 
 ## Writing with depth (not bullet-reflow)
