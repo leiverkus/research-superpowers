@@ -74,6 +74,12 @@ Create TodoWrite tasks for each:
      form: physical        # or: html-only
      note: "Suhrkamp print edition; page numbers follow it. Cited chapters scanned."
    ```
+   **When the original is the volume, not the chapter** — an edited volume acquired once, whose chapters you ingest separately — name the volume instead. The chapter keeps its own bibkey (own authors, own title, own pages; collapsing nine chapters into one entry destroys the citation), and the gate is satisfied by the volume's PDF:
+   ```yaml
+   bibkey: aubet-2014-phoenicia-iron-age-ii
+   parent_bibkey: steiner-killebrew-2014-oxford-handbook-levant
+   ```
+   This claims nothing about what can exist — it points at a file. If the volume is not in the library either, the page still fails the gate, but as **one** `MISSING-VOLUME` naming the volume rather than one finding per chapter: nine chapters of one handbook are one download.
    This is **not** a way to close the finding for a PDF you simply have not fetched — that belongs on `input/bibliography/acquisition-todo.md`, and neither is it `based_on` (which records that you read a *substitute*). The note must say how the cited passages stay checkable; the linter exempts the page but keeps counting the declaration, because a wiki full of them is a fact about its evidence base.
    Do NOT substitute a preprint, prior version, book review, or different edition, and do NOT auto-download a URL. Only ingest a substitute with **explicit user consent**, recorded as provenance (see "Provenance of substitutes" below).
    **Distinguish the two failures — they need different answers:**

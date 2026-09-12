@@ -210,6 +210,8 @@ def gate_originals_present(pages: dict, lib_pdfs: Path | None) -> list[str]:
     stems = {p.stem for p in lib_pdfs.glob("*.pdf")}
     missing = []
     declared: dict[str, int] = {}
+    in_volume: dict[str, int] = {}
+    orphan_chapters: dict[str, list[Path]] = {}
     for slug, path in sorted(pages.items()):
         fm = parse_frontmatter(path) or {}
         if fm.get("type") != "source":
@@ -227,20 +229,45 @@ def gate_originals_present(pages: dict, lib_pdfs: Path | None) -> list[str]:
             form = str(exempt.get("form", "?"))
             declared[form] = declared.get(form, 0) + 1
             continue
+        # A chapter in a volume that IS on disk. The gate's premise — one work,
+        # one PDF — is right for articles and wrong for edited volumes, where
+        # nine chapters of one handbook produce nine findings for a file that
+        # has been sitting in the library all along. Counted, never silent; and
+        # a chapter whose volume is missing too still fails, but points at the
+        # volume, because that is the one thing a human has to go and fetch.
+        parent = fm.get("parent_bibkey")
+        if parent:
+            if parent in stems:
+                in_volume[parent] = in_volume.get(parent, 0) + 1
+            else:
+                orphan_chapters.setdefault(parent, []).append(path)
+            continue
         missing.append(f"  NO-ORIGINAL: {path} — bibkey '{key}' has no "
                        f"<library>/pdf/{key}.pdf")
     lines = []
     if missing:
         lines += missing
         lines.append("    → acquire the original, or correct the bibkey if it is wrong. "
+                     "If this is a chapter in a volume you have, name the volume: "
+                     "`parent_bibkey: <volume bibkey>`. "
                      "If no PDF of this work can exist, declare it: "
                      "`original_unavailable: {form: physical|html-only, note: …}`.")
-    else:
+    elif not orphan_chapters:
         lines.append("  Every source page's bibkey has its original in the library.")
+    for parent, paths in sorted(orphan_chapters.items()):
+        lines.append(f"  MISSING-VOLUME: {len(paths)} chapter page(s) name "
+                     f"'{parent}', which has no <library>/pdf/{parent}.pdf")
+        for p in paths:
+            lines.append(f"      {p}")
+        lines.append(f"    → acquire the volume once: {parent}")
     if declared:
         detail = ", ".join(f"{f}: {n}" for f, n in sorted(declared.items()))
         lines.append(f"  {sum(declared.values())} page(s) declare no original can exist "
                      f"({detail}) — known exceptions, not findings.")
+    if in_volume:
+        detail = ", ".join(f"{k}: {n}" for k, n in sorted(in_volume.items()))
+        lines.append(f"  {sum(in_volume.values())} page(s) are chapters in an acquired "
+                     f"volume ({detail}) — known exceptions, not findings.")
     return lines
 
 
@@ -1230,8 +1257,12 @@ def main():
                   + gate_stable_synthesis_before_draft(pages, root)
                   + gate_two_stage_review(root))
     print("\n".join(gate_lines))
+    # MISSING-VOLUME belongs here for the same reason NO-ORIGINAL does: a chapter
+    # whose volume is not on disk has no original either. Leaving it out of the
+    # count would let --strict-gates pass a wiki that cannot show its evidence,
+    # which is precisely the failure the gate exists to prevent.
     gate_findings = [l for l in gate_lines
-                     if re.search(r"\b(NO-ORIGINAL|UNSTABLE-DRAFT|HALF-REVIEW):", l)]
+                     if re.search(r"\b(NO-ORIGINAL|MISSING-VOLUME|UNSTABLE-DRAFT|HALF-REVIEW):", l)]
     if gate_findings and not args.strict_gates:
         print(f"\n  {len(gate_findings)} gate finding(s) — reported, not blocking. "
               f"Re-run with --strict-gates to fail on them.")
