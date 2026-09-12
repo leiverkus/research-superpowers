@@ -564,6 +564,122 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
     return report
 
 
+# The two sections that make a source page navigable rather than merely extracted:
+# a map of what the source contains, and its own theses. Matched bilingually and
+# loosely — the same concession `FOREIGN_SECTIONS` already makes, because a
+# German project writes "## Aufbau des Aufsatzes" and "## Die zwanzig
+# Kernthesen", and a check that only understands English would report every
+# correctly written page as missing both. A project in a third language adds its
+# heading here; that is cheaper than forcing English headings onto prose the
+# researcher has to read.
+SOURCE_MAP_HEADING = re.compile(
+    r"^##\s+.*\b(aufbau|gliederung|struktur|inhaltsverzeichnis|"
+    r"section map|structure|contents|outline)\b", re.I)
+KERNTHESEN_HEADING = re.compile(
+    r"^##\s+.*\b(kernthesen|hauptthesen|leitthesen|"
+    r"core theses|key theses|main theses|principal claims)\b", re.I)
+# A map row whose coverage cell holds an EXPLICIT dash: present in the source,
+# not yet worked up here. The re-ingest worklist.
+#
+# Deliberately not "empty or dash". A map table's first column need not be the
+# coverage column at all — the reference page this template is derived from puts
+# the section NUMBER there, and its unnumbered front matter ("| | An
+# Orientation… |") would then read as five uncovered sections on a page that is
+# worked up as thoroughly as any in the corpus. Silence on a table that does not
+# declare coverage is the right answer; a false worklist is worse than none.
+UNCOVERED_ROW = re.compile(r"^\|\s*(?:\*\*)?\s*(?:—|–|--)\s*(?:\*\*)?\s*\|")
+
+DEPTH_MIN_THESES = {"map": 0, "standard": 10, "deep": 20}
+
+
+def report_source_depth(pages: dict[str, Path], verbose: bool = False) -> list[str]:
+    """How thoroughly the sources are worked up — reported, never gated.
+
+    A source page has two jobs, and the second one is easy to skip because
+    nothing asks for it: capture what THIS project takes from the source under a
+    question, and record what the source contains AT ALL, so a question that
+    shifts later can find its way back. Without the second, a re-read means
+    opening the PDF again and reading forty pages to learn whether the answer is
+    even in there.
+
+    None of this blocks. `UNCOVERED` in particular is a worklist, not a finding:
+    exhausting a source is never the goal, and a gate on it would only teach
+    people to write maps that claim full coverage.
+    """
+    by_depth: dict[str, int] = {}
+    no_map: list[str] = []
+    thin: list[tuple[str, int, int]] = []
+    uncovered_pages: list[tuple[str, int]] = []
+    total = 0
+
+    for slug, path in sorted(pages.items()):
+        fm = parse_frontmatter(path) or {}
+        if fm.get("type") != "source":
+            continue
+        total += 1
+        depth = str(fm.get("depth") or "standard").lower()
+        by_depth[depth] = by_depth.get(depth, 0) + 1
+        try:
+            body = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+
+        lines = body.splitlines()
+        has_map = any(SOURCE_MAP_HEADING.match(l) for l in lines)
+        if not has_map:
+            no_map.append(slug)
+
+        # Kernthesen are counted as the `###` entries under their own heading —
+        # the section is only worth what it enumerates.
+        theses, in_block = 0, False
+        for line in lines:
+            if line.startswith("## "):
+                in_block = bool(KERNTHESEN_HEADING.match(line))
+            elif in_block and line.startswith("### "):
+                theses += 1
+        want = DEPTH_MIN_THESES.get(depth, 10)
+        if want and theses < want:
+            thin.append((slug, theses, want))
+
+        if has_map:
+            n = sum(1 for l in lines if UNCOVERED_ROW.match(l) and l.count("|") >= 3)
+            if n:
+                uncovered_pages.append((slug, n))
+
+    if not total:
+        return ["  No source pages yet — depth report n/a."]
+
+    spread = " · ".join(f"{d} {n}" for d, n in sorted(by_depth.items()))
+    lines_out = [f"  {total} source page(s): {spread}"]
+
+    def _list(items, label):
+        head = ", ".join(items[:6])
+        more = " …" if len(items) > 6 else ""
+        lines_out.append(f"  {label} ({len(items)}): {head}{more}")
+
+    if no_map:
+        _list(no_map, "NO-MAP: no section map, so nothing says what else is in there")
+        lines_out.append("    → add a map section (what the source contains, with page ranges). "
+                         "It is the cheapest part to write and the one a shifted question needs.")
+    if thin:
+        worst = sorted(thin, key=lambda x: x[1])[:6]
+        detail = ", ".join(f"{s} ({h}/{w})" for s, h, w in worst)
+        lines_out.append(f"  THIN ({len(thin)}): fewer Kernthesen than the page's depth asks for — "
+                         f"{detail}{' …' if len(thin) > 6 else ''}")
+        lines_out.append("    → write them, or declare the source `depth: map` if it is one you "
+                         "consult rather than read.")
+    if uncovered_pages:
+        n_sec = sum(n for _, n in uncovered_pages)
+        lines_out.append(f"  UNCOVERED: {n_sec} section(s) across {len(uncovered_pages)} page(s) "
+                         f"are marked as not yet worked up — a re-ingest worklist, not findings.")
+        if verbose:
+            for slug, n in sorted(uncovered_pages, key=lambda x: -x[1]):
+                lines_out.append(f"      {n:3d}  {slug}")
+    if not (no_map or thin or uncovered_pages):
+        lines_out.append("  Every source page carries a map and its Kernthesen.")
+    return lines_out
+
+
 def report_review_flags(pages: dict[str, Path]) -> tuple[list[str], int]:
     """Surface single-page content-review findings (`review_flags`) raised by
     semantic-wiki-review.
@@ -1234,6 +1350,9 @@ def main():
 
     print("\n=== Inference rate ===")
     print("\n".join(report_inference_rate(pages)))
+
+    print("\n=== Source depth ===")
+    print("\n".join(report_source_depth(pages, args.verbose)))
 
     print("\n=== Review flags ===")
     review_lines, _open_flags = report_review_flags(pages)

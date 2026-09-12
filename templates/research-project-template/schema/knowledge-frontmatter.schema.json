@@ -76,6 +76,15 @@
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{4}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$",
       "description": "BibTeX citation key. Required when type = source; matches the entry in output/bibtex/references.bib. Shape: surname-year-shorttitle (e.g. finkelstein-2003-low-chronology), all lowercase ASCII. This is a cross-project JOIN KEY — wiki-global-graph.py matches sources across projects on it — so it must be a deterministic function of the work's own metadata, not a per-project choice: the same work must yield the same key everywhere. It is also the PDF filename stem in the shared library (<library>/pdf/<bibkey>.pdf), so bibkey == PDF stem is a checkable invariant. Add a disambiguation letter after the year for same-author-same-year clashes (finkelstein-2003b-...)."
     },
+    "depth": {
+      "type": "string",
+      "enum": ["map", "standard", "deep"],
+      "default": "standard",
+      "description": "Optional, type=source only. How deeply this source is worked up \u2014 the knob that makes thoroughness affordable, because twenty theses for a four-page note is as wrong as one paragraph for an excavation volume. map = bibliography plus the section map only, no Kernthesen: for reference works one CONSULTS rather than reads (handbooks, lexica, gazetteers). It is not a licence for thinness but an honest statement, and anyone quoting from the source must raise it to standard first. standard = section map plus at least ten Kernthesen plus focus blocks; the default. deep = section map plus at least twenty Kernthesen, long form, verbatim quotation throughout \u2014 for the handful of works a project actually rests on, typically its own author's. Set from the project's Ingest-depth block in CLAUDE.md or on the user's explicit instruction; a re-ingest may raise it, never lower it.",
+      "examples": [
+        "deep"
+      ]
+    },
     "parent_bibkey": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{4}[a-z]?-[a-z0-9]+(?:-[a-z0-9]+)*$",
