@@ -10,7 +10,7 @@ Every `knowledge/**/*.md` page begins with a YAML frontmatter block. The normati
 
 ## Optional fields
 
-`tags`, `sources`, `bibkey` (required on sources), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
+`tags`, `sources`, `bibkey` (required on sources), `parent_bibkey` (on a source that is a chapter in an acquired volume — see below), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
 
 ## Field semantics in short
 
@@ -38,6 +38,31 @@ relations:
 - **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear), `asserted` (a decision the project made, not a finding it read — the edge records a position taken while writing and is grounded in no source). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal; `asserted` is counted on its own line beside it, never inside it, because it answers a different question — not *how much did the model guess?* but *how much does this project assert on its own authority?*
   > **`asserted` is for synthesis pages that record decisions**, the kind a writing phase produces: which side of a controversy the work takes, which reading it rejects and why. It is not a licence to skip sourcing — an `asserted` edge without a `because` is flagged by the linter, because an assertion that gives no reason cannot be reviewed.
 - **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`, and **required in practice for `asserted`**, where it is the only thing standing between a decision and an assertion. `lint-wiki.py` reports the share of relations that carry one.
+
+## `parent_bibkey` — a chapter whose original is the volume's PDF
+
+`lint-wiki.py`'s NO-ORIGINAL gate assumes one work, one file: `<library>/pdf/<bibkey>.pdf`. That
+is right for articles and wrong for edited volumes, where nine chapters of one handbook produce
+nine findings for a file that has been in the library all along.
+
+```yaml
+bibkey: aubet-2014-phoenicia-iron-age-ii
+parent_bibkey: steiner-killebrew-2014-oxford-handbook-levant
+```
+
+The chapter keeps its own bibkey — own authors, own title, own pages — and the gate is satisfied
+by the volume's PDF. Three things this field is **not**:
+
+- not `original_unavailable`, which declares that no PDF *can* exist. Here one does; it is simply
+  filed under the volume's key.
+- not `based_on`, which records that a *substitute* was read. A chapter in its own volume is the
+  original.
+- not a "see also". It is a claim about where the bytes are, and the linter checks it.
+
+If the volume is missing too, the page still fails — as one `MISSING-VOLUME` naming the volume
+rather than one finding per chapter, because that is the single thing a human goes and fetches.
+`MISSING-VOLUME` counts as a gate finding, so `--strict-gates` cannot pass a wiki that is unable to
+show its evidence.
 
 The field is additive: pages without `relations` remain valid, and plain wikilinks continue to work unchanged (the graph export treats them as `extracted` edges).
 
