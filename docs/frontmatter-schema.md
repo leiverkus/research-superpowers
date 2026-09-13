@@ -10,7 +10,7 @@ Every `knowledge/**/*.md` page begins with a YAML frontmatter block. The normati
 
 ## Optional fields
 
-`tags`, `sources`, `bibkey` (required on sources), `parent_bibkey` (on a source that is a chapter in an acquired volume — see below), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
+`tags`, `sources`, `bibkey` (required on sources), `parent_bibkey` (on a source that is a chapter in an acquired volume — see below), `depth` (how thoroughly a source is worked up — see below), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
 
 ## Field semantics in short
 
@@ -38,6 +38,31 @@ relations:
 - **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear), `asserted` (a decision the project made, not a finding it read — the edge records a position taken while writing and is grounded in no source). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal; `asserted` is counted on its own line beside it, never inside it, because it answers a different question — not *how much did the model guess?* but *how much does this project assert on its own authority?*
   > **`asserted` is for synthesis pages that record decisions**, the kind a writing phase produces: which side of a controversy the work takes, which reading it rejects and why. It is not a licence to skip sourcing — an `asserted` edge without a `because` is flagged by the linter, because an assertion that gives no reason cannot be reviewed.
 - **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`, and **required in practice for `asserted`**, where it is the only thing standing between a decision and an assertion. `lint-wiki.py` reports the share of relations that carry one.
+
+## `depth` — how thoroughly a source is worked up
+
+A source page has two jobs: capture what **this** project takes from the source under a question,
+and record what the source contains **at all**, so a question that shifts later can find its way
+back. The second is what `depth` governs.
+
+```yaml
+depth: deep      # map | standard | deep   (default: standard)
+```
+
+| | section map | Kernthesen | for |
+|---|---|---|---|
+| `map` | ✓ | — | handbooks, lexica, gazetteers — works one **consults**, not reads |
+| `standard` | ✓ | ≥ 10 | the normal case |
+| `deep` | ✓ | ≥ 20, long form | the handful of works a project rests on — typically its own author's |
+
+`map` is not a licence for thinness but an honest statement. Quoting from such a source means
+raising it to `standard` first. A re-ingest may **raise** the depth and never lower it.
+
+Which sources get which depth is a **project** decision, not a per-ingest one: set it in the
+**Ingest depth** block of the project's `CLAUDE.md`, the mirror of the `Manuscript style (drafting
+depth)` block that `drafting-manuscript` already reads. `lint-wiki.py` reports the spread plus
+`NO-MAP`, `THIN` and `UNCOVERED` — none of which gates, because exhausting a source is never the
+goal.
 
 ## `parent_bibkey` — a chapter whose original is the volume's PDF
 
