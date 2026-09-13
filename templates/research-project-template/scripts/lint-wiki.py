@@ -575,9 +575,30 @@ def report_inference_rate(pages: dict[str, Path]) -> list[str]:
 SOURCE_MAP_HEADING = re.compile(
     r"^##\s+.*\b(aufbau|gliederung|struktur|inhaltsverzeichnis|"
     r"section map|structure|contents|outline)\b", re.I)
+# Three shapes of "the source's theses" occur in real, author-approved pages, and
+# a check that knows only one reports the others as bare:
+#
+#   ## Die zwanzig Kernthesen          an EXPLICIT thesis section — every `###`
+#   ### 1. …                           child is a thesis
+#
+#   ## Teil A — Die exegetischen Thesen   a GENERIC heading, theses split across
+#   ### 1. …                              several parts — only NUMBERED children
+#                                          count, summed over all such sections
+#
+#   ## These 1: Othering durch Nähe     a thesis AS a heading — each counts once
+#
+# The word alone is not the signal. "thesis" sits inside focus headings ("## Focus:
+# Continuity thesis — …") and assessment sections ("… the wiki's standing theses")
+# across the corpus; matching it loosely would count focus blocks as theses. So
+# focus blocks are excluded outright, and a generic heading must earn its count
+# through numbered entries.
 KERNTHESEN_HEADING = re.compile(
     r"^##\s+.*\b(kernthesen|hauptthesen|leitthesen|"
     r"core theses|key theses|main theses|principal claims)\b", re.I)
+THESIS_GENERIC_HEADING = re.compile(r"^##\s+.*\b(thesen|theses)\b", re.I)
+THESIS_AS_HEADING = re.compile(r"^##\s+(these|thesis)\s+\d+\b", re.I)
+FOCUS_HEADING = re.compile(r"^##\s+(focus|fokus)\b", re.I)
+NUMBERED_ENTRY = re.compile(r"^###\s+(?:⭐\s*)*\d+\s*[.·:)]")
 # A map row whose coverage cell holds an EXPLICIT dash: present in the source,
 # not yet worked up here. The re-ingest worklist.
 #
@@ -590,6 +611,35 @@ KERNTHESEN_HEADING = re.compile(
 UNCOVERED_ROW = re.compile(r"^\|\s*(?:\*\*)?\s*(?:—|–|--)\s*(?:\*\*)?\s*\|")
 
 DEPTH_MIN_THESES = {"map": 0, "standard": 10, "deep": 20}
+
+
+def count_theses(lines: list[str]) -> int:
+    """Count the source's theses across the three shapes real pages use.
+
+    A section is only worth what it enumerates: an explicit Kernthesen heading
+    counts every `###` below it, a generic "…Thesen" heading counts only its
+    numbered entries (and several such sections are summed — a page may split its
+    theses into parts), and a heading that IS a thesis ("## These 1: …") counts
+    once. Focus blocks never count, whatever their heading says.
+    """
+    total, mode = 0, None   # mode: "explicit" | "generic" | None
+    for line in lines:
+        if line.startswith("## "):
+            if FOCUS_HEADING.match(line):
+                mode = None
+            elif THESIS_AS_HEADING.match(line):
+                total += 1
+                mode = None
+            elif KERNTHESEN_HEADING.match(line):
+                mode = "explicit"
+            elif THESIS_GENERIC_HEADING.match(line):
+                mode = "generic"
+            else:
+                mode = None
+        elif line.startswith("### ") and mode:
+            if mode == "explicit" or NUMBERED_ENTRY.match(line):
+                total += 1
+    return total
 
 
 def report_source_depth(pages: dict[str, Path], verbose: bool = False) -> list[str]:
@@ -629,14 +679,7 @@ def report_source_depth(pages: dict[str, Path], verbose: bool = False) -> list[s
         if not has_map:
             no_map.append(slug)
 
-        # Kernthesen are counted as the `###` entries under their own heading —
-        # the section is only worth what it enumerates.
-        theses, in_block = 0, False
-        for line in lines:
-            if line.startswith("## "):
-                in_block = bool(KERNTHESEN_HEADING.match(line))
-            elif in_block and line.startswith("### "):
-                theses += 1
+        theses = count_theses(lines)
         want = DEPTH_MIN_THESES.get(depth, 10)
         if want and theses < want:
             thin.append((slug, theses, want))

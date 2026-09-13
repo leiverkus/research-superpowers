@@ -6,6 +6,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **The source-depth report counted theses in only one of the three shapes real pages
+  use**, and so reported a 9.483-word excerpt with seventeen numbered theses as having
+  none — on its author's own article, the page type the `deep` rule exists for. The
+  first release recognised `## Die zwanzig Kernthesen` with `###` entries below it. It
+  missed a generic heading split into parts (`## Teil A — Die exegetischen Thesen`,
+  numbered entries, summed over every part) and a thesis written as a heading
+  (`## These 1: …`, counted once each).
+
+  The word "thesis" is not the signal and could not simply be matched more loosely: it
+  sits inside focus headings (*"## Focus: Continuity thesis — …"*) and assessment sections
+  (*"… the wiki's standing theses"*) across the corpus. Focus blocks are now excluded
+  outright, and a generic heading must earn its count through **numbered** entries.
+  Checked against 782 source pages in 21 projects: the two misread pages change, nothing
+  else does.
+
+
 ## [0.41.0] — 2026-09-13
 
 Minor, not patch: the frontmatter schema gains `depth`, `ingest-source` writes a
