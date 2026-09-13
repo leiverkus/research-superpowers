@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.41.0] — 2026-09-13
+
 Minor, not patch: the frontmatter schema gains `depth`, `ingest-source` writes a
 visibly different source page, and every page type gains a template where three of
 them had none.
