@@ -269,6 +269,33 @@ ingest and referenced in the wiki pages.
   `output/bibtex/references.bib`.
 - Code in `data-analysis/` and `code/` has its own README files.
 
+### Ingest depth
+
+The mirror of the drafting-depth block below, for the other end of the pipeline.
+`ingest-source` reads this first. **Tune it to the project.**
+
+- **Default depth:** `standard` — a section map of the source plus at least ten
+  Kernthesen.
+- **Always `deep`** (map + at least twenty Kernthesen, long form, verbatim
+  quotation throughout): works by the project's own author(s), and the handful of
+  works the research question rests on.
+  <!-- Name them here. e.g.: every title by <author>; the two monographs the
+       whole argument leans on. -->
+- **Usually `map`** (map only, no Kernthesen): handbooks, lexica, gazetteers —
+  works one **consults** rather than reads. Quoting from one means raising it to
+  `standard` first.
+- **Kernthesen are the source's theses, not the project's.** Write what the author
+  argues, including the parts this project has no use for today. That is what lets
+  a question that shifts in three months find its way back to the right pages —
+  and it is the half a focus-only ingest silently drops.
+- **Minimums are floors, not quotas.** A source with thirty load-bearing theses
+  gets thirty. Padding to reach ten is worse than declaring the source `map`.
+
+> **Why this is a project setting and not a habit.** "For my own articles, write
+> long excerpts" is exactly the kind of instruction that is given once, in a
+> conversation, and is gone by the next session. Written here it survives, and
+> `lint-wiki.py` can check the result (`=== Source depth ===`).
+
 ### Manuscript style (drafting depth)
 
 The wiki is deliberately terse; the manuscript must not be. When `drafting-manuscript`
@@ -325,29 +352,60 @@ For each page type an example file lives in the respective folder
 structure, and frontmatter, and are skipped by the lint script
 (`scripts/lint-wiki.py` ignores the `_example-` / `_beispiel-` prefix).
 
+**Every page type carries the same two halves**: what the thing *is* (which
+outlives this project's question) and what *this project* takes from it (which
+does not). Keep them apart — when the question shifts, the first half is what
+survives, and it is the half that is easiest to skip because nothing asks for it.
+
 ### Entity (`knowledge/entities/`)
 People, places, sites, institutions, artefacts, software projects.
-Structure: short description → relevance to the research question →
-relationships to other entities → sources.
-Example: `_example-tel-megiddo.md`
+
+```markdown
+## Location and authority data   ← coordinates + accuracy, ORCID / GND / Wikidata / iDAI
+## What one sees                 ← the standing remains today; for a person: work and influence
+## History of research           ← who dug/wrote when, and through which lens
+## The evidence                  ← written out, by phase or stratum, with citations
+## Contested                     ← the open questions, both positions named
+## Relevance to this project     ← the narrow half: what THIS project takes
+## Multiple roles                ← which other chapters/questions cut the same object differently
+## Open / to verify
+## Sources
+```
+
+*Omit what does not apply (a method has no stratigraphy). `Contested` is not
+optional padding: an entity page that records only the settled parts is the one
+that misleads a later reader.*
 
 ### Concept (`knowledge/concepts/`)
 Theories, methods, technical terms, technical concepts.
-Structure: definition → context in research → related concepts →
-critical perspectives → sources.
-Example: `_example-low-chronology.md`
+
+```markdown
+## Definition                    ← who coined it, with the citation
+## Where it comes from           ← what it replaced, and why
+## How it is applied             ← on what material, with what results
+## Criticism                     ← who objects, and on what grounds
+## Not to be confused with       ← the neighbouring term it gets mixed up with
+## Relevance to this project
+## Sources
+```
 
 ### Source (`knowledge/sources/`)
-Summary of a single source from the shared library.
-Structure: bibliographic info → core theses → methodology → relevant
-results → own assessment → connections to other pages.
-Example: `_example-finkelstein-2003.md`
+One source from the shared library, worked up in two halves — the **Erschließung**
+(section map, Kernthesen, what the source does not address: what is in there at
+all) and one **Focus block per ingest** (what this project takes under one
+question). `ingest-source` owns the full template; see also **Ingest depth** below.
 
 ### Synthesis (`knowledge/synthesis/`)
-Cross-cutting analyses that connect several sources and concepts.
-Structure: research question → argumentation → evidence from sources →
-open questions → implications for your own work.
-Example: `_example-chronologie-debatte.md`
+Cross-cutting analyses that connect several sources and concepts. The structure
+follows the argument and is deliberately free, with two required parts:
+
+```markdown
+## Evidence base    ← which source pages carry this, and where the gaps are
+## What stays open
+```
+
+*The evidence base is what makes a synthesis auditable: without it, a reader
+cannot tell a claim resting on four sources from one resting on a hunch.*
 
 ## Workflows
 
