@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.41.1] — 2026-09-13
+
 ### Fixed
 
 - **The source-depth report counted theses in only one of the three shapes real pages
