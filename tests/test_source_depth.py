@@ -161,6 +161,56 @@ class DepthTiers(unittest.TestCase):
             self.assertIn("standard 1", out)
 
 
+class ThesisShapesFoundInTheWild(unittest.TestCase):
+    """Three shapes occur on author-approved pages. The first release knew one.
+
+    It reported a 9.483-word excerpt with seventeen numbered theses as having
+    none — on the page type its author cares about most. Surveyed across 782
+    source pages in 21 projects: exactly these two were misread, and the fix must
+    change nothing else.
+    """
+
+    def _n(self, body):
+        return lw.count_theses(body.splitlines())
+
+    def test_explicit_kernthesen_heading_counts_every_entry(self):
+        body = "## Die zwanzig Kernthesen\n\n### 1. A (S. 1)\n\n### Unnummeriert (S. 2)\n"
+        self.assertEqual(self._n(body), 2)
+
+    def test_generic_thesen_split_across_parts_counts_numbered_entries(self):
+        """Real shape: '## Teil A — Die exegetischen Thesen (§1–4)'."""
+        body = ("## Teil A — Die exegetischen Thesen (§1–4)\n\n"
+                "### 1. Eine crux (§1.1)\n\n### 2. Späte Schicht (§1.1)\n\n"
+                "## Teil B — Die historischen Thesen\n\n"
+                "### 3. ⭐ Idumäa (§5)\n\n### Ein Zwischentitel ohne Nummer\n")
+        self.assertEqual(self._n(body), 3,
+                         "numbered theses in both parts, the unnumbered subheading not")
+
+    def test_thesis_as_heading_counts_once_each(self):
+        """Real shape: '## These 1: Othering durch Nähe'."""
+        body = ("## These 1: Othering durch Nähe (Ms. 4–7)\n\n"
+                "### Drei Beobachtungen (Ms. 5)\n\n"
+                "## These 2: Obadjas Edom (Ms. 8–13)\n\n"
+                "## These 3: Eine Stimme unter mehreren (Ms. 13–15)\n")
+        self.assertEqual(self._n(body), 3,
+                         "the ### beneath a thesis heading elaborates it; it is not a fourth thesis")
+
+    def test_focus_heading_mentioning_thesis_is_not_a_thesis_section(self):
+        """Real shape, many times over: the word sits inside focus headings."""
+        body = ("## Focus: Continuity thesis — aniconism as post-exilic — 2026-08-01\n\n"
+                "### 1. Claim one\n\n### 2. Claim two\n")
+        self.assertEqual(self._n(body), 0)
+
+    def test_assessment_of_standing_theses_is_not_a_thesis_list(self):
+        body = ("## Assessment — what this source does to the wiki's standing theses\n\n"
+                "### Stale syntheses\n")
+        self.assertEqual(self._n(body), 0)
+
+    def test_focus_claims_are_never_theses(self):
+        body = "## Focus: x — 2026-01-01\n\n### Claims relevant to this focus\n1. a\n2. b\n"
+        self.assertEqual(self._n(body), 0)
+
+
 class NothingGates(unittest.TestCase):
     def test_report_never_raises_on_a_bare_page(self):
         with tempfile.TemporaryDirectory() as td:
