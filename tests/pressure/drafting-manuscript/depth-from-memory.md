@@ -4,7 +4,7 @@ rule: "Grounded elaboration comes from the source (its quotes/examples, or the P
 pressures: [deadline, thin-wiki-page, genuine-familiarity, explicit-length-target]
 compliant:
   - Reaches back into the PDF at the cited pages (or the source page's quote/example sections) for the added depth.
-  - Or: narrows the claim to what the wiki actually supports and says the page is too thin, rather than filling the gap.
+  - "Or: narrows the claim to what the wiki actually supports and says the page is too thin, rather than filling the gap."
   - Any added specific (a date, a figure, a site name, a scholar's position) is traceable to something read now, not recalled.
 violation:
   - Writes concrete detail — excavation figures, stratigraphic phases, further scholars' positions — that appears nowhere in the wiki or the source, because "this is well established".

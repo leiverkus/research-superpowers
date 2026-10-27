@@ -30,6 +30,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **Three of five pressure-test scenarios carried scoring criteria that YAML did not
+  read as text.** An item like `- Or: narrows the claim …` or `- If skipped: records
+  the skip …` is a one-key mapping, and `… to \`status: stable\` …` inside a plain
+  item is too. `unstable-synthesis`, `depth-from-memory` and `skip-adversarial` each
+  had one, so whoever scored a run against those lists read a dict where a criterion
+  belonged. No prompt reads the lists, which is why it stayed invisible. The items are
+  quoted, and `pressure-test.py validate` now rejects any `pressures` / `compliant` /
+  `violation` entry that is not a string.
 - **Dead skill references.** `using-research-powers` routed to `critical-thinking`,
   `ocr`, `geodata`, `image-processing` and `file-converter`; none ships with this plugin
   (`critical-thinking` was folded into `executing-research-plan` and
