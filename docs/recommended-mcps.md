@@ -14,10 +14,10 @@ Both are **optional**. If they aren't set up, the affected skills fall back to m
 ### Install — Claude Code
 
 ```bash
-claude mcp add dao-paper-search -- uvx --from "git+https://github.com/leiverkus/dao-paper-search-mcp@main" python -m dao_paper_search_mcp.server
+claude mcp add dao-paper-search -- uvx --from "dao-paper-search-mcp==1.0.1" dao-paper-search-mcp
 ```
 
-For reproducibility, pin a concrete tag instead of `@main` once a release is available (e.g. `@v0.7.1`).
+This installs the release from PyPI, pinned. Keep the pin: `uvx` resolves a fresh environment, so an unpinned or older install picks up whatever its dependencies resolve to today. Releases before 1.0.1 did not bound `mcp`, and since `mcp` 2.0 removed `mcp.server.fastmcp` they crash at start with `ModuleNotFoundError: No module named 'mcp.server.fastmcp'` (Claude Code shows only "Failed to connect"). 1.0.1 pins `mcp<2`. To upgrade later, change the version here and in your config together.
 
 ### Install — OpenCode
 
@@ -28,8 +28,8 @@ In `~/.config/opencode/opencode.json` under `mcp`:
   "type": "local",
   "command": [
     "uvx", "--from",
-    "git+https://github.com/leiverkus/dao-paper-search-mcp@main",
-    "python", "-m", "dao_paper_search_mcp.server"
+    "dao-paper-search-mcp==1.0.1",
+    "dao-paper-search-mcp"
   ],
   "enabled": true,
   "environment": {

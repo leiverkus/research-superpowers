@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **`docs/recommended-mcps.md` installed `dao-paper-search-mcp` from Git `@main`**, and
+  suggested `@v0.7.1` as the pin. Any tag before 1.0.1 leaves `mcp` unbounded, and since
+  `mcp` 2.0 removed `mcp.server.fastmcp`, a fresh `uvx` install of one crashes at start;
+  Claude Code reports only "Failed to connect", and every skill silently falls back to
+  its manual path. Both install lines (Claude Code, OpenCode) now use the PyPI release
+  `dao-paper-search-mcp==1.0.1`, which pins `mcp<2`, and the page says why to keep the pin.
+
 ## [0.42.2] — 2026-10-27
 
 Patch: CI and documentation, plus argument hints in the slash prompt. No skill
