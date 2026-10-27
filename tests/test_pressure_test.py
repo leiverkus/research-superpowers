@@ -162,6 +162,21 @@ class Validation(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("does not exist", out.getvalue())
 
+    def test_a_criterion_that_yaml_read_as_a_mapping_is_rejected(self):
+        # `- Or: narrows the claim …` is a one-key mapping, not a string; three
+        # shipped scenarios carried such items unnoticed, because no prompt reads
+        # the scoring lists — only whoever scores a run against them.
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            s = self._scenario(pathlib.Path(t),
+                               "skill: ingest-source\nrule: r\npressures: [a, b, c]\n"
+                               "compliant:\n  - Or: narrows the claim\nviolation: [b]\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = pt.validate(s)
+            self.assertEqual(code, 1)
+            self.assertIn("list of strings", out.getvalue())
+
     def test_missing_scoring_keys_are_rejected(self):
         import tempfile
         with tempfile.TemporaryDirectory() as t:

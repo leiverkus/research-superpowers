@@ -93,6 +93,12 @@ def validate(scenarios: list[dict]) -> int:
             problems.append(f"{s['id']}: skill '{skill}' does not exist")
         if skill and s["path"].parent.name != skill:
             problems.append(f"{s['id']}: directory does not match skill '{skill}'")
+        for key in ("pressures", "compliant", "violation"):
+            items = s.get(key)
+            if items and (not isinstance(items, list)
+                          or not all(isinstance(i, str) for i in items)):
+                problems.append(f"{s['id']}: '{key}' must be a list of strings — "
+                                f"quote an item that contains ': '")
         if isinstance(s.get("pressures"), list) and len(s["pressures"]) < MIN_PRESSURES:
             problems.append(f"{s['id']}: {len(s['pressures'])} pressure(s), "
                             f"need >= {MIN_PRESSURES} — one pressure is not a test")
