@@ -47,7 +47,7 @@ A workflow has exactly **one** skill — the SOT. If the workflow also needs a s
 - subagent-specific dispatch rules (no parent memory, one message, strict output format)
 - the output report template
 
-When the parent skill dispatches a subagent, it embeds the full SKILL.md content into the agent's prompt at dispatch time. The agent file stays small; the checklist lives in one place.
+In Claude Code the agent preloads its skill: the agent file's `skills:` frontmatter names the skill it implements, and Claude Code injects the full SKILL.md into the subagent's context at startup. The parent passes only the concrete inputs. On a host without skill preloading (a generic subagent type, or an agent loader without `skills:`) the parent embeds the SKILL.md into the prompt instead, as all versions before v0.42 did. Either way the agent file stays small and the checklist lives in one place.
 
 This was a v0.2 change. Earlier versions had three artefact types (skill, agent, command) and the same workflow logic lived in all three — which divergence made literally inevitable. See [`skill-contract.md`](skill-contract.md) for the formal contract, including the `inputs:` / `outputs:` frontmatter.
 

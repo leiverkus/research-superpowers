@@ -9,6 +9,9 @@ Checks:
      in its `agents:` field (and vice-versa).
   4. Agent files must not contain a numbered checklist longer than 3 items
      (heuristic: procedural content belongs in SKILL.md, not the agent).
+  5. Every agent preloads the skill it implements: its `skills:` list contains
+     the `implements:` skill, and every `skills:` entry is an existing skill
+     (bare name — Claude Code skips an unresolvable entry silently).
 
 Usage:
   python scripts/lint-plugin.py [--root <repo-root>]
@@ -212,6 +215,24 @@ def main() -> int:
                         f"[ERR]   skills/{skill_name}/SKILL.md  lists agent '{a}', "
                         f"but {a}.implements = '{back}' (skill not found)"
                     )
+
+    # --- Check 5: agent preloads its skill ---
+    for agent_name, agent in agents.items():
+        preload = agent["fm"].get("skills") or []
+        if isinstance(preload, str):
+            preload = [preload]
+        implements = agent["fm"].get("implements")
+        if implements and implements not in preload:
+            errors.append(
+                f"[ERR]   agents/{agent_name}.md  implements: '{implements}', "
+                f"but does not preload it — add it to `skills:`"
+            )
+        for s in preload:
+            if s not in skills:
+                errors.append(
+                    f"[ERR]   agents/{agent_name}.md  skills: '{s}' "
+                    f"— no matching skills/{s}/SKILL.md (use the bare skill name)"
+                )
 
     # --- Check 4: agent checklist depth ---
     for agent_name, agent in agents.items():

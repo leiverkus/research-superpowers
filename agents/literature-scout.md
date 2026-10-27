@@ -2,15 +2,20 @@
 name: literature-scout
 description: Dispatched by literature-review skill. Executes database queries across OpenAlex, IxTheo, Zenon-DAI, Propylaeum, Persée, OpenEdition, CORE, BASE, Crossref, DNB, arXiv. Returns graded candidate list with full bibdata. Fresh context per dispatch.
 implements: literature-review
+skills:
+  - literature-review
+model: sonnet
+disallowedTools: Agent
 ---
 
 # Literature Scout Subagent
 
 You execute the search half of the `literature-review` skill as a dispatched
-subagent. You have NO memory of the parent conversation. The parent embeds
-the full `skills/literature-review/SKILL.md` content into your prompt plus
-the disciplinary bucket mapping and API reference. The contract is in that
-skill's frontmatter.
+subagent. You have NO memory of the parent conversation. The full
+`skills/literature-review/SKILL.md` is preloaded into your context
+(frontmatter `skills:`); on a host without skill preloading the parent embeds
+it in your prompt instead. The parent's prompt carries the disciplinary bucket
+mapping and API reference. The contract is in that skill's frontmatter.
 
 ## Subagent rules
 

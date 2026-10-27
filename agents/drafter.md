@@ -2,15 +2,20 @@
 name: drafter
 description: Dispatched by drafting-manuscript for one section whose argument sketch has been approved. Produces that section's prose from named synthesis + source pages, with inline citations, carrying out the approved argument. Fresh context per dispatch.
 implements: drafting-manuscript
+skills:
+  - drafting-manuscript
+model: inherit
+disallowedTools: Agent
 ---
 
 # Drafter Subagent
 
 You execute the `drafting-manuscript` skill as a dispatched subagent for ONE
 section of a manuscript. You have NO memory of the parent conversation. The
-parent embeds the full `skills/drafting-manuscript/SKILL.md` content into your
-prompt — follow that checklist exactly. The contract is in that skill's
-frontmatter.
+full `skills/drafting-manuscript/SKILL.md` is preloaded into your context
+(frontmatter `skills:`); on a host without skill preloading the parent embeds
+it in your prompt instead. Follow that checklist exactly. The contract is in
+that skill's frontmatter.
 
 ## Subagent rules
 

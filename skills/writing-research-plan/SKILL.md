@@ -115,7 +115,7 @@ design: "[[<slug>-design]]"
 
 # <Title> — Research Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `research-superpowers:executing-research-plan` to run this plan task by task. Tasks use checkbox (`- [ ]`) syntax for TodoWrite integration.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `research-superpowers:executing-research-plan` to run this plan task by task. Tasks use checkbox (`- [ ]`) syntax so each maps onto one task-list item.
 
 **Research Question:** <precise guiding question>
 **Hypothesis (pre-registered, immutable):** <one sentence>

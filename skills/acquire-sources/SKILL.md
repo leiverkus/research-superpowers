@@ -67,7 +67,7 @@ Report counts: "Acquired N of M A+B sources. K need manual download — see `acq
 
 ## Checklist
 
-Create TodoWrite tasks for each:
+Create a task-list item for each:
 
 1. **Build the A+B worklist** — read `literaturguide_path` and `bibtex_path`. The guide's **weighted source table** (section 1, columns `Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link`) is the canonical weighting: filter on its `Grade` column by `grade_scope` (default `A,B`). For every in-scope source collect: `bibkey`, authors, year, short title (the `Kurztitel` cell), grade, `doi`, `url`, `oa_pdf` (the per-candidate fields the `literature-scout` agent emits), and the canonical target filename `<bibkey>.pdf` — **the bibkey IS the filename**. The bibkey is `autor-jahr-kurztitel`, all lowercase ASCII, hyphen-separated: `autor` = first author's surname (umlauts → `ae`/`oe`/`ue`, `ß` → `ss`; Turkish `ı` → `i`, Polish `ł` → `l`; particles/hyphens removed), `jahr` = four-digit year (letter suffix **after the year** for clashes, `finkelstein-2003b`), `kurztitel` = the first significant title word, stopwords dropped. e.g. `finkelstein-2003-low-chronology.pdf`. **Into `<library>/pdf/` — resolve the library with `scripts/library.py`.**
 2. **Reconcile against the library first (idempotent)** — scan `<library>/pdf/*.pdf`. Match each worklist item by its `<bibkey>.pdf` filename — an exact match, no fuzzy guessing needed: that is the whole point of `bibkey == filename`. A match → `already-present`; **never re-download it.** Note the library is SHARED: another project may already have acquired this source, and that counts.

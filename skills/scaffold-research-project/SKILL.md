@@ -55,7 +55,7 @@ Create a new research project from the `research-project-template` without leavi
 
 ## Checklist
 
-Create a TodoWrite task for each. Complete in order; do not write files until all inputs are collected and confirmed.
+Create a task-list item for each. Complete in order; do not write files until all inputs are collected and confirmed.
 
 1. **Ask for project name.** Require kebab-case (lowercase, hyphens, no spaces). Reject `MyProject` or `my project` — request a slug like `iron-age-chronology` or `negev-fortresses-debate`. Validate against the regex `^[a-z][a-z0-9-]*$`.
 

@@ -56,7 +56,7 @@ If a condition is unmet: name it, ask for a one-line reason, write it to `knowle
 
 ## Checklist
 
-Create TodoWrite tasks for each:
+Create a task-list item for each:
 
 1. **Resolve the library.** `python scripts/add-to-library.py inspect <pdf>` resolves it via `scripts/library.py`. If it reports the library is not configured, that is the machine-local `.research-library` problem — surface the message, do not proceed.
 

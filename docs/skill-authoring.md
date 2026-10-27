@@ -96,14 +96,19 @@ Agents are thin pointers — no duplicated procedural content. See [`skill-contr
 name: <agent-name>
 description: <one-line, when dispatched>
 implements: <skill-name>
+skills:
+  - <skill-name>          # preloaded; must include the implemented skill
+model: inherit            # or sonnet/haiku for mechanical work
+disallowedTools: Agent    # a worker does not dispatch further workers
 ---
 
 # <Agent Title>
 
 You execute the `<skill-name>` skill as a dispatched subagent. You have NO
-memory of the parent conversation. The parent embeds the full
-`skills/<skill-name>/SKILL.md` content into your prompt — follow that
-checklist exactly. The contract is in that skill's frontmatter.
+memory of the parent conversation. The full `skills/<skill-name>/SKILL.md` is
+preloaded into your context (frontmatter `skills:`); on a host without skill
+preloading the parent embeds it in your prompt instead. Follow that checklist
+exactly. The contract is in that skill's frontmatter.
 
 ## Subagent rules
 - (dispatch-specific constraints only — no duplicate checklist)
@@ -228,6 +233,6 @@ The German terms below are common in the source material a researcher will be wo
 
 1. Start a fresh Claude Code session in a demo research project.
 2. Give a prompt that should trigger the skill.
-3. Verify: skill is invoked before any tool call; announce-line appears; checklist tracked via TodoWrite; SOFT-GATE respected.
+3. Verify: skill is invoked before any tool call; announce-line appears; checklist tracked as task-list items; SOFT-GATE respected.
 4. Try to bypass the gate — it must prompt for an override reason and log it to `knowledge/_meta/gate-overrides.log`.
 5. Run the full phase-flow end-to-end once with a toy example.

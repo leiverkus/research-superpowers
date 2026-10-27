@@ -6,7 +6,7 @@ This document defines how the three artefact types in this plugin relate to each
 
 | Type | Lives in | Loaded by | Has procedural content? |
 |------|----------|-----------|-------------------------|
-| **Skill** (`skills/<name>/SKILL.md`) | Plugin | `Skill` tool in main conversation (Claude Code), or OpenCode's native `skill` tool, or embedded into a subagent prompt | **Yes — this is the SOT.** |
+| **Skill** (`skills/<name>/SKILL.md`) | Plugin | `Skill` tool in main conversation (Claude Code), or OpenCode's native `skill` tool, or preloaded into a subagent via the agent's `skills:` frontmatter (embedded into the prompt on hosts without preloading) | **Yes — this is the SOT.** |
 | **Agent** (`agents/<name>.md`) | Plugin | `Agent` tool with `subagent_type` | **No** — dispatch contract only. |
 
 A workflow has exactly one Skill (the SOT). It may additionally have an Agent (when subagent dispatch is useful for context isolation). The Agent never duplicates the procedural content of the Skill.
@@ -60,13 +60,17 @@ An Agent file declares: which Skill it implements, the dispatch-specific rules (
 name: source-ingester
 description: Dispatched by ingest-source. Reads ONE source thoroughly and produces all wiki artefacts. Fresh context per dispatch.
 implements: ingest-source
+skills:
+  - ingest-source
+model: inherit
+disallowedTools: Agent
 ---
 
 # Source Ingester Subagent
 
 You execute the `ingest-source` skill as a dispatched subagent. You have NO memory
-of the parent conversation. The parent embeds the full `ingest-source` SKILL.md
-content into your prompt; follow that checklist exactly.
+of the parent conversation. The full `skills/ingest-source/SKILL.md` is preloaded
+into your context; follow that checklist exactly.
 
 ## Subagent rules
 
@@ -83,17 +87,19 @@ content into your prompt; follow that checklist exactly.
 
 That is the whole agent file. The checklist, red flags, templates — all live in the SKILL.md.
 
-## How the embedding works at dispatch
+## How the skill reaches the subagent
 
 When a parent Skill (or the user triggering `ingest-source` via natural language) dispatches the `source-ingester` subagent:
 
-1. The parent reads `skills/ingest-source/SKILL.md`.
-2. The parent calls the `Agent` tool with `subagent_type: source-ingester` and a `prompt` that contains:
-   - The full SKILL.md content (procedural checklist, red flags, templates), AND
-   - The concrete input values (source path, project root, etc.).
-3. The Agent file's own content (the system prompt loaded from `agents/source-ingester.md`) provides the subagent-specific framing (no memory, output format).
+1. The parent calls the `Agent` tool with `subagent_type: source-ingester` and a `prompt` that contains the concrete input values (source path, project root, focus, etc.).
+2. Claude Code starts the subagent with the agent file as its system prompt and **preloads every skill listed in its `skills:` frontmatter** — the full SKILL.md (procedural checklist, red flags, templates) is in the subagent's context before it reads the prompt.
+3. The Agent file's own content provides the subagent-specific framing (no memory, output format).
 
-Result: the Skill checklist exists in exactly one file. The Agent file declares contract and dispatch rules. The Command file is a one-line UI shortcut.
+**Fallback — hosts without preloading.** A dispatch to a generic subagent type does not read `skills:`, and neither does a host whose agent loader lacks the field (check before relying on it in OpenCode). There the parent reads `skills/ingest-source/SKILL.md` and embeds its full content in the prompt alongside the inputs, as every version before v0.42 did. The agent body says both, so it reads correctly either way.
+
+**Agent frontmatter beyond the contract.** `model:` routes the work (`inherit` where reading or writing quality is the product — ingest, drafting, analysis, review; `sonnet` for mechanical batch work — search, download, lint). `inherit` is written out rather than omitted so that a user-configured default subagent model cannot silently downgrade a source reading. `disallowedTools: Agent` keeps a worker from dispatching further workers — the preloaded skill describes its own dispatch step, which is the parent's job. `tools:` is deliberately **not** set as an allowlist: an allowlist drops MCP tools (`dao-paper-search`, `dao-searxng`) unless each is named, and the agents use them. Claude Code ignores `hooks`, `mcpServers` and `permissionMode` in plugin agents.
+
+Result: the Skill checklist exists in exactly one file. The Agent file declares contract and dispatch rules.
 
 ## Lint check
 
@@ -105,6 +111,7 @@ contract" job) and locally before a PR.
 - Every Agent has an `implements:` field, referencing an existing Skill.
 - Every Skill referenced as `agents:` exists.
 - Symmetry: if an Agent implements Skill X, Skill X lists that Agent, and the back-pointer resolves.
+- Every Agent preloads the Skill it implements (`skills:` contains the `implements:` value), and every `skills:` entry is an existing Skill by its bare name. Claude Code skips an unresolvable entry with only a debug-log warning, so this is checked here rather than discovered as a subagent that silently lacks its checklist.
 
 **Advisory — reported, but does not fail:**
 

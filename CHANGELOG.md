@@ -6,6 +6,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **Subagents preload their skill instead of receiving it pasted into the prompt.**
+  Every agent file now lists the skill it implements under `skills:`, and Claude Code
+  injects the full SKILL.md into the subagent's context at startup. Before, the parent
+  read the SKILL.md and embedded it in every dispatch: 541 lines of `ingest-source` per
+  source in a batch ingest, and a subagent that silently lacked its checklist whenever a
+  parent cut the paste short. The parent now passes only the inputs. On a host that does
+  not read `skills:` (a generic subagent type, an agent loader without the field) the
+  parent still embeds the skill; the agent bodies say both.
+- **Each agent declares its model and cannot dispatch further workers.** `model:
+  inherit` for the agents whose reading or writing is the product (`source-ingester`,
+  `drafter`, `analyst`, `peer-reviewer`), written out so that a user-configured default
+  subagent model cannot quietly downgrade a source reading; `model: sonnet` for the
+  mechanical batch agents (`literature-scout`, `source-acquirer`, `wiki-linter`).
+  `disallowedTools: Agent` on all seven: the preloaded skill describes its own dispatch
+  step, which is the parent's job. `peer-reviewer` additionally loses `Write`, `Edit` and
+  `NotebookEdit` (it returns its report; the parent saves it, and a reviewer must not
+  touch the manuscript under review) and runs at `effort: high`. No `tools:` allowlist:
+  it would drop the MCP tools the agents use unless each one were named.
+- **Checklists say "task-list item", not `TodoWrite`.** Current Claude Code tracks work
+  with `TaskCreate` / `TaskUpdate`; `TodoWrite` is the older builds' and OpenCode's name.
+  `using-research-powers` maps the term once; the skills name the concept, not the tool.
+
+### Added
+
+- **`lint-plugin.py` enforces the preload.** An agent whose `skills:` lacks its
+  `implements:` skill, or names a skill that does not exist (including the namespaced
+  `plugin:skill` form), fails the build. Claude Code skips an unresolvable `skills:`
+  entry with only a debug-log warning, so the linter is where this gets caught.
+
 ## [0.41.1] — 2026-09-13
 
 ### Fixed
