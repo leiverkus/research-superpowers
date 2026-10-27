@@ -220,6 +220,9 @@ mklink /D .claude\skills C:\path\to\research-superpowers\skills
 ```
 
 This removes the plugin and its hooks; your research projects on disk are untouched.
+So is the shared state listed under [What landed on disk](#what-landed-on-disk) —
+the library, the project registry, the search index and the drift state. Delete
+those by hand if you want them gone.
 
 To remove the marketplace itself:
 ```
@@ -234,7 +237,18 @@ For curiosity / debugging — the plugin lives at:
 - **GitHub URL install**: `~/.claude/plugins/cache/<hash>/research-superpowers/`
 - **Local install**: wherever you cloned it; Claude Code keeps a reference.
 
-The plugin reads from these files; it doesn't modify them. Your research projects live wherever you scaffolded them (`~/Documents/...` or similar). The plugin never writes outside the project you're working in.
+The plugin reads from these files; it doesn't modify them. Your research projects live wherever you scaffolded them (`~/Documents/...` or similar).
+
+Outside the project, the plugin and the project scripts keep shared state in two places:
+
+| Path | What | Written by |
+|---|---|---|
+| `~/.config/research-superpowers/library` | One line: the path to the shared library, used when neither `RESEARCH_LIBRARY` nor a project's `.research-library` is set. The library itself (`references.bib`, `pdf/<bibkey>.pdf`) lives wherever that path points, written to by `add-to-library` and `acquire-sources` | you, by hand |
+| `~/.config/research-superpowers/projects` | Registry of project roots, one per line | the session-start drift check, `scaffold-research-project` |
+| `~/.cache/research-superpowers/index-*.sqlite` | Full-text index of the library — derived, safe to delete | `scripts/bib-search.py` |
+| `~/.cache/research-superpowers/drift-state.json`, `last-drift-report.md` | Fingerprints and last findings of the drift check — derived, safe to delete | `hooks/drift_check.py` |
+
+These deliberately do **not** live in Claude Code's per-plugin data directory (`${CLAUDE_PLUGIN_DATA}`): the project scripts run without the plugin (from a terminal, from OpenCode, in CI) and could not find it there, and Claude Code deletes that directory on uninstall — together with a library that holds originals you may have fetched by hand.
 
 ## Where to go next
 

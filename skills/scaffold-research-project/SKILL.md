@@ -1,6 +1,7 @@
 ---
 name: scaffold-research-project
 description: Use to create a new research project from the template via conversation — no terminal, no `cp` commands. Asks for project name, parent directory, methodology, discipline, and languages; copies the template tree using the Write tool; patches CLAUDE.md frontmatter; optionally initialises git. Designed to work in Cowork (no shell access) as well as Claude Code.
+argument-hint: "[project-name]"
 inputs:
   - name: project_name
     description: kebab-case slug, used as both the directory name and the project's own identifier (e.g. `negev-fortresses-chronology`)

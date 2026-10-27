@@ -1,6 +1,7 @@
 ---
 name: requesting-peer-review
 description: Use when a manuscript (book chapter, article, grant) is drafted and ready for structured review. Runs a two-stage peer-review workflow — constructive then adversarial — with discipline-specific checklists (CONSORT/STROBE + theology/archaeology/DH-specific).
+argument-hint: "<path-to-manuscript>"
 inputs:
   - name: manuscript_path
     description: Path to the QMD or PDF manuscript under output/

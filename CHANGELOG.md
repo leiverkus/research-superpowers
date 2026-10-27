@@ -6,6 +6,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`claude plugin validate --strict` on the plugin manifest in CI** (install-smoke
+  job). The job validated only the marketplace manifest. The strict plugin check also
+  validates every skill, agent and hook, and fails on what the runtime merely
+  tolerates, such as a skill whose frontmatter does not parse and so loads with every
+  field dropped.
+- **`argument-hint` on the eight skills one invokes directly**, e.g.
+  `/research-superpowers:ingest-source <path-to-pdf> [focus]`, so the slash prompt
+  shows what it expects. OpenCode ignores the field.
+
+### Changed
+
+- **`hooks/hooks.json` drops `"async": false`.** The field is not documented for
+  command hooks; synchronous is the default.
+
+### Fixed
+
+- **`docs/installation.md` said the plugin never writes outside the project.** It does:
+  the project registry, the drift state, the full-text index and the shared library.
+  The page now lists each path, what writes it, and which are safe to delete. It also
+  says why they stay out of Claude Code's per-plugin `${CLAUDE_PLUGIN_DATA}`: the
+  project scripts run without the plugin and could not find it there, and Claude Code
+  deletes that directory on uninstall.
+
 ## [0.42.1] — 2026-10-27
 
 Patch, not minor: no new capability. The orientation skill stops sending quick

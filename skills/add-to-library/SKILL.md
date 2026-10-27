@@ -1,6 +1,7 @@
 ---
 name: add-to-library
 description: Add ONE document (a PDF) directly to the shared master library — outside the project ingest flow. Auto-discovers the bibliographic metadata, VERIFIES it against Crossref/OpenAlex (never guessing), derives keywords cheaply from the PDF's docinfo + first-page abstract (no full read), computes the canonical bibkey, places the PDF at <library>/pdf/<bibkey>.pdf and appends the entry to <library>/references.bib. Stops and asks when metadata cannot be verified. Triggers on "add this PDF to the library", "add to the master bibliography", "put this straight in the library", "füge das Dokument der Bibliothek hinzu", "nimm das PDF in die Bibliothek auf". NOT ingest-source (which reads a source into a project's wiki), NOT acquire-sources (which downloads a review's worklist).
+argument-hint: "<path-to-pdf> [doi]"
 inputs:
   - name: source_path
     description: Path to the single PDF to add to the library

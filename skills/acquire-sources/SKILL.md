@@ -1,6 +1,7 @@
 ---
 name: acquire-sources
 description: Use AFTER literature-review and BEFORE ingest-source to obtain the actual PDFs for the A+B graded sources. Auto-downloads Open-Access PDFs into the shared library (<library>/pdf/<bibkey>.pdf — the bibkey IS the filename) and writes a manual-download worklist (input/bibliography/acquisition-todo.md) for everything paywalled or bot-blocked, so the user can fetch originals via university VPN. Re-run to reconcile manually-downloaded files. Triggers on "acquire the sources", "download the literature", "get the PDFs", "Quellen beschaffen", "lade die Literatur herunter". NOT a search skill (that is literature-review), NOT an ingest skill (that is ingest-source).
+argument-hint: "[grade-scope, e.g. A,B]"
 inputs:
   - name: literaturguide_path
     description: Path to input/bibliography/literaturguide.md produced by literature-review

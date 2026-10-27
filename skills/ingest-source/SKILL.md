@@ -1,6 +1,7 @@
 ---
 name: ingest-source
 description: Use when adding a scholarly source (PDF, book chapter, article) to the research project wiki under a specific focus. Produces a focus-driven Source page (claims relevant to the project, not a generic summary), extracts Entities, updates BibTeX, and logs the ingest. On re-ingest of the same source with a new focus, appends a new focus block to the existing page rather than overwriting. This is the ONLY skill for bringing sources into the knowledge wiki.
+argument-hint: "<path-to-pdf> [focus]"
 inputs:
   - name: source_path
     description: Absolute path to the already-acquired PDF or text file in the shared library (<library>/pdf/<bibkey>.pdf, obtained via acquire-sources). No URL auto-download happens here — if the original is missing, the skill hard-stops (see step 2).
