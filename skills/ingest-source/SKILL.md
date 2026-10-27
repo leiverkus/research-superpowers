@@ -58,7 +58,7 @@ If any condition is missing: explain to the user which, ask for a short reason f
 - Re-reading an already-ingested source under a new focus (a new chapter draws on a different aspect of the same source)
 - Batch ingest from a literature list — loop this skill, one source per iteration, focus repeated or per-source
 
-**NOT for:** modifying existing focus blocks (edit directly), pure BibTeX-only entries without reading (use `file-converter` or shell), or single-fact lookups.
+**NOT for:** modifying existing focus blocks (edit directly), pure BibTeX-only entries without reading (edit the `.bib` directly, or `add-to-library` for a PDF you only want catalogued), or single-fact lookups.
 
 ## Checklist
 
@@ -86,7 +86,7 @@ Create a task-list item for each:
    - *The library is not configured on this machine* (`library.py` says so): the user must point this project at it — one line in `.research-library`. Do not report this as "PDF missing"; the file may well exist.
    - *The library is configured but has no PDF for this bibkey*: the source was never acquired. Point the user at `input/bibliography/acquisition-todo.md` and offer to run `acquire-sources`.
 3. **Settle the depth** — read the project's **Ingest depth** block in `CLAUDE.md` (if absent, `standard` applies) and set `depth:` in the frontmatter. It decides how much of step 3a you owe: `map` = the section map only; `standard` = map + at least 10 Kernthesen; `deep` = map + at least 20, long form. A re-ingest may **raise** it, never lower it. When the user says a source matters — "this is one of the most important articles I ever wrote" — that is a `deep` instruction; record it in the frontmatter rather than in the answer, so the next session still knows.
-4. **Read the source thoroughly** under the chosen focus — full text, not just abstract. Use `pdf` skill / `ocr` skill if scanned. Read with the focus question actively in mind; mark anything that bears on it.
+4. **Read the source thoroughly** under the chosen focus — full text, not just abstract. If it is a scan (no text layer), OCR it first — `ocrmypdf`, the tool `bib-search` and the drift report name, or the host's PDF/OCR skill if one is installed. Read with the focus question actively in mind; mark anything that bears on it.
 5. **Write the Erschließung — what the source contains, independent of the focus.** This is the half a focus-only ingest leaves out, and it is what a *later, different* question needs. It is written **once**, on first ingest, and only extended afterwards. Three sections (see the template below): the **section map** with page ranges and a coverage column, the **Kernthesen** (the source's own theses, ausgeführt, with page anchors — *not* only those the current focus needs), and **what the source does not address**, naming where it is treated instead.
    ⚠ **Kernthesen are the source's theses, not the project's.** The temptation is to write ten restatements of the focus; that produces a second focus block under a different name and helps nobody later. Write what the *author* argues, including the parts this project has no use for today.
 6. **Derive `bibkey` and slug — they are NOT the same thing.**
@@ -154,7 +154,7 @@ digraph ingest {
     "User consents to substitute?" [shape=diamond];
     "Record provenance (based_on)" [shape=box];
     "Scanned PDF?" [shape=diamond];
-    "Invoke ocr" [shape=box];
+    "OCR the scan (ocrmypdf)" [shape=box];
     "Read source under focus" [shape=box];
     "Derive slug" [shape=box];
     "Source page exists?" [shape=diamond];
@@ -182,9 +182,9 @@ digraph ingest {
     "User consents to substitute?" -> "HARD-STOP: point to acquisition-todo" [label="no"];
     "User consents to substitute?" -> "Record provenance (based_on)" [label="yes"];
     "Record provenance (based_on)" -> "Scanned PDF?";
-    "Scanned PDF?" -> "Invoke ocr" [label="yes"];
+    "Scanned PDF?" -> "OCR the scan (ocrmypdf)" [label="yes"];
     "Scanned PDF?" -> "Read source under focus" [label="no"];
-    "Invoke ocr" -> "Read source under focus";
+    "OCR the scan (ocrmypdf)" -> "Read source under focus";
     "Read source under focus" -> "Derive slug";
     "Derive slug" -> "Source page exists?";
     "Source page exists?" -> "Re-ingest mode" [label="yes"];

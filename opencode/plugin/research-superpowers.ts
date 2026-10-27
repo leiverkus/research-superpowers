@@ -67,8 +67,9 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 ## Calling convention
 
 When a user message matches a skill's trigger, load the skill via the \`Skill\`
-tool before responding. Skills declare their inputs/outputs in frontmatter
-(see \`docs/skill-contract.md\`).
+tool before responding. A request whose answer lives only in the chat — a
+single reference, a definition, what a wiki page says — needs no skill. Skills
+declare their inputs/outputs in frontmatter (see \`docs/skill-contract.md\`).
 
 User instructions in CLAUDE.md or AGENTS.md override skill defaults. If the
 user says "skip <phase>", name the skipped phase out loud and proceed.`

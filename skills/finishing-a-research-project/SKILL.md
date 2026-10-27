@@ -111,7 +111,7 @@ Pick one with user, update log entry with DOI.
 If submission targeted:
 
 - Identify journal / publisher / conference CfP
-- Check author guidelines — may require format conversion (invoke `file-converter` skill)
+- Check author guidelines — may require format conversion (`quarto render --to docx` / `--to latex`, or pandoc)
 - Produce cover letter draft
 - Confirm corresponding author + ORCID
 - Do NOT submit on the user's behalf — prepare and hand over
