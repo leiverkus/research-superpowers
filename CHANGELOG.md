@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.42.0] — 2026-10-27
+
+Minor, not patch: the agent dispatch contract changes. A parent no longer embeds the
+SKILL.md, and every agent now runs on a declared model with a restricted tool set.
+
 ### Changed
 
 - **Subagents preload their skill instead of receiving it pasted into the prompt.**
