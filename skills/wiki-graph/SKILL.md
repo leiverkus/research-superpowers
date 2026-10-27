@@ -1,6 +1,7 @@
 ---
 name: wiki-graph
 description: Use to build and query the knowledge wiki as a graph. Exports an interactive self-contained graph.html plus graph.json / graph.graphml (scripts/wiki-to-graph.py), and answers questions against the live wiki with deterministic sub-commands (neighbors, path, god-nodes, bridges, relations, search, stats). Triggers include "build/show me a knowledge graph", "map the wiki", "which entity bridges my sources", "most connected pages", "where are the gaps or weak links", "export to Gephi/yEd". NOT wiki-lint (frontmatter and wikilink validation), NOT semantic-wiki-review (claim audit).
+argument-hint: "[question]"
 inputs:
   - name: project_root
     description: Absolute path to the research project root

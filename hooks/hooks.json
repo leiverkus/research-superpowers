@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
-            "async": false
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
           }
         ]
       },
@@ -16,8 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" drift-check",
-            "async": false
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" drift-check"
           }
         ]
       }

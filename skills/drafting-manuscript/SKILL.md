@@ -1,6 +1,7 @@
 ---
 name: drafting-manuscript
 description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Settles the argument architecture with the user first, then drafts section by section — each section's argument agreed before its prose is written. Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
+argument-hint: "<section, e.g. 3.2 Core arguments>"
 inputs:
   - name: plan_task_id
     description: Reference to the explicit Draft task in input/ideas/<slug>-plan.md

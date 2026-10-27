@@ -1,6 +1,7 @@
 ---
 name: literature-review
 description: Systematic literature search for theology, biblical archaeology, ancient history, and digital humanities. Triggers on "literature review on X", "Stand der Forschung zu X", "Literaturrecherche zu X". NOT for single-paper lookups — those are simple metadata queries.
+argument-hint: "<topic>"
 inputs:
   - name: topic
     description: Research question or topic to search for
