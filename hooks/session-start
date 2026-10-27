@@ -3,6 +3,12 @@
 # Injects a compact skill index (hooks/session-context.md, ~25 lines) so the
 # assistant knows what skills exist and when to invoke them. Full SKILL.md
 # content is loaded on-demand via the Skill tool — not at session start.
+#
+# Claude Code lists every skill's description on its own, so on paper this is
+# redundant. It is kept because that listing has a budget: with many plugins
+# installed, Claude Code drops descriptions to stay within it, and observed
+# sessions showed four of this plugin's skills listed by name only. The index
+# is the phase map that survives that cut, at ~2.4 KB.
 
 set -euo pipefail
 

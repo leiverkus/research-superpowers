@@ -1,6 +1,6 @@
 ---
 name: using-research-powers
-description: Use when starting any research conversation — establishes how to find and use research skills. Requires Skill tool invocation before ANY response, including clarifying questions. Governs the full research workflow from idea to publication.
+description: Use at the start of a research conversation, or when unsure which research-superpowers skill fits a request. Maps a request to the skill that governs its phase (idea, plan, literature, acquisition, ingest, analysis, manuscript, review, wrap-up), explains the SOFT-GATEs, and says when no skill is needed.
 ---
 
 <SUBAGENT-STOP>
@@ -9,15 +9,19 @@ If you were dispatched as a subagent to execute a specific task (ingest a source
 
 ## When a skill should fire
 
-When the user's request falls into a research phase — idea, plan, literature
-work, source ingest, analysis, manuscript, review, wrap-up — invoke the
-governing skill before you answer or edit. Skills carry the discipline that
-separates a reproducible result from an unaccountable guess: checklists,
-preconditions, audit trails.
+When a request falls into a research phase — idea, plan, literature work,
+source acquisition, ingest, analysis, manuscript, review, wrap-up — invoke the
+governing skill before you answer or edit. The skill carries what the phase
+needs and a general answer lacks: the checklist, the preconditions, the audit
+trail.
 
-When in doubt, invoke one more skill rather than one fewer. If an invoked
-skill turns out not to fit, you can discard it after reading — that's cheap.
-What's expensive is silent skipping.
+**The test is what the request leaves behind.** If it should change the project
+— a source page, an entity, a bib entry, a plan, a synthesis, a draft, a
+review — a skill governs it; use that skill. If the answer lives only in the
+chat — a single reference, a definition, a date, what a wiki page says, an edit
+the user dictates word for word — answer directly. A phase skill there is
+ceremony, and it can steer the user into a workflow (a brainstorming session, a
+plan) they did not ask for.
 
 ## Instruction Priority
 
@@ -58,69 +62,82 @@ gap surfaced while writing). See `docs/phase-flow.md`.
 
 Support skills are context-triggered, not phase-bound:
 
-- **critical-thinking** — when evaluating evidence, methodology, or contested sources
+- **scaffold-research-project** — when the working directory is not yet a research project
 - **add-to-library** — when adding one PDF straight to the shared library (verify + keyword it), outside the project ingest flow
-- **grant-finder** — when planning funding in parallel to publication
 - **wiki-lint** — before drafting, before finishing, after bulk ingest
+- **semantic-wiki-review** — when the wiki's *content* needs auditing: contradictions, claims overtaken by newer sources
 - **wiki-graph** — to analyse the wiki's structure (god nodes, bridges, clusters) and export it as a graph
-- **ocr / geodata / image-processing / file-converter** — utilities invoked when data demands
+- **drift-report** — to check library and projects for accumulated drift (also runs at session start)
+- **grant-finder** — when planning funding in parallel to publication
 
-## Heuristic
+Two things are deliberately **not** skills of this plugin:
 
-Invoke relevant skills before you answer or edit. A wrong invocation is
-cheap (read the skill, discard, move on); a skipped skill is expensive
-(missing audit trail, missed precondition).
+- **Critical evaluation** of evidence and method is a checklist inside
+  `executing-research-plan` (method selection) and `requesting-peer-review`
+  (evidence audit), not a separate skill.
+- **Format utilities** — OCR, geodata, image processing, file conversion — come
+  from the host, if installed. For scans, `ocrmypdf` is the tool the drift
+  report and `bib-search` already name.
+
+## Routing
 
 ```dot
 digraph research_flow {
     "User message received" [shape=doublecircle];
-    "Is this a research task?" [shape=diamond];
+    "Should it change the project?" [shape=diamond];
+    "Starts new research?" [shape=diamond];
     "Existing design doc?" [shape=diamond];
     "Existing research plan?" [shape=diamond];
+    "Answer directly" [shape=doublecircle];
     "Invoke brainstorming-research" [shape=box];
     "Invoke writing-research-plan" [shape=box];
-    "Check other skill triggers" [shape=diamond];
-    "Invoke matching skill" [shape=box];
+    "Invoke the phase's skill" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Follow skill checklist" [shape=box];
     "Respond" [shape=doublecircle];
 
-    "User message received" -> "Is this a research task?";
-    "Is this a research task?" -> "Check other skill triggers" [label="no"];
-    "Is this a research task?" -> "Existing design doc?" [label="yes"];
+    "User message received" -> "Should it change the project?";
+    "Should it change the project?" -> "Answer directly" [label="no — chat-only answer"];
+    "Should it change the project?" -> "Starts new research?" [label="yes"];
+    "Starts new research?" -> "Invoke the phase's skill" [label="no — work inside an existing project"];
+    "Starts new research?" -> "Existing design doc?" [label="yes — a question, study, chapter, grant"];
     "Existing design doc?" -> "Invoke brainstorming-research" [label="no"];
     "Existing design doc?" -> "Existing research plan?" [label="yes"];
     "Existing research plan?" -> "Invoke writing-research-plan" [label="no"];
-    "Existing research plan?" -> "Check other skill triggers" [label="yes"];
-    "Check other skill triggers" -> "Invoke matching skill" [label="match"];
-    "Check other skill triggers" -> "Respond" [label="no match"];
+    "Existing research plan?" -> "Invoke the phase's skill" [label="yes"];
     "Invoke brainstorming-research" -> "Announce: 'Using [skill] to [purpose]'";
     "Invoke writing-research-plan" -> "Announce: 'Using [skill] to [purpose]'";
-    "Invoke matching skill" -> "Announce: 'Using [skill] to [purpose]'";
+    "Invoke the phase's skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Follow skill checklist";
     "Follow skill checklist" -> "Respond";
 }
 ```
 
-## Red Flags (rationalisations that should trigger a skill)
+"Starts new research" means opening a question, study, chapter or grant. Finding
+literature for a running project, ingesting one more source or revising a
+section does not — those go straight to their phase skill.
+
+## Red Flags
+
+Thoughts that, in this plugin's domain, come right before the failures it exists
+to prevent — a claim no source backs, a draft written from memory, a review that
+never happened:
 
 | Thought | Reality |
 |---------|---------|
-| "It's just a quick literature question" | Questions are tasks. Check the skill. |
-| "I need more context first" | Skill check comes before follow-up questions. |
 | "The source is short, I'll skim it" | Ingest requires structured extraction. |
+| "I know what the source says" | Knowing ≠ documented. Ingest the source. |
+| "I'll just freewrite the draft" | Drafts pull from synthesis pages, not from memory. |
 | "I have the hypothesis in my head" | Quantitative: written in the plan. Hermeneutic: research question + method sketch is enough. |
 | "I'll clean up the wiki later" | Lint before draft — overrides get logged. |
-| "I know what the source says" | Knowing ≠ documented. Ingest the source. |
 | "Peer review is optional" | Not before publication, it isn't. |
-| "I'll just freewrite the draft" | Drafts pull from synthesis pages, not from your head. |
-| "This time I don't need brainstorming" | Even "simple" projects go through brainstorming — override is possible, but you owe a reason. |
+| "This new project doesn't need a design doc" | Brainstorming first. The user may skip it — then name the skipped phase and log the reason (SOFT-GATE). |
 
 ## Skill Priority (multiple skills could apply)
 
-1. **Phase skills first** (brainstorming-research, writing-research-plan, executing-research-plan) — these determine WHERE in the workflow you are
-2. **Support skills second** (critical-thinking, wiki-lint) — these refine HOW you do a step
-3. **Utility skills last** (ocr, geodata, image-processing, file-converter) — these handle format questions
+1. **Phase skills first** (brainstorming-research, writing-research-plan, literature-review, acquire-sources, ingest-source, executing-research-plan, drafting-manuscript, requesting-peer-review, finishing-a-research-project) — these determine WHERE in the workflow you are
+2. **Support skills second** (wiki-lint, semantic-wiki-review, wiki-graph, drift-report, add-to-library, grant-finder) — these refine HOW you do a step
+3. **Host utilities last** (OCR, file conversion, …) — these handle format questions
 
 Trigger examples:
 
@@ -136,14 +153,15 @@ Trigger examples:
 - "Review the manuscript" → **requesting-peer-review**
 - "Find funding" → **grant-finder**
 - "Show me a knowledge graph / which entity bridges my sources / most-connected pages" → **wiki-graph**
+- "Who wrote X, and when?" / "What does our page on Tel Rehov say?" → **no skill** — answer directly
 
 ## Skill Types
 
 **Rigid** (must follow the checklist exactly, do not skip steps):
-- brainstorming-research, writing-research-plan, acquire-sources, ingest-source, add-to-library, executing-research-plan, drafting-manuscript, finishing-a-research-project
+- scaffold-research-project, brainstorming-research, writing-research-plan, acquire-sources, ingest-source, add-to-library, executing-research-plan, drafting-manuscript, finishing-a-research-project
 
 **Flexible** (adapt principles to context):
-- critical-thinking, literature-review, peer-review, grant-finder, wiki-lint, wiki-graph
+- literature-review, requesting-peer-review, grant-finder, wiki-lint, semantic-wiki-review, wiki-graph, drift-report
 
 The skill itself tells you which.
 

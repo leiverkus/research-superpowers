@@ -6,6 +6,47 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **`using-research-powers` says when no skill is needed.** The orientation skill was
+  written for models that skipped skills: "skill invocation before ANY response,
+  including clarifying questions", "when in doubt, invoke one more skill", and a
+  routing graph that sent every research request without a design doc into
+  `brainstorming-research` — a literature question for a running project included.
+  Current models follow that literally and over-trigger. The test is now what a
+  request leaves behind: if it should change the project (a source page, a bib entry,
+  a plan, a draft), its skill governs it; if the answer lives only in the chat (a
+  reference, a definition, what a wiki page says), answer directly. The routing graph
+  asks the same question first, and "starts new research" now means opening a
+  question, study, chapter or grant, not any research-shaped message. The red-flag
+  table keeps the rows tied to the plugin's real failure modes (unbacked claims,
+  drafts from memory, skipped review) and drops the two that pushed skill calls onto
+  quick questions.
+- **The session-start index stays, now with its reason written down**, and carries the
+  same "no skill needed" rule. Claude Code lists skill descriptions on its own, but
+  under a budget: with many plugins installed it drops descriptions, and sessions
+  showed four of this plugin's skills listed by name only. `wiki-graph`'s description
+  (1,015 characters, the longest) is cut to 575.
+
+### Fixed
+
+- **Dead skill references.** `using-research-powers` routed to `critical-thinking`,
+  `ocr`, `geodata`, `image-processing` and `file-converter`; none ships with this plugin
+  (`critical-thinking` was folded into `executing-research-plan` and
+  `requesting-peer-review` in v0.2). `ingest-source` and
+  `finishing-a-research-project` named `ocr` / `file-converter` too. They now name
+  what exists: `ocrmypdf` for scans, Quarto or pandoc for format conversion. The skill
+  lists in `using-research-powers` cover all 17 skills; `peer-review` is
+  `requesting-peer-review`.
+
+### Added
+
+- **`tests/test_plugin_frontmatter_yaml.py`** parses every skill and agent frontmatter
+  as real YAML. `lint-plugin.py`'s tolerant parser accepted a description with `: `
+  inside, which Claude Code rejects by loading the skill with **all** frontmatter
+  dropped, description included. Caught while editing `wiki-graph`, by
+  `claude plugin validate --strict`.
+
 ## [0.42.0] — 2026-10-27
 
 Minor, not patch: the agent dispatch contract changes. A parent no longer embeds the
