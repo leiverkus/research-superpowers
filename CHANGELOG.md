@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.42.2] — 2026-10-27
+
+Patch: CI and documentation, plus argument hints in the slash prompt. No skill
+behaves differently.
+
 ### Added
 
 - **`claude plugin validate --strict` on the plugin manifest in CI** (install-smoke
