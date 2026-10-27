@@ -13,6 +13,7 @@ stale silently:
 
 Stdlib unittest. Run: python -m unittest tests.test_macos_setup
 """
+import os
 import pathlib
 import re
 import shutil
@@ -63,6 +64,10 @@ class MacosSetup(unittest.TestCase):
         self.assertTrue(first.startswith("# Brewfile for research-superpowers"))
         self.assertIn("'^# Brewfile for research-superpowers'", SCRIPT.read_text(encoding="utf-8"))
 
+    # Windows runners put WSL's bash first on PATH, which cannot open a
+    # D:\\... path and exits 1 with no message. The script is macOS-only;
+    # parsing it on Windows tests the runner, not the script.
+    @unittest.skipIf(os.name == "nt", "macOS-only script; Windows' bash on PATH is WSL")
     @unittest.skipUnless(shutil.which("bash"), "bash not available")
     def test_script_parses(self):
         r = subprocess.run(["bash", "-n", str(SCRIPT)], capture_output=True, text=True)
