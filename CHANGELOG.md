@@ -13,8 +13,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   `mcp` 2.0 removed `mcp.server.fastmcp`, a fresh `uvx` install of one crashes at start;
   Claude Code reports only "Failed to connect", and every skill silently falls back to
   its manual path. Both install lines (Claude Code, OpenCode) now use the PyPI release
-  `dao-paper-search-mcp==1.1.0`, and the page says why to keep the pin. (1.0.1 bounded
-  `mcp<2`; 1.1.0 moves the server to `mcp` 2.x and bounds it below 3.)
+  `dao-paper-search-mcp==1.2.0`, and the page says why to keep the pin. (1.0.1 bounded
+  `mcp<2`; 1.1.0 moves the server to `mcp` 2.x; 1.2.0 adds the DOI lookup below.)
+- **Six MCP calls in the skills used parameters the tools do not have.**
+  `add-to-library`, `ingest-source`, `drafting-manuscript` and `requesting-peer-review`
+  wrote `search_crossref(doi=…)`; the tool takes `query`. `ingest-source` also wrote
+  `resolve_author(name=…)` (it is `name_string`) and `resolve_site(name=…)` (it is
+  `query`). A call made exactly as documented failed. Renaming alone would have been
+  worse: up to `dao-paper-search-mcp` 1.1.0 a DOI passed as `query` was searched, and the
+  first hit was observed to be a different work, so a skill "verifying" metadata would
+  have copied a stranger's citation. 1.2.0 looks a DOI up directly, and the
+  verification steps now also check that the hit's `identifiers.doi` is the DOI asked
+  for, which protects older installs as well.
+
+### Added
+
+- **`tests/test_mcp_call_signatures.py`** checks every `dao-paper-search-mcp` call in
+  skills, agents and docs against the tools/list snapshot in
+  `tests/fixtures/dao-paper-search-mcp-tools.json`, and that the snapshot matches the
+  version `docs/recommended-mcps.md` pins.
 
 ## [0.42.2] — 2026-10-27
 

@@ -425,8 +425,11 @@ relations:
 **For the BibTeX entry (step 10):** Instead of formatting by hand, fetch the ready-made reference string:
 
 ```text
-dao-paper-search-mcp.search_crossref(doi=<doi>)
-  → response.inline_citation.authoritative_bibliography_line
+dao-paper-search-mcp.search_crossref(query=<doi>)
+  → exactly one hit; check that its identifiers.doi IS <doi>
+    (a direct lookup from dao-paper-search-mcp 1.2.0; older versions search
+     and can return a different work)
+  → hit.inline_citation.authoritative_bibliography_line
 ```
 
 Take the string verbatim — it is structurally guarded against author/year hallucination. Optionally also embed `inline_citation.markdown` into the "Direct quotes" section as a clickable link.
@@ -434,10 +437,10 @@ Take the string verbatim — it is structurally guarded against author/year hall
 **When creating new entity pages (step 9):** Use the resolvers for persons and places:
 
 ```text
-resolve_author(name="Israel Finkelstein")
+resolve_author(name_string="Israel Finkelstein")
   → orcid="0000-…", wikidata_qid="Q461571", gnd_id="118533533", …
 
-resolve_site(name="Tel Megiddo")
+resolve_site(query="Tel Megiddo")
   → idai_gazetteer_id="2048473", coordinates=…
 ```
 

@@ -71,8 +71,11 @@ Create a task-list item for each:
 3. **Discover and VERIFY the metadata** (this is the load-bearing step). Prefer the `dao-paper-search-mcp` (see [`docs/recommended-mcps.md`](../../docs/recommended-mcps.md)); fall back to a manual Crossref lookup if it is absent.
    - **With a DOI** (from step 2 or the `doi` input):
      ```text
-     dao-paper-search-mcp.search_crossref(doi=<doi>)
-       → response.inline_citation.authoritative_bibliography_line   (verbatim)
+     dao-paper-search-mcp.search_crossref(query=<doi>)
+       → exactly one hit; check that its identifiers.doi IS <doi>
+         (a DOI query is a direct lookup from dao-paper-search-mcp 1.2.0;
+          older versions search and can return a different work)
+       → hit.inline_citation.authoritative_bibliography_line   (verbatim)
      ```
      or manually: `curl -s https://api.crossref.org/works/<doi>`.
    - **Without a DOI:** search `search_crossref` / `search_openalex` by the title + author from docinfo, and require a **confident** single match.

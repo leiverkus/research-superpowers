@@ -229,7 +229,7 @@ Extended Cited Evidence Audit (5 spot-checks) with MCP:
 |---|---|---|---|---|
 | `[@bibkey, p. X]` | <claim> | yes / no / partial | primary_publisher / aggregator / ... | <reason> |
 
-- For each cited DOI: `dao-paper-search-mcp.search_crossref(doi=...)` or equivalent adapter; compare `inline_citation.authoritative_bibliography_line` from the MCP response against the manuscript bibliography — discrepancies are Major Issues.
+- For each cited DOI: `dao-paper-search-mcp.search_crossref(query=<doi>)` or equivalent adapter, checking that the hit's `identifiers.doi` is that DOI; compare `inline_citation.authoritative_bibliography_line` from the MCP response against the manuscript bibliography — discrepancies are Major Issues.
 - For web citations (online sources): `dao-searxng-mcp.fetch_url(url=...)` and check `source_class`. Aggregator or suspect classification without an explanatory note in the manuscript is at minimum a Minor Issue.
 - If no MCPs are available: drop the `source_class` column; do spot-checks by hand.
 
