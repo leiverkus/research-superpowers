@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.42.3] — 2026-10-27
+
+Patch: the skills' `dao-paper-search-mcp` calls now work as documented, and DOI
+verification checks it got the work it asked for. Pair it with
+`dao-paper-search-mcp` 1.2.0.
+
 ### Fixed
 
 - **`docs/recommended-mcps.md` installed `dao-paper-search-mcp` from Git `@main`**, and
