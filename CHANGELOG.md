@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **`sync-project.py --apply` left an in-sync project on its old `plugin_version`.**
+  The version was recorded only when a file was copied, so a project whose files all
+  matched kept saying, for example, `0.41.1` under a 0.42.3 plugin. That is not
+  cosmetic: the script tells "outdated" from "locally modified" by that version, so a
+  deliberate edit made later would have been read as outdated and overwritten by
+  `--apply` without `--force`. `--apply` now records the current version on in-sync
+  projects without touching any other file. The report-only run names them ("in sync,
+  but plugin_version is behind"). On the 19 registered projects on the maintainer's
+  machine, all were in sync and all recorded `0.41.1` or nothing.
+
 ## [0.42.3] — 2026-10-27
 
 Patch: the skills' `dao-paper-search-mcp` calls now work as documented, and DOI

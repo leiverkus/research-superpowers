@@ -222,6 +222,48 @@ class ApplyProtectsLocalEdits(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(sp.read_project_version(root), sp.plugin_version())
 
+    def _argv_run(self, *args):
+        import sys
+        argv = sys.argv
+        sys.argv = ["sync-project.py", *args]
+        try:
+            return self._run(argv)
+        finally:
+            sys.argv = argv
+
+    def test_apply_records_the_version_on_an_in_sync_project(self):
+        # Every file matches, but CLAUDE.md says an older version. Left so, a
+        # later deliberate edit would read as OUTDATED and be overwritten by
+        # --apply without --force.
+        with tempfile.TemporaryDirectory() as td:
+            root = _fake_project(pathlib.Path(td) / "p", version="0.1.0")
+            before = {rel: (root / rel).read_bytes() for rel in sp.SYNCED_PATHS}
+            code, out = self._argv_run("--roots", str(root), "--apply")
+            self.assertEqual(code, 0)
+            self.assertEqual(sp.read_project_version(root), sp.plugin_version())
+            self.assertEqual({rel: (root / rel).read_bytes() for rel in sp.SYNCED_PATHS}, before,
+                             "recording the version must not touch any synced file")
+            self.assertIn("in sync; plugin_version set to", out)
+
+    def test_report_only_names_a_stale_version_but_keeps_it(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = _fake_project(pathlib.Path(td) / "p", version="0.1.0")
+            code, out = self._argv_run("--roots", str(root))
+            self.assertEqual(code, 0)
+            self.assertEqual(sp.read_project_version(root), "0.1.0")
+            self.assertIn("behind", out)
+            self.assertIn("--apply records", out)
+
+    def test_in_sync_project_without_frontmatter_is_not_guessed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = _fake_project(pathlib.Path(td) / "p", version=None)
+            (root / "CLAUDE.md").write_text("# Project, no frontmatter\n", encoding="utf-8")
+            code, out = self._argv_run("--roots", str(root), "--apply")
+            self.assertEqual(code, 0)
+            self.assertEqual((root / "CLAUDE.md").read_text(encoding="utf-8"),
+                             "# Project, no frontmatter\n")
+            self.assertIn("no frontmatter", out)
+
     def test_report_only_writes_nothing(self):
         with tempfile.TemporaryDirectory() as td:
             root = _fake_project(pathlib.Path(td) / "p", version="0.1.0",
