@@ -41,6 +41,11 @@ frontmatter settles it:
 The heuristic is named in the output rather than hidden, because the middle case
 is the one where being wrong costs something.
 
+That is also why `--apply` records the current version on a project that is
+already in sync. A project whose files all match but whose CLAUDE.md still says
+an older version would, on a later run, have a deliberate local edit read as
+OUTDATED — and `--apply` would overwrite it without `--force`.
+
 USAGE
 -----
     python scripts/sync-project.py --from-registry
@@ -274,7 +279,7 @@ def main() -> int:
     labels = labels_for(roots)
     print(f"# Project sync — plugin {current}\n")
 
-    total_out = total_local = total_missing = written = refused = 0
+    total_out = total_local = total_missing = written = refused = stale = stamped = 0
     for root in roots:
         recorded, rows = classify(root, current)
         out = [r for r, s in rows if s == "outdated"]
@@ -286,7 +291,19 @@ def main() -> int:
 
         shown = recorded or "not recorded"
         if not out and not loc and not gone:
-            print(f"  ✓ {labels[root]} ({shown}) — in sync")
+            if recorded == current:
+                print(f"  ✓ {labels[root]} ({shown}) — in sync")
+            elif not args.apply:
+                stale += 1
+                print(f"  ✓ {labels[root]} ({shown}) — in sync, "
+                      f"but {FRONTMATTER_KEY} is behind {current}")
+            elif write_project_version(root, current):
+                stamped += 1
+                print(f"  ✓ {labels[root]} ({shown}) — in sync; "
+                      f"{FRONTMATTER_KEY} set to {current}")
+            else:
+                print(f"  ✓ {labels[root]} ({shown}) — in sync; "
+                      f"⚠ no frontmatter in CLAUDE.md, {FRONTMATTER_KEY} not recorded")
             continue
 
         print(f"  • {labels[root]} ({shown})")
@@ -323,10 +340,14 @@ def main() -> int:
     if not args.apply and (total_out or total_missing or total_local):
         print("  → re-run with --apply to copy the outdated ones "
               "(add --force to overwrite local edits)")
+    if not args.apply and stale:
+        print(f"  → {stale} in-sync project(s) record an older {FRONTMATTER_KEY}; "
+              f"--apply records {current} without touching any other file")
     if args.apply:
         print(f"  → wrote {written} file(s)"
               + (f", refused {refused} local edit(s) — pass --force to overwrite"
-                 if refused else ""))
+                 if refused else "")
+              + (f"; recorded {current} in {stamped} in-sync project(s)" if stamped else ""))
     # Local edits are a finding a human must settle; outdated files are not an
     # error once --apply has dealt with them.
     return 1 if (total_local and not args.force) else 0
