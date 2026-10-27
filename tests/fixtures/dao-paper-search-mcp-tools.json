@@ -1,0 +1,187 @@
+{
+  "server": "dao-paper-search-mcp",
+  "version": "1.2.0",
+  "note": "Tool signatures as reported by tools/list. Regenerate when the pinned version in docs/recommended-mcps.md changes.",
+  "tools": {
+    "ping": {
+      "params": [],
+      "required": []
+    },
+    "resolve_author": {
+      "params": [
+        "domain_hint",
+        "name_string"
+      ],
+      "required": [
+        "name_string"
+      ]
+    },
+    "resolve_site": {
+      "params": [
+        "query"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_adaj": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_arxiv": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_biorxiv": {
+      "params": [
+        "include_medrxiv",
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_core": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_crossref": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_gnomon": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_iaa": {
+      "params": [
+        "collection",
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_ixtheo": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_openalex": {
+      "params": [
+        "language",
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_openedition": {
+      "params": [
+        "collection",
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_propylaeum": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_semantic_scholar": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_zenodo": {
+      "params": [
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    "search_zenon": {
+      "params": [
+        "language",
+        "max_results",
+        "query",
+        "year_from",
+        "year_to"
+      ],
+      "required": [
+        "query"
+      ]
+    }
+  }
+}
