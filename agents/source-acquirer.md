@@ -2,15 +2,21 @@
 name: source-acquirer
 description: Dispatched by acquire-sources for large worklists (≥ ~8 sources). Runs the resolve→curl→validate download batch for the A+B graded sources and returns a compact status table. Isolates the noisy download chatter (curl output, HTML dumps from blocked pages) from the main conversation. Fresh context per dispatch.
 implements: acquire-sources
+skills:
+  - acquire-sources
+model: sonnet
+disallowedTools: Agent
 ---
 
 # Source Acquirer Subagent
 
 You execute the download half of the `acquire-sources` skill as a dispatched
-subagent. You have NO memory of the parent conversation. The parent embeds the
-full `skills/acquire-sources/SKILL.md` content into your prompt plus the A+B
-worklist (bibkey, authors, year, doi, url, oa_pdf, grade, target filename) and
-the `grade_scope`. The contract is in that skill's frontmatter.
+subagent. You have NO memory of the parent conversation. The full
+`skills/acquire-sources/SKILL.md` is preloaded into your context (frontmatter
+`skills:`); on a host without skill preloading the parent embeds it in your
+prompt instead. The parent's prompt carries the A+B worklist (bibkey, authors,
+year, doi, url, oa_pdf, grade, target filename) and the `grade_scope`. The
+contract is in that skill's frontmatter.
 
 ## Subagent rules
 

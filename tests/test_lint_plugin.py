@@ -27,12 +27,17 @@ def _skill(root, name, agents=()):
     p.write_text("\n".join(fm) + "\nbody\n", encoding="utf-8")
 
 
-def _agent(root, name, implements=None, body="body"):
+def _agent(root, name, implements=None, body="body", skills=None):
     p = pathlib.Path(root) / "agents" / f"{name}.md"
     p.parent.mkdir(parents=True, exist_ok=True)
     fm = ["---", f"name: {name}", "description: x"]
     if implements is not None:
         fm.append(f"implements: {implements}")
+    if skills is None:                         # default: preload what it implements
+        skills = [implements] if implements else []
+    if skills:
+        fm.append("skills:")
+        fm += [f"  - {s}" for s in skills]
     fm.append("---")
     p.write_text("\n".join(fm) + "\n" + body + "\n", encoding="utf-8")
 
@@ -65,6 +70,22 @@ class GateSemantics(unittest.TestCase):
             _agent(d, "a", implements="s")        # but a implements s → asymmetry
             rc, out = _run(d)
             self.assertEqual(rc, 1, out)
+
+    def test_agent_not_preloading_its_skill_is_an_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            _skill(d, "s", agents=["a"])
+            _agent(d, "a", implements="s", skills=[])
+            rc, out = _run(d)
+            self.assertEqual(rc, 1, out)
+            self.assertIn("does not preload", out)
+
+    def test_namespaced_preload_entry_is_an_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            _skill(d, "s", agents=["a"])
+            _agent(d, "a", implements="s", skills=["s", "research-superpowers:s"])
+            rc, out = _run(d)
+            self.assertEqual(rc, 1, out)
+            self.assertIn("bare skill name", out)
 
     def test_deep_checklist_is_advisory_not_fatal(self):
         with tempfile.TemporaryDirectory() as d:

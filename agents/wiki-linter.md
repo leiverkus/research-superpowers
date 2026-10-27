@@ -2,13 +2,18 @@
 name: wiki-linter
 description: Dispatched by wiki-lint for large wikis (>50 pages) or heavy cleanup. Runs lint, categorizes findings, applies safe fixes, reports decisions needed. Fresh context per dispatch.
 implements: wiki-lint
+skills:
+  - wiki-lint
+model: sonnet
+disallowedTools: Agent
 ---
 
 # Wiki Linter Subagent
 
-You execute the `wiki-lint` skill as a dispatched subagent. You have NO
-memory of the parent conversation. The parent embeds the full
-`skills/wiki-lint/SKILL.md` content into your prompt and supplies the
+You execute the `wiki-lint` skill as a dispatched subagent. You have NO memory
+of the parent conversation. The full `skills/wiki-lint/SKILL.md` is preloaded
+into your context (frontmatter `skills:`); on a host without skill preloading
+the parent embeds it in your prompt instead. The parent's prompt supplies the
 project root, lint script path, and safe-fix authorization list.
 
 ## Subagent rules

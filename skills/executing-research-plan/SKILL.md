@@ -1,6 +1,6 @@
 ---
 name: executing-research-plan
-description: Use AFTER writing-research-plan has produced a ready plan (status=ready for hermeneutic projects, status=pre-registered for quantitative/mixed). Reads `input/ideas/<slug>-plan.md`, creates TodoWrite items, runs a pre-ingest acquisition gate (acquire-sources) so originals are on disk before any source-ingester runs, and works tasks via subagent dispatch (source-acquirer, source-ingester, analyst, drafter) with two-stage review. Does not execute anything outside the plan.
+description: Use AFTER writing-research-plan has produced a ready plan (status=ready for hermeneutic projects, status=pre-registered for quantitative/mixed). Reads `input/ideas/<slug>-plan.md`, creates one task-list item per plan task, runs a pre-ingest acquisition gate (acquire-sources) so originals are on disk before any source-ingester runs, and works tasks via subagent dispatch (source-acquirer, source-ingester, analyst, drafter) with two-stage review. Does not execute anything outside the plan.
 inputs:
   - name: plan_path
     description: Path to input/ideas/<slug>-plan.md — status=ready (hermeneutic) or status=pre-registered (quantitative/mixed)
@@ -49,7 +49,7 @@ deviations go into the deviation log.
 
 1. **Load the plan** — read `input/ideas/<slug>-plan.md` end-to-end
 2. **Verify the plan is ready** (methodology-aware): `methodology: hermeneutic` → frontmatter `status: ready` is enough (no frozen hypothesis); `methodology: quantitative`/`mixed` (or a task block marked `pre-registered: true`) → `status: pre-registered` + user confirmation of the hypothesis
-3. **Create TodoWrite items** — one per task in the plan (use the plan's own wording)
+3. **Create task-list items** — one per task in the plan (use the plan's own wording)
 4. **Acquisition gate (before any ingest task)** — guarantee the originals are on disk first; run the **Acquisition gate** algorithm below. `literature-review` only searches — without this gate every `source-ingester` hard-stops on a missing PDF.
 5. **Route each task to the right subagent:**
    - **Ingest task** → `source-ingester` (see `agents/source-ingester.md`)
@@ -87,7 +87,7 @@ per-source hard-stops.
    - **a. Offer the list.** Present the missing sources from `acquisition-todo.md`
      plus the manual-download instruction (university VPN / library proxy; save
      each into `<library>/pdf/` under the exact `<bibkey>.pdf`
-     filename). Mark the dependent ingest TodoWrite items `blocked` and **pause** —
+     filename). Mark the dependent ingest tasks as blocked and **pause** —
      do not dispatch those ingests.
    - **b. On the user's resume signal**, re-scan `<library>/pdf/` for the newly
      added PDFs and **reconcile** — re-run `acquire-sources` in reconcile mode:
@@ -117,7 +117,7 @@ digraph executing {
     "Load plan" [shape=box];
     "Pre-registered & signed?" [shape=diamond];
     "Back to writing-research-plan" [shape=box];
-    "Create TodoWrite from plan" [shape=box];
+    "Create task list from plan" [shape=box];
     "Acquisition gate: scan the library" [shape=box];
     "All originals present?" [shape=diamond];
     "Run acquire-sources" [shape=box];
@@ -145,8 +145,8 @@ digraph executing {
 
     "Load plan" -> "Pre-registered & signed?";
     "Pre-registered & signed?" -> "Back to writing-research-plan" [label="no"];
-    "Pre-registered & signed?" -> "Create TodoWrite from plan" [label="yes"];
-    "Create TodoWrite from plan" -> "Acquisition gate: scan the library";
+    "Pre-registered & signed?" -> "Create task list from plan" [label="yes"];
+    "Create task list from plan" -> "Acquisition gate: scan the library";
     "Acquisition gate: scan the library" -> "All originals present?";
     "All originals present?" -> "Next task" [label="yes"];
     "All originals present?" -> "Run acquire-sources" [label="no"];

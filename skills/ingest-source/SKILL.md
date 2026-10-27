@@ -62,7 +62,7 @@ If any condition is missing: explain to the user which, ask for a short reason f
 
 ## Checklist
 
-Create TodoWrite tasks for each:
+Create a task-list item for each:
 
 1. **Determine focus** — read `input/description/*.md` if present; extract the project's research question (look for `## Research question` heading or first H2). Propose: "Default focus from project description: «<research question>». Use this for the ingest or refine? (e.g. 'focus on the stratigraphic argument for Megiddo IVA' is more useful than the whole research question)." If `input/description/` is absent, ask explicitly: "What's the focus for this ingest? One sentence — what aspect of this source serves your project?" **Do not proceed without an explicit confirmed focus string.**
 2. **Locate the acquired original** — the PDF lives in the **shared library**, not in the project: `<library>/pdf/<bibkey>.pdf` (placed there by `acquire-sources`; e.g. `finkelstein-2003-low-chronology.pdf`). Resolve the library with `python scripts/library.py`, or from Python: `from library import pdf_for; pdf_for("<bibkey>")`.
@@ -506,7 +506,7 @@ Append a single line to `knowledge/_meta/log.md`:
 
 ## Subagent Dispatch (optional)
 
-For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source (see `agents/source-ingester.md`). The subagent gets fresh context with the source PDF + this skill's content + the project frontmatter schema + the focus string. Main conversation reviews the diff after each ingest.
+For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source (see `agents/source-ingester.md`). The subagent gets fresh context with this skill preloaded (its `skills:` frontmatter; embed this skill's content in the prompt only on a host without preloading) and the prompt passes the source PDF + the project frontmatter schema + the focus string. Main conversation reviews the diff after each ingest.
 
 ## Red Flags
 

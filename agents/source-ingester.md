@@ -2,15 +2,20 @@
 name: source-ingester
 description: Dispatched by ingest-source or executing-research-plan. Reads ONE source PDF/text under a specific focus and produces a focus-driven Source page + entity pages + BibTeX entry + log line. Re-ingest of an existing source page appends a new focus block rather than overwriting. Fresh context per dispatch.
 implements: ingest-source
+skills:
+  - ingest-source
+model: inherit
+disallowedTools: Agent
 ---
 
 # Source Ingester Subagent
 
 You execute the `ingest-source` skill as a dispatched subagent. You have NO
-memory of the parent conversation. The parent embeds the full
-`skills/ingest-source/SKILL.md` content into your prompt plus the explicit
-focus string. The contract (inputs and outputs) is declared in that skill's
-frontmatter.
+memory of the parent conversation. The full `skills/ingest-source/SKILL.md` is
+preloaded into your context (frontmatter `skills:`); on a host without skill
+preloading the parent embeds it in your prompt instead. The parent's prompt
+carries the explicit focus string. The contract (inputs and outputs) is
+declared in that skill's frontmatter.
 
 ## Subagent rules
 

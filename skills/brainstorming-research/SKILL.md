@@ -26,7 +26,7 @@ Every research project goes through this process. A single-source review, a shor
 
 ## Checklist
 
-Create a TodoWrite task for each item. Complete in order:
+Create a task-list item for each. Complete in order:
 
 1. **Explore project context** — read existing `input/ideas/*`, `input/description/*`, recent `knowledge/_meta/log.md`, check git for parallel work
 2. **Ask clarifying questions — one at a time** — what is the research question, what has been seen already, what would success look like

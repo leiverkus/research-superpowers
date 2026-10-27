@@ -153,6 +153,8 @@ The skill itself tells you which.
 
 **In OpenCode:** Skills load natively from `skills/<name>/SKILL.md` and `.claude/skills/<name>/SKILL.md`. Trigger them via natural language or the built-in `skill` tool (e.g. `skill({ name: "ingest-source" })`).
 
+**"Task-list item"** in a checklist means whatever task tracker the host gives you: `TaskCreate` / `TaskUpdate` in current Claude Code, `TodoWrite` in older Claude Code builds and in OpenCode. The skills name the concept, not the tool, so they survive a rename.
+
 ## The Research Project Template
 
 Every research project uses the same folder layout (from `templates/research-project-template/`):
