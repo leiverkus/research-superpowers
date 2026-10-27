@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.42.1] — 2026-10-27
+
+Patch, not minor: no new capability. The orientation skill stops sending quick
+questions into a workflow, dead references and malformed scenario criteria are fixed,
+and two checks catch those faults from now on.
+
 ### Changed
 
 - **`using-research-powers` says when no skill is needed.** The orientation skill was
