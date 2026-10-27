@@ -13,7 +13,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   `mcp` 2.0 removed `mcp.server.fastmcp`, a fresh `uvx` install of one crashes at start;
   Claude Code reports only "Failed to connect", and every skill silently falls back to
   its manual path. Both install lines (Claude Code, OpenCode) now use the PyPI release
-  `dao-paper-search-mcp==1.0.1`, which pins `mcp<2`, and the page says why to keep the pin.
+  `dao-paper-search-mcp==1.1.0`, and the page says why to keep the pin. (1.0.1 bounded
+  `mcp<2`; 1.1.0 moves the server to `mcp` 2.x and bounds it below 3.)
 
 ## [0.42.2] — 2026-10-27
 
