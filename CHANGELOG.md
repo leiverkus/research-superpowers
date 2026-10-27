@@ -6,6 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`setup/macos/`: one re-runnable script sets up a Mac for the plugin.** A
+  `Brewfile` lists every dependency and what it is for:
+  - Git, Python, uv, Claude Code;
+  - Poppler, Ghostscript, OCRmyPDF with language data;
+  - Quarto and the four template fonts;
+  - Zettlr for editing the Markdown wiki;
+  - optionally `gh` and the desktop app.
+
+  `setup-macos.sh` adds what Homebrew cannot do: PyYAML for Homebrew's Python (there
+  is no formula, and PEP 668 blocks a plain `pip install`), TinyTeX via Quarto, the
+  Claude login, the plugin itself, the dao-paper-search MCP server (asks, reads the
+  CORE key without echo), and the pointer to the shared PDF library. It ends with a
+  check of every piece. It works from a clone or as `curl … | bash`, fetching the
+  `Brewfile` when none of its own sits next to it. Linked from `docs/installation.md`
+  and `docs/README.md`.
+- **`tests/test_macos_setup.py`** keeps the setup in step with what it copies: the
+  MCP version against the pin in `docs/recommended-mcps.md`, the font casks against
+  the fonts the templates set (a missing font makes Quarto fall back silently), the
+  `Brewfile` header the script recognises it by, and `bash -n` on the script.
+
 ### Fixed
 
 - **`sync-project.py --apply` left an in-sync project on its old `plugin_version`.**

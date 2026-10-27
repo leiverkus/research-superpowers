@@ -24,7 +24,7 @@ claude plugins install /path/to/research-superpowers
 
 After install, start a session inside a research project (scaffold one from `templates/research-project-template/` first). The assistant gets a compact skill index at SessionStart and loads individual skills on demand.
 
-**Step-by-step install for non-technical users:** see [`installation.md`](installation.md). **Cowork or no terminal at all:** see [`installation-cowork.md`](installation-cowork.md) — uses the new `scaffold-research-project` skill so no `cp` commands are needed.
+**Step-by-step install for non-technical users:** see [`installation.md`](installation.md). **Setting up a Mac from scratch:** [`setup/macos/`](../setup/macos/README.md) installs every dependency via Homebrew in one re-runnable script. **Cowork or no terminal at all:** see [`installation-cowork.md`](installation-cowork.md) — uses the new `scaffold-research-project` skill so no `cp` commands are needed.
 
 ## Install (OpenCode)
 
