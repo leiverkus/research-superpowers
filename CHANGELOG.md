@@ -41,11 +41,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- **`tests/test_plugin_frontmatter_yaml.py`** parses every skill and agent frontmatter
-  as real YAML. `lint-plugin.py`'s tolerant parser accepted a description with `: `
-  inside, which Claude Code rejects by loading the skill with **all** frontmatter
-  dropped, description included. Caught while editing `wiki-graph`, by
-  `claude plugin validate --strict`.
+- **`tests/test_plugin_frontmatter_yaml.py`** parses every skill **and agent**
+  frontmatter as real YAML, as part of the local test run. A description with `: `
+  inside makes Claude Code load the skill with **all** frontmatter dropped,
+  description included; `lint-plugin.py`'s tolerant parser accepts it. CI's "Skill
+  frontmatter is valid YAML" step already covered skills, but not agents, and only
+  after a push. Caught while editing `wiki-graph`, by `claude plugin validate --strict`.
 
 ## [0.42.0] — 2026-10-27
 
