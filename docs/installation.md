@@ -4,6 +4,12 @@ This guide walks you through installing `research-superpowers` step by step. No 
 
 **No terminal, no Python, no git?** Skip this page and read [`installation-cowork.md`](installation-cowork.md) instead — the click-only path takes 3–5 minutes and works fully in Cowork.
 
+**On a Mac?** One script installs everything this page covers and more — Python with PyYAML, the PDF tools (Poppler, Ghostscript, OCRmyPDF), Quarto with TeX and the template fonts, Zettlr, the plugin and the recommended MCP server — via Homebrew. It is safe to re-run. See [`setup/macos/`](../setup/macos/README.md):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/leiverkus/research-superpowers/main/setup/macos/setup-macos.sh | bash
+```
+
 Total time: **5–10 minutes** for the recommended path.
 
 ## Before you start

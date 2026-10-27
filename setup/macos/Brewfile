@@ -1,0 +1,32 @@
+# Brewfile for research-superpowers on macOS
+# Install with:  brew bundle --file setup/macos/Brewfile
+# (setup-macos.sh does this for you, plus the steps Homebrew cannot do.)
+
+# --- Core: without these the plugin does not run --------------------------
+brew "git"            # project repos, plugin marketplace
+brew "python"         # lint-wiki.py, wiki-to-graph.py, bib-search.py, drift check (needs >= 3.10;
+                      # macOS's own /usr/bin/python3 is too old)
+brew "uv"             # provides `uvx`, which starts the dao-paper-search MCP server
+cask "claude-code"    # the `claude` CLI. Update with: brew upgrade --cask claude-code
+
+# --- PDFs: acquire, ingest, search, add-to-library -------------------------
+brew "poppler"        # pdftotext, pdfinfo, pdfimages (reading and indexing sources)
+brew "ghostscript"    # scripts/optimize-pdf.py
+brew "ocrmypdf"       # text layer for scanned PDFs (drift report, bib-search)
+brew "tesseract-lang" # OCR language data: German, Hebrew, French, … (~650 MB)
+
+# --- Publishing: Quarto article / book / talk ------------------------------
+cask "quarto"         # renders output/**.qmd (pandoc included); TeX comes via `quarto install tinytex`
+cask "font-gentium-plus"   # mainfont: Latin transliteration (ḥ ṣ ṭ ʾ ʿ ā ī ū)
+cask "font-noto-sans"      # sansfont: headings
+cask "font-fira-code"      # monofont: code
+cask "font-ezra-sil"       # Hebrew (babel, _preamble.tex)
+
+# --- Editing: the wiki and manuscripts are Markdown --------------------------
+cask "zettlr"         # Markdown editor: wiki pages (knowledge/), notes (input/), .qmd drafts;
+                      # reads YAML frontmatter, [[wikilinks]] and @citekeys from a .bib
+
+# --- Optional --------------------------------------------------------------
+brew "gh"             # GitHub CLI: PRs and releases of your own repos
+cask "claude"         # Claude desktop app (Cowork, Code tab)
+# brew "graphviz"     # only for plugin maintainers: regenerate docs/assets/phase-flow.svg
