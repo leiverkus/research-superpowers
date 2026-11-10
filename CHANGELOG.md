@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`bib-search.py` fills a thin result from the query's two-term pairs.** Bare words
+  are AND-ed on one page, so one reworded term sinks a query of three or four.
+  When a plain query of 3–6 terms returns fewer page hits than `--limit`, the free
+  slots are now filled from its two-term pairs, rank-fused like `--q` variants.
+  Strict hits stay first and untouched; every added hit is marked (`~`, or
+  `"relaxed": true` in JSON) and names the pair that found it, because it matched
+  only part of the query. Queries that state their own logic (`OR`, `NOT`, `NEAR`,
+  parentheses) or come with `--q` are never rewritten; `--no-relax` gives the
+  strict answer alone. Measured on 20 wiki claims of known source: 10 found
+  before, 17 after, none ranked worse. The `search()` function keeps its old
+  behaviour unless called with `relax=True`.
+
 ## [0.43.1] — 2026-11-10
 
 Patch: the library search recipe now asks for every language the library holds.

@@ -471,3 +471,119 @@ class Fusion(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Relaxation(unittest.TestCase):
+    """A thin strict result is filled from the query's two-term pairs.
+
+    Bare words are AND-ed on one page, so a single reworded term sinks a query of
+    three or four. Measured (docs/measurements/2026-07-17-semantic-search, addendum
+    2026-11-10): 10 of 20 known sources with one such query, 17 with its pairs.
+    What is pinned here is that relaxation can only ADD, says what it added, and
+    never rewrites a query that already states how its terms combine.
+    """
+
+    LIB = {
+        # the page that answers the question never uses the paraphrased word
+        "benyosef-2019-bias": ["nomadic polities leave little monumental architecture"],
+        "other-2020-walls": ["monumental architecture of the palace"],
+        "third-2021-all": ["nomads monumental architecture invisible in the record"],
+    }
+
+    def test_it_is_off_for_library_callers_unless_asked(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomadic monumental invisible")
+            self.assertEqual(hits, [])
+
+    def test_a_query_no_page_fully_matches_is_answered_from_its_pairs(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomadic monumental invisible", relax=True)
+            self.assertIn("benyosef-2019-bias", [h["bibkey"] for h in hits])
+            self.assertTrue(all(h["relaxed"] for h in hits))
+
+    def test_an_added_hit_names_the_pair_that_found_it(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomadic monumental invisible", relax=True)
+            hit = next(h for h in hits if h["bibkey"] == "benyosef-2019-bias")
+            self.assertEqual(hit["queries"], ["nomadic monumental"])
+
+    def test_strict_hits_come_first_and_are_not_marked(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomads monumental invisible", relax=True)
+            self.assertEqual(hits[0]["bibkey"], "third-2021-all")
+            self.assertNotIn("relaxed", hits[0])
+            self.assertNotIn("queries", hits[0])
+            self.assertTrue(all(h.get("relaxed") for h in hits[1:]))
+
+    def test_a_strict_hit_is_not_repeated_as_a_relaxed_one(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomads monumental invisible", relax=True)
+            pages = [(h["bibkey"], h["page"]) for h in hits]
+            self.assertEqual(len(pages), len(set(pages)))
+
+    def test_a_full_strict_result_is_left_exactly_as_it_was(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            strict = bs.search(f.library, "nomads monumental invisible", limit=1)
+            self.assertEqual(
+                bs.search(f.library, "nomads monumental invisible", limit=1, relax=True),
+                strict)
+
+    def test_the_limit_bounds_strict_and_added_page_hits_together(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            # strict: one page; the pair "monumental architecture" matches all three
+            hits = bs.search(f.library, "monumental architecture nomads", limit=2, relax=True)
+            self.assertEqual(len(hits), 2)
+            self.assertEqual(hits[0]["bibkey"], "third-2021-all")
+
+    def test_two_terms_have_nothing_to_relax_to(self):
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            self.assertEqual(bs.search(f.library, "nomadic invisible", relax=True), [])
+
+    def test_variants_switch_it_off(self):
+        # --q means the caller is already running narrow queries on purpose.
+        with _Fixture(self.LIB) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomadic monumental invisible",
+                             variants=["palace"], relax=True)
+            self.assertFalse(any(h.get("relaxed") for h in hits))
+
+    def test_a_query_that_states_its_own_logic_is_never_rewritten(self):
+        for q in ('nomadic OR monumental OR invisible',
+                  'nomadic NOT monumental invisible',
+                  'NEAR(nomadic monumental, 5) invisible',
+                  '(nomadic monumental) invisible',
+                  'nomadic monumental "invisible'):
+            self.assertEqual(bs.relax_pairs(q), [], q)
+
+    def test_a_phrase_is_one_term_and_is_never_split(self):
+        self.assertEqual(
+            bs.relax_pairs('"Iron IIC" pottery Persian'),
+            ['"Iron IIC" pottery', '"Iron IIC" Persian', 'pottery Persian'])
+
+    def test_a_prefix_keeps_its_star(self):
+        self.assertIn("nomad* invisible", bs.relax_pairs("nomad* monumental invisible"))
+
+    def test_a_repeated_term_makes_no_pair_with_itself(self):
+        self.assertEqual(bs.relax_pairs("edom edom persian"), [])
+
+    def test_a_sentence_is_not_exploded_into_dozens_of_queries(self):
+        self.assertEqual(bs.relax_pairs("a b c d e f g"), [])
+
+    def test_a_curated_keyword_reached_only_by_a_pair_is_marked_too(self):
+        bib = ("@article{benyosef-2019-bias,\n  title = {X},\n"
+               "  keywords = {architectural bias; nomadic polities}\n}\n")
+        with _Fixture(self.LIB, bib_text=bib) as f:
+            bs.build(f.library, quiet=True)
+            hits = bs.search(f.library, "nomadic polities invisible", relax=True)
+            kw = [h for h in hits if h["matched"] == "keyword"]
+            self.assertEqual(len(kw), 1)
+            self.assertTrue(kw[0]["relaxed"])
+            self.assertEqual(kw[0]["queries"], ["nomadic polities"])
