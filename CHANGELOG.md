@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.43.0] — 2026-11-10
+
+Minor: the wiki now knows which position came first. Sources carry a date, relations
+between them have a direction in time, a debate can be read in publication order, and
+the literature search asks who answered a work. Also a one-command macOS setup.
+
 ### Added
 
 - **Research chronology: positions carry their date.** A wiki recorded "A contradicts
@@ -38,6 +44,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   Later is not the same as right: `supersedes` is for a later source that engages the
   earlier one and says it fails. See "Research chronology" in
   `docs/frontmatter-schema.md`.
+- **`wiki-to-graph.py timeline <slug>`: a debate in publication order.** For one page —
+  usually a concept or a synthesis — it lists every connected source by year, with the
+  typed stance each takes toward the page and toward the earlier sources in the list, and
+  closes with a `Superseded by:` line when a source says the position no longer stands.
+  Nothing is inferred; it is the existing edges, sorted. Also exposed as the MCP tool
+  `graph_timeline`. `drafting-manuscript` runs it before sketching a section and hands
+  the result to the `drafter`.
+  - Source nodes carry `year` and typed edges carry `basis` in `graph.json`,
+    `graph.graphml` and `graph.html`; `relations` prints the basis.
+  - `lint-wiki.py` adds the advisory `SUPERSEDED-POSITION` for a concept that a source
+    `supersedes`. It points at the timeline and decides nothing.
 - **`forward-search.py`: who answered a work, and what its author wrote later.** A topic
   search finds what was written *about* a question, not what was written *in reply to* a
   given work. For each bibkey or DOI the new project script lists the works that cite it
@@ -53,22 +70,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   - `literature-scout` no longer sends an e-mail address: OpenAlex ended its `mailto`
     polite pool in 2026. `OPENALEX_API_KEY`, when set, is used instead.
   - Synced to projects by `sync-project.py`; mirrored in the example project.
-- **`wiki-to-graph.py timeline <slug>`: a debate in publication order.** For one page —
-  usually a concept or a synthesis — it lists every connected source by year, with the
-  typed stance each takes toward the page and toward the earlier sources in the list, and
-  closes with a `Superseded by:` line when a source says the position no longer stands.
-  Nothing is inferred; it is the existing edges, sorted. Also exposed as the MCP tool
-  `graph_timeline`. `drafting-manuscript` runs it before sketching a section and hands
-  the result to the `drafter`.
-  - Source nodes carry `year` and typed edges carry `basis` in `graph.json`,
-    `graph.graphml` and `graph.html`; `relations` prints the basis.
-  - `lint-wiki.py` adds the advisory `SUPERSEDED-POSITION` for a concept that a source
-    `supersedes`. It points at the timeline and decides nothing.
-- **`PAGE-OUT-OF-RANGE` no longer reads the frontmatter.** Relations now sit on the later
-  page, so a `because` there routinely gives the *earlier* work's page, with nothing in
-  the sentence marking whose page it is; a review flag's `detail` does the same. Three
-  such anchors fired on correct pages in two live projects. The body carries the same
-  claims with their pages, so a PDF with the wrong pagination is still caught there.
 - **`tests/test_research_chronology.py`** pins the direction rule, `orig_year`, the
   advisory findings, and that a chain of supersessions is satisfied by citing its
   latest member.
@@ -92,6 +93,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   the fonts the templates set (a missing font makes Quarto fall back silently), the
   `Brewfile` header the script recognises it by, and `bash -n` on the script.
 
+### Changed
+
+- **`PAGE-OUT-OF-RANGE` no longer reads the frontmatter.** Relations now sit on the later
+  page, so a `because` there routinely gives the *earlier* work's page, with nothing in
+  the sentence marking whose page it is; a review flag's `detail` does the same. Three
+  such anchors fired on correct pages in two live projects. The body carries the same
+  claims with their pages, so a PDF with the wrong pagination is still caught there.
 ### Fixed
 
 - **`sync-project.py --apply` left an in-sync project on its old `plugin_version`.**
