@@ -53,6 +53,7 @@ project-root/
 │   ├── library.py         ← Resolves the shared library (env → dotfile → global)
 │   ├── bib-subset.py      ← output/bibtex/references.bib ← the cited subset
 │   ├── bib-search.py      ← page-level full-text search across the library (FTS5)
+│   ├── forward-search.py  ← who cites a work, who names it in the library, what its author wrote later
 │   ├── lint-wiki.py       ← Structural check of the wiki
 │   ├── wiki-to-graph.py   ← Knowledge-graph export + live queries
 │   ├── graph_mcp.py       ← MCP server exposing the graph queries
@@ -562,7 +563,8 @@ The same queries are exposed as an **MCP server** (`scripts/graph_mcp.py`,
 stdlib-only, a thin wrapper over the CLI). `.mcp.json` registers it for
 **Claude Code** automatically, so in a session the agent can call the
 `graph_neighbors` / `graph_path` / `graph_god_nodes` / `graph_bridges` /
-`graph_communities` / `graph_relations` / `graph_search` / `graph_stats` tools
+`graph_communities` / `graph_relations` / `graph_timeline` / `graph_search` /
+`graph_stats` tools
 natively. For
 **OpenCode**, add the equivalent to `opencode.json`:
 

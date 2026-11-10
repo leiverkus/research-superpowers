@@ -38,6 +38,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   Later is not the same as right: `supersedes` is for a later source that engages the
   earlier one and says it fails. See "Research chronology" in
   `docs/frontmatter-schema.md`.
+- **`forward-search.py`: who answered a work, and what its author wrote later.** A topic
+  search finds what was written *about* a question, not what was written *in reply to* a
+  given work. For each bibkey or DOI the new project script lists the works that cite it
+  (OpenAlex `cites:`), the owned works whose text names it (the library's full-text
+  index, with PDF pages), and with `--author` what its first author published since.
+  Book parts registered under separate DOIs are folded into one row, and works already
+  in a `.bib` are marked. The output says that neither list is complete — on one checked
+  case OpenAlex listed 39 citing records and missed two chapters that cite the work.
+  - `literature-review` runs it as a **forward pass** on every A-graded work that is
+    not among the newest, records the outcome per work in the guide's debates section,
+    and gates on it (SOFT-GATE 5). `literature-scout` reports it; `ingest-source` reads
+    the guide's pointers when placing a source in the research history.
+  - `literature-scout` no longer sends an e-mail address: OpenAlex ended its `mailto`
+    polite pool in 2026. `OPENALEX_API_KEY`, when set, is used instead.
+  - Synced to projects by `sync-project.py`; mirrored in the example project.
 - **`wiki-to-graph.py timeline <slug>`: a debate in publication order.** For one page —
   usually a concept or a synthesis — it lists every connected source by year, with the
   typed stance each takes toward the page and toward the earlier sources in the list, and

@@ -49,7 +49,7 @@ for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
            scripts/graph_mcp.py scripts/wiki-global-graph.py \
            scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
            scripts/check-pdf-version.py scripts/add-to-library.py \
-           scripts/optimize-pdf.py \
+           scripts/optimize-pdf.py scripts/forward-search.py \
            scripts/vendor/cytoscape.min.js; do
   diff -q "templates/research-project-template/$rel" "examples/example-project/$rel"
 done
@@ -127,7 +127,7 @@ for rel in scripts/lint-wiki.py scripts/wiki-to-graph.py \
            scripts/graph_mcp.py scripts/wiki-global-graph.py \
            scripts/library.py scripts/bib-subset.py scripts/bib-search.py \
            scripts/check-pdf-version.py scripts/add-to-library.py \
-           scripts/optimize-pdf.py \
+           scripts/optimize-pdf.py scripts/forward-search.py \
            scripts/vendor/cytoscape.min.js; do
   cp "$src/$rel" "examples/example-project/$rel"
 done
