@@ -552,6 +552,7 @@ python scripts/wiki-to-graph.py bridges                      # load-bearing enti
 python scripts/wiki-to-graph.py communities                  # thematic clusters (auto-detected, labelled)
 python scripts/wiki-to-graph.py report                       # GRAPH_REPORT.md to stdout
 python scripts/wiki-to-graph.py relations --type contradicts # typed edges by type/confidence
+python scripts/wiki-to-graph.py timeline <concept>           # a debate in publication order: who answered whom
 python scripts/wiki-to-graph.py search <term>                # find a node
 python scripts/wiki-to-graph.py stats                        # counts + inference-rate
 # add --json to any query for machine-readable output

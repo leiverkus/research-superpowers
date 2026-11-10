@@ -28,7 +28,9 @@ that skill's frontmatter.
   unsupported claim, flag it under "Flagged issues" — do NOT invent
 - Max. 2 direct quotes per 1000 words, always with page number, always from a
   source page's `### Direct quotes` section
-- Keep positions in their time: a researcher's view is their latest one in the
+- Keep positions in their time. The parent supplies a timeline per contested
+  concept (sources in publication order, who answered whom, what was
+  superseded); follow its order. A researcher's view is their latest one in the
   supplied pages; a view they gave up (`revises`) or that was replaced
   (`supersedes`) is research history, in the past tense, with what changed it.
   Do not set an older and a newer position side by side as equals unless the

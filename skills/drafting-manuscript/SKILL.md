@@ -311,7 +311,7 @@ The counter-position line is not decoration. A section that cannot name what arg
 - Every citation key MUST exist in `output/bibtex/references.bib`
 - Direct quotes: inline with `>` or an em-dash, always with page number
 - No uncited claims in argumentative sections (exception: common knowledge, clearly marked)
-- **Positions carry their date.** Before sketching a section, read the `Research chronology` section of `lint-wiki.py` and the `relations:` of the source pages you cite. Then:
+- **Positions carry their date.** Before sketching a section, run `python scripts/wiki-to-graph.py timeline <slug>` for each concept or synthesis page the section argues about (MCP: `graph_timeline`), and read the `Research chronology` section of `lint-wiki.py`. The timeline lists the sources in publication order with what each says about the page and about the earlier sources; put the relevant lines into the sketch, so the order of the argument is agreed at STOP 2 and not improvised in prose. Then:
   - A researcher's view is what they hold in their **latest** source in the wiki. An earlier view they gave up (`revises`) appears as history, in the past tense, with what changed their mind: "Finkelstein first dated … [@finkelstein-1996-…]; after the Tel Rehov dates he moved to … [@finkelstein-2003-…]".
   - A source with an incoming `supersedes` is not cited as the state of the question. Cite it together with what superseded it, and say on what `basis` — new evidence dates the older position, a reinterpretation only disputes it.
   - Positions from different decades are not listed as parallel options unless the wiki shows the earlier one is still held (`contradicts`, or a `responds-to` that leaves it open). Order them in time and name the finds or arguments that moved the discussion.
@@ -414,6 +414,7 @@ For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/draf
 
 The subagent receives:
 - **The approved argument sketch** for this section — its contract; the prose must carry out *this* argument, not a reasonable-looking alternative
+- **The timeline** of each contested concept the section treats (`wiki-to-graph.py timeline <slug>` output, pasted) — which source came first, who answered whom, what has been superseded
 - List of synthesis pages (paths) to pull from
 - List of source pages (paths) with allowed citation keys
 - **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 11). Without these, the subagent can only bullet-reflow

@@ -161,19 +161,38 @@ def collect_pages(wiki_dir: Path) -> dict[str, dict]:
     return pages
 
 
+_BIBKEY_YEAR = re.compile(r"-(\d{4})[a-z]?-")
+
+
+def source_year(fm: dict) -> int | None:
+    """The year a source's position entered the discussion: `orig_year` when the
+    page declares one (reprint, translation, unrevised later edition), otherwise
+    the year in the bibkey. Same rule as lint-wiki.py — the two scripts share no
+    module, so the three lines are repeated rather than imported."""
+    if fm.get("type") != "source":
+        return None
+    orig = fm.get("orig_year")
+    if isinstance(orig, int) and not isinstance(orig, bool):
+        return orig
+    m = _BIBKEY_YEAR.search(str(fm.get("bibkey") or ""))
+    return int(m.group(1)) if m else None
+
+
 def build_nodes(pages: dict[str, dict]) -> list[dict]:
     nodes = []
     for slug, page in sorted(pages.items()):
         fm = page["fm"]
-        nodes.append(
-            {
-                "id": slug,
-                "type": fm.get("type", "unknown"),
-                "subtype": derive_subtype(fm),
-                "title": fm.get("title", slug),
-                "status": fm.get("status", "unknown"),
-            }
-        )
+        node = {
+            "id": slug,
+            "type": fm.get("type", "unknown"),
+            "subtype": derive_subtype(fm),
+            "title": fm.get("title", slug),
+            "status": fm.get("status", "unknown"),
+        }
+        year = source_year(fm)
+        if year is not None:
+            node["year"] = year
+        nodes.append(node)
     return nodes
 
 
@@ -245,6 +264,8 @@ def build_edges(
                 "because": str(rel.get("because", "")).strip(),
                 "weight": 1,
             }
+            if rel.get("basis"):
+                edges[key]["basis"] = str(rel["basis"]).strip()
 
     stats = {
         "dangling": dangling,
@@ -459,9 +480,11 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         ("d_title", "node", "title", "string"),
         ("d_status", "node", "status", "string"),
         ("d_community", "node", "community", "int"),
+        ("d_year", "node", "year", "int"),
         ("e_relation", "edge", "relation_type", "string"),
         ("e_confidence", "edge", "confidence", "string"),
         ("e_because", "edge", "because", "string"),
+        ("e_basis", "edge", "basis", "string"),
         ("e_weight", "edge", "weight", "int"),
     ]
     for key_id, domain, name, attr_type in keys:
@@ -481,6 +504,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         "title": "d_title",
         "status": "d_status",
         "community": "d_community",
+        "year": "d_year",
     }
     for node in nodes:
         el = ET.SubElement(graph, f"{{{ns}}}node")
@@ -497,6 +521,7 @@ def write_graphml(out_dir: Path, nodes, edges) -> Path:
         "relation_type": "e_relation",
         "confidence": "e_confidence",
         "because": "e_because",
+        "basis": "e_basis",
         "weight": "e_weight",
     }
     for i, edge in enumerate(edges):
@@ -732,7 +757,8 @@ def write_html(out_dir: Path, nodes, edges, bridges, stats, vendor_path: Path,
         {"data": {
             "id": f"e{i}", "source": e["source"], "target": e["target"],
             "relation_type": e["relation_type"], "confidence": e["confidence"],
-            "because": e.get("because", ""), "weight": e.get("weight", 1),
+            "because": e.get("because", ""), "basis": e.get("basis", ""),
+            "weight": e.get("weight", 1),
         }}
         for i, e in enumerate(edges)
     ]
@@ -934,7 +960,8 @@ function showInfo(n) {
   const id = n.id();
   const out = GRAPH.edges.filter(e => e.data.source === id && e.data.relation_type !== 'wikilink');
   const inc = GRAPH.edges.filter(e => e.data.target === id && e.data.relation_type !== 'wikilink');
-  const why = e => e.data.because ? ` <span class="k">— ${e.data.because}</span>` : '';
+  const basis = e => e.data.basis ? ` <span class="k">[${e.data.basis}]</span>` : '';
+  const why = e => basis(e) + (e.data.because ? ` <span class="k">— ${e.data.because}</span>` : '');
   const li = e => `<li>${e.data.relation_type} <span class="k">(${e.data.confidence})</span> → ${e.data.target}${why(e)}</li>`;
   const liIn = e => `<li>${e.data.source} <span class="k">(${e.data.confidence})</span> → ${e.data.relation_type}${why(e)}</li>`;
   document.getElementById('info').innerHTML =
@@ -1063,6 +1090,62 @@ def q_relations(edges, rtype=None, confidence=None, node=None):
     return out
 
 
+# Types that say the earlier position no longer stands in some respect.
+SUPERSEDING_RELATIONS = ("supersedes", "revises")
+
+
+def q_timeline(nodes, edges, focus):
+    """The sources around one page, in the order they were published.
+
+    A debate has a history, and a list of "A contradicts B" edges does not show
+    it. For the focus page (usually a concept or a synthesis, but any page
+    works) this collects every source connected to it, dates each by its year,
+    and attaches two things: the stance it takes toward the focus, and what it
+    says about the EARLIER sources in the same list. Nothing here is inferred —
+    it is the existing edges, sorted.
+    """
+    by_id = {n["id"]: n for n in nodes}
+    members: set[str] = set()
+    for e in edges:
+        if focus in (e["source"], e["target"]):
+            other = e["target"] if e["source"] == focus else e["source"]
+            if by_id.get(other, {}).get("type") == "source":
+                members.add(other)
+    if by_id.get(focus, {}).get("type") == "source":
+        members.add(focus)
+
+    def typed(e):
+        out = {"type": e["relation_type"], "confidence": e["confidence"]}
+        if e.get("basis"):
+            out["basis"] = e["basis"]
+        if e.get("because"):
+            out["because"] = e["because"]
+        return out
+
+    entries = []
+    for sid in members:
+        stance, responses = [], []
+        for e in edges:
+            if e["relation_type"] == "wikilink" or e["source"] != sid:
+                continue
+            if e["target"] == focus and sid != focus:
+                stance.append(typed(e))
+            elif e["target"] in members and e["target"] != sid:
+                responses.append({"target": e["target"], **typed(e)})
+        entries.append({"id": sid, "title": by_id[sid].get("title", sid),
+                        "year": by_id[sid].get("year"), "stance": stance,
+                        "responses": sorted(responses, key=lambda r: (by_id[r["target"]].get("year") or 0, r["target"]))})
+    entries.sort(key=lambda x: (x["year"] is None, x["year"] or 0, x["id"]))
+
+    superseded_by = [{"id": x["id"], "year": x["year"], "basis": s.get("basis", "")}
+                     for x in entries for s in x["stance"] if s["type"] in SUPERSEDING_RELATIONS]
+    years = [x["year"] for x in entries if x["year"] is not None]
+    return {"focus": focus, "title": by_id.get(focus, {}).get("title", focus),
+            "type": by_id.get(focus, {}).get("type", "unknown"),
+            "span": [min(years), max(years)] if years else None,
+            "superseded_by": superseded_by, "sources": entries}
+
+
 def q_search(nodes, term):
     t = term.lower()
     return [n for n in nodes
@@ -1144,7 +1227,39 @@ def run_query(args, nodes, edges, stats) -> int:
         print(f"Relations: {len(rels)}")
         for e in rels:
             why = f"  — {e['because']}" if e.get("because") else ""
-            print(f"  {e['source']} --{e['relation_type']} ({e['confidence']})--> {e['target']}{why}")
+            basis = f", {e['basis']}" if e.get("basis") else ""
+            print(f"  {e['source']} --{e['relation_type']} ({e['confidence']}{basis})--> {e['target']}{why}")
+        return 0
+
+    if args.cmd == "timeline":
+        focus = need(args.node)
+        if not focus:
+            return 1
+        tl = q_timeline(nodes, edges, focus)
+        if as_json:
+            print(_json.dumps(tl, ensure_ascii=False, indent=2)); return 0
+        span = f", {tl['span'][0]}–{tl['span'][1]}" if tl["span"] else ""
+        print(f"Timeline: {tl['focus']} ({tl['type']}) — {len(tl['sources'])} source(s){span}")
+
+        def show(r, lead):
+            tags = ", ".join(x for x in (r.get("basis"), r["confidence"]) if x)
+            why = f" — {r['because']}" if r.get("because") else ""
+            print(f"{lead}{r['type']}{' ' + r['target'] if 'target' in r else ''} [{tags}]{why}")
+
+        for x in tl["sources"]:
+            year = x["year"] if x["year"] is not None else "n.d."
+            print(f"  {year}  {x['id']}")
+            if not x["stance"] and x["id"] != focus:
+                print("          (linked; no typed stance toward the focus)")
+            for s in x["stance"]:
+                show(s, "          ")
+            for r in x["responses"]:
+                show(r, "          → ")
+        if tl["superseded_by"]:
+            who = ", ".join(f"{s['id']} ({s['year']}{', ' + s['basis'] if s['basis'] else ''})"
+                            for s in tl["superseded_by"])
+            print(f"  Superseded by: {who} — present this position as research history, "
+                  f"or show that it is still held.")
         return 0
 
     if args.cmd == "search":
@@ -1226,6 +1341,10 @@ def main() -> int:
     sub.add_parser("bridges", parents=[common], help="Entities joining unconnected source clusters")
     sp = sub.add_parser("relations", parents=[common], help="List typed relations")
     sp.add_argument("--type"); sp.add_argument("--confidence"); sp.add_argument("--node")
+    sp = sub.add_parser("timeline", parents=[common],
+                        help="Sources around one page in publication order, with their stance "
+                             "toward it and toward each other")
+    sp.add_argument("node")
     sp = sub.add_parser("search", parents=[common], help="Find nodes by id/title")
     sp.add_argument("term")
     sub.add_parser("stats", parents=[common], help="Counts + inference-rate")

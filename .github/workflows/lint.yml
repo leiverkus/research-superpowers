@@ -194,6 +194,9 @@ jobs:
           rel = q("relations", "--type", "contradicts")
           assert len(rel) >= 1, "expected a contradicts relation"
           assert rel[0].get("because"), "expected a `because` rationale on the relation"
+          tl = q("timeline", "chronology-debate")
+          years = [s["year"] for s in tl["sources"]]
+          assert years == sorted(years) and len(years) == 3, f"timeline not in order: {years}"
           comm = q("communities")
           assert comm and all("members" in c for c in comm), "communities malformed"
           print(f"query OK — neighbours {len(nb['neighbors'])}, "
@@ -219,6 +222,7 @@ jobs:
           assert by_id[1]["result"]["serverInfo"]["name"] == "wiki-graph"
           tools = [t["name"] for t in by_id[2]["result"]["tools"]]
           assert "graph_neighbors" in tools and "graph_stats" in tools, tools
+          assert "graph_timeline" in tools, tools
           assert by_id[3]["result"]["isError"] is False
           print(f"MCP OK — {len(tools)} tools, stats call ok")
           PY
