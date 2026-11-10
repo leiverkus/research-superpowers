@@ -6,6 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **Library search: run every concept in each language the library holds.** The
+  full-text index matches characters, so a German query does not reach an English
+  source. Measured on a 3,131-document library with 20 wiki claims of known source:
+  queries in the source's language found 17, queries in the other language 3.
+  `drafting-manuscript` now makes the other language a required alias (one `--q` per
+  language, including transliteration variants) and adds "search with the source's
+  words, not your paraphrase"; `literature-review` says the same for its library
+  pass. The measurement is recorded as an addendum to
+  `docs/measurements/2026-07-17-semantic-search/` — the verdict against a vector
+  index stands.
+
 ## [0.43.0] — 2026-11-10
 
 Minor: the wiki now knows which position came first. Sources carry a date, relations
