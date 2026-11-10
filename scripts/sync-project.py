@@ -94,6 +94,7 @@ SYNCED_PATHS = (
     "scripts/check-pdf-version.py",
     "scripts/add-to-library.py",
     "scripts/optimize-pdf.py",
+    "scripts/forward-search.py",
     "scripts/vendor/cytoscape.min.js",
 )
 
