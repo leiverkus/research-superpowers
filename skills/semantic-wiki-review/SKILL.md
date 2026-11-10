@@ -46,15 +46,32 @@ State the scope to the user before reading.
 2. **List in-scope pages** — read each fully (no skim).
 3. **Build a claim ledger** as you read — one line per substantive claim,
    tagged with `[[source-key]]` and page-of-origin.
-4. **Flag issues** in five categories. Each has a *recording channel* — where
+4. **Flag issues** in the categories below. Each has a *recording channel* — where
    the finding is written so downstream skills (lint, drafting) can act on it:
    - **Contradictions** — two pages assert incompatible things. → Record as a
      typed `relations:` edge with `type: contradicts` on the *pages themselves*
      (both directions), `confidence: inferred` unless a verbatim quote grounds
      it, plus a `because`. This is NOT a `review_flag` (a flag is about one
      page's own content; a contradiction is a relation between two).
-   - **Stale syntheses** — a synthesis page relies on sources that have since
-     been complemented or refuted by newer ingests. → `review_flags` `kind: stale`.
+   - **Stale syntheses** — a synthesis page relies on sources that a *later*
+     source has complemented or refuted. Later means later **published** (the
+     year in the bibkey, or `orig_year`), not later ingested: a 1996 paper
+     ingested last week is still the older position. Start from the
+     `SUPERSEDED-CITED` lines of `lint-wiki.py`'s `Research chronology` section.
+     → `review_flags` `kind: stale`.
+   - **Flattened chronology** — a page sets positions from different years side
+     by side as if all were held today: an older view in the present tense with
+     no word about what came after, or a researcher cited for a view they later
+     gave up (a `revises` edge exists, or a later source by the same author on
+     the page says otherwise). → `review_flags` `kind: stale`, with a `detail`
+     naming both sources and their years. Where the later source's answer is
+     only in prose, also write the missing `responds-to` / `supersedes` /
+     `revises` edge on the **later** page (`confidence: inferred` unless a quote
+     grounds it). Later is not the same as right: flag the flattening, do not
+     decide the debate.
+   - **Misdirected edges** — `ANACHRONISM` lines in the lint output: a stance
+     edge from an earlier source to a later one. → Move it to the later page
+     with the fitting type; keep the `because`.
    - **Unsupported claims** — assertions without a `[[source]]` link or
      `@citekey` in the text. → `review_flags` `kind: weak-support` (or
      `missing-citation` when a specific citation is simply absent).
@@ -109,6 +126,9 @@ author: llm
 
 ## Stale syntheses
 | Page | Outdated by | Why |
+
+## Flattened chronology
+| Page | Earlier position (year) | Later position (year) | What the page does |
 
 ## Unsupported claims
 | Page | Claim | Suggested source / mark as opinion |

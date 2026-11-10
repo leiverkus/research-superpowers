@@ -9,7 +9,8 @@ status: review
 author: llm
 relations:
   - target: finkelstein-piasetzky-2003
-    type: contradicts
+    type: responds-to
+    basis: argument
     confidence: extracted
     because: "Explicitly rejects the Low-Chronology phase-boundary priors of Finkelstein & Piasetzky 2003 (Level 3 of the argument structure)."
 ---
@@ -51,6 +52,6 @@ The article situates the chronology debate within the broader history of Levanti
 
 ## Connections
 
-- Contradicts: [[finkelstein-piasetzky-2003]] on phase-boundary priors (Level 3 of the argument structure)
+- Responds to: [[finkelstein-piasetzky-2003]] — rejects its phase-boundary priors (Level 3 of the argument structure)
 - Cited by: [[chronology-debate]] synthesis page
 - Complemented by: [[regev-et-al-2020]] (current Tel Rehov 14C dataset, partly converging with MCC under IntCal20)

@@ -8,6 +8,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Research chronology: positions carry their date.** A wiki recorded "A contradicts
+  B" and nothing about which came first, so a position from 1996 and one from 2020
+  reached the manuscript as two equal voices — including views their own author had
+  since given up. Now:
+  - A source is dated by the year in its `bibkey`; the optional `orig_year` (reprint,
+    translation, unrevised edition) and `evidence_until` (the data cut-off the source
+    states) correct the cases where that year misleads. There is no separate
+    publication-year field, so existing pages need no migration.
+  - Three relation types are directed in time, from the later source to the earlier
+    one: `responds-to`, `supersedes`, and `revises` for an author correcting their own
+    earlier position. An optional `basis` on any relation says why the later work
+    departs: `new-evidence`, `new-method`, `reinterpretation` or `argument`.
+  - `lint-wiki.py` gains a `Research chronology` section. `CHRONO-ORDER` (a
+    time-directed edge from an earlier source to a later one) fails the run.
+    `ANACHRONISM` (an older stance type pointing forward in time), `SUPERSEDED-CITED`
+    (a synthesis page or `output/**/*.qmd` cites a superseded source without what
+    superseded it) and `EVIDENCE-DATE` are advisory.
+  - `ingest-source` and the `source-ingester` agent place each source in the research
+    history, look for the author's own retractions, and no longer write edges forward
+    in time — the skill's own frontmatter example did exactly that.
+  - `semantic-wiki-review` defines `stale` by publication year instead of ingest
+    order, and adds the "flattened chronology" finding.
+  - `drafting-manuscript` and the `drafter` agent cite a researcher's latest position
+    as their view and treat abandoned or replaced positions as research history.
+  - The example project's forward-pointing edge (Finkelstein & Piasetzky 2003
+    `contradicts` Mazar 2011) moved to the later page as `responds-to`.
+
+  Later is not the same as right: `supersedes` is for a later source that engages the
+  earlier one and says it fails. See "Research chronology" in
+  `docs/frontmatter-schema.md`.
+- **`PAGE-OUT-OF-RANGE` no longer reads the frontmatter.** Relations now sit on the later
+  page, so a `because` there routinely gives the *earlier* work's page, with nothing in
+  the sentence marking whose page it is; a review flag's `detail` does the same. Three
+  such anchors fired on correct pages in two live projects. The body carries the same
+  claims with their pages, so a PDF with the wrong pagination is still caught there.
+- **`tests/test_research_chronology.py`** pins the direction rule, `orig_year`, the
+  advisory findings, and that a chain of supersessions is satisfied by citing its
+  latest member.
 - **`setup/macos/`: one re-runnable script sets up a Mac for the plugin.** A
   `Brewfile` lists every dependency and what it is for:
   - Git, Python, uv, Claude Code;
