@@ -110,7 +110,7 @@ class Anchors(unittest.TestCase):
 
 
 class Check(unittest.TestCase):
-    def _run(self, bib_pages, claims, connections=""):
+    def _run(self, bib_pages, claims, connections="", frontmatter=""):
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d) / "proj"
             (root / "knowledge" / "sources").mkdir(parents=True)
@@ -119,7 +119,8 @@ class Check(unittest.TestCase):
                 "@article{smith-2016-software,\n  author = {Smith, A},\n  title = {T},\n"
                 f"  year = {{2016}},\n  pages = {{{bib_pages}}}\n}}\n", encoding="utf-8")
             (root / "knowledge" / "sources" / "s.md").write_text(
-                SOURCE.format(key="smith-2016-software", claims=claims,
+                SOURCE.replace("bibkey: {key}\n", "bibkey: {key}\n" + frontmatter)
+                      .format(key="smith-2016-software", claims=claims,
                               connections=connections), encoding="utf-8")
             cwd = os.getcwd()
             try:
@@ -154,6 +155,25 @@ class Check(unittest.TestCase):
         hard, _ = self._run("405--413", "1. claim (p. 407)",
                             "- Cited by [[other-work]] (p. 344)")
         self.assertEqual([h for h in hard if "PAGE-OUT-OF-RANGE" in h], [])
+
+    def test_a_foreign_page_in_a_relation_rationale_does_NOT_fire(self):
+        # Relations sit on the LATER page, so a `because` there routinely gives the
+        # EARLIER work's page with nothing marking whose it is. Live: Bienkowski 2024
+        # (printed 235–261) answering a position stated on Levin 2020, pp. 3 and 5.
+        fm = ('relations:\n  - target: s\n    type: contradicts\n    confidence: inferred\n'
+              '    because: "States the same position as the earlier article (pp. 3, 5)."\n'
+              'review_flags:\n  - kind: overstatement\n'
+              '    detail: "A later reader takes it otherwise (p. 146)."\n'
+              '    raised_by: test\n    detected: 2026-11-10\n    state: open\n')
+        hard, _ = self._run("405--413", "1. claim (p. 407)", frontmatter=fm)
+        self.assertEqual([h for h in hard if "PAGE-OUT-OF-RANGE" in h], [])
+
+    def test_the_body_is_still_checked_when_the_frontmatter_is_exempt(self):
+        fm = ('relations:\n  - target: s\n    type: supports\n    confidence: inferred\n'
+              '    because: "Same finding (p. 3)."\n')
+        hard, _ = self._run("405--413", "1. claim (p. 2)", frontmatter=fm)
+        # Only the body's page 2 is reported; the rationale's page 3 is not.
+        self.assertTrue(any("PAGE-OUT-OF-RANGE" in h and "cites p. 2, but" in h for h in hard))
 
     def test_no_printed_range_means_no_check(self):
         # Article-number journals. Guessing a range here would fire on every page.

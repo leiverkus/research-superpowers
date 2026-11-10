@@ -1368,7 +1368,8 @@ def lint_citekeys(pages: dict[str, Path], schema: dict) -> tuple[list[str], list
         spans = _printed_spans(defined[key][3])
         if not spans:
             continue
-        text = _own_sections(_strip_code(path.read_text(encoding="utf-8", errors="replace")))
+        text = _own_sections(_strip_code(_without_frontmatter(
+            path.read_text(encoding="utf-8", errors="replace"))))
         bad = sorted({n for n in _cited_pages(text)
                       if not any(a <= n <= b for a, b in spans)})
         if bad:
@@ -1406,6 +1407,19 @@ PAGE_ANCHOR = re.compile(r"\(\s*pp?\.\s*([0-9][0-9,\s–—-]*)\)")
 FOREIGN_SECTIONS = re.compile(
     r"^##\s+(connections|mentioned entities|related|references|see also|"
     r"verbindungen|erwähnte entitäten)\b", re.I | re.M)
+
+
+def _without_frontmatter(text: str) -> str:
+    """Drop the YAML frontmatter before looking for page anchors.
+
+    A relation's `because` and a review flag's `detail` are statements about TWO
+    works. Since relations sit on the later page, a rationale there routinely gives
+    the earlier work's page — "rejects the dating on Levin 2020 (pp. 3, 5)" — and
+    nothing in the sentence marks whose page it is. Three such anchors fired on
+    correct pages in two live projects the week the direction rule arrived. The body
+    carries the same claims with their pages, so a PDF with the wrong pagination is
+    still caught there."""
+    return re.sub(r"\A---\n.*?\n---\n", "", text, count=1, flags=re.S)
 
 
 def _own_sections(text: str) -> str:

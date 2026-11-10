@@ -38,6 +38,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   Later is not the same as right: `supersedes` is for a later source that engages the
   earlier one and says it fails. See "Research chronology" in
   `docs/frontmatter-schema.md`.
+- **`PAGE-OUT-OF-RANGE` no longer reads the frontmatter.** Relations now sit on the later
+  page, so a `because` there routinely gives the *earlier* work's page, with nothing in
+  the sentence marking whose page it is; a review flag's `detail` does the same. Three
+  such anchors fired on correct pages in two live projects. The body carries the same
+  claims with their pages, so a PDF with the wrong pagination is still caught there.
 - **`tests/test_research_chronology.py`** pins the direction rule, `orig_year`, the
   advisory findings, and that a chain of supersessions is satisfied by citing its
   latest member.
