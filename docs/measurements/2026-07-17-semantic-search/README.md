@@ -170,3 +170,68 @@ pipeline shares this record's FTS5 foundation but adds three model-driven stages
 - **qmd's LLM query expansion** is likewise already covered in this setup: the alias
   recipe in `drafting-manuscript` has the session agent do the expanding, with discipline
   (spelling variants, stems, other fields' names) a generic 1.7B expander does not have.
+
+## Addendum (2026-11-10) — a larger, mixed-language library; the gap is language, not meaning
+
+Re-opened because the library is no longer the one measured above: **3,131 indexed
+documents / 346,882 pages** (was 593 / 32,137), and no longer 94 % English — about 830
+documents contain German running text and about 170 French (counted by stop-word
+co-occurrence on a page, so documents that merely quote German are included).
+
+**No embedding model was run this time.** The question was narrower: where does the
+lexical search fail on real questions from humanities projects, and would those
+failures be the kind a vector index addresses?
+
+### The gold set
+
+Twenty claims drawn at random from the source pages of two project wikis (a
+Persian-period Transjordan article and an archaeological guidebook), each attributed to
+one source. 17 sources are English, 3 German. For each claim one German and one English
+query was written **from the wiki's wording, without looking at the PDF text**. Scored
+at document level, `--limit 40`: does the expected source appear?
+
+### Result
+
+| queries | found (top 40) | in top 10 |
+|---|---|---|
+| one 3–4-term query, source's language (`probe6`) | 10 / 20 | 10 |
+| narrow two-term queries, rank-fused, **source's language** (`probe7`) | **17 / 20** | 15 |
+| narrow two-term queries, **the other language** | **3 / 20** | 3 |
+| both languages fused | 16 / 20 | 13 |
+
+- **Language is the gap.** The three cross-language hits all ran through a proper name
+  spelled alike in both languages (`Teman`, `Apollonia`, `Qaus`). English queries reached
+  none of the three German sources.
+- **Narrow beats long.** One query of three or four AND-ed terms found 10; the same terms
+  as fused pairs found 17. A paraphrased term that the source never uses sinks a long
+  query (`Brandrodung`, the wiki's word, occurs nowhere in the source it summarises).
+- **Fusing more queries is not free.** With both languages fused, one German source fell
+  from rank 12 out of the top 40. More variants help recall and can cost rank.
+- **The three misses in the right language:** one source is not in the index at all; one
+  is a scan whose text layer carries the searched name only in the index pages (suspected
+  poor OCR, not verified); one — `benyosef-2019-architectural` — was missed by a
+  paraphrase and is at rank 1 under its own term. Only that last case is the kind a
+  semantic index is for, and curated keywords already cover it.
+
+### Verdict — unchanged, with a different reason
+
+Still do not build. The dominant failure is cross-language, and the session agent closes
+it by running each concept in every language the library holds — now a rule in
+`drafting-manuscript` → "Searching for a concept, not a string". Missing or poor text
+layers (50 PDFs without one at the time of writing) are invisible to any retrieval
+method and are an OCR task. The earlier note that cross-lingual *embedding* retrieval
+"works" but "never reaches usable precision here" was not re-tested.
+
+### Limits
+
+Twenty questions; queries hand-written by the same agent that scored them; one expected
+source per question, so other legitimate hits are not credited; document level only, no
+check that the hit page is the cited page.
+
+| script | what it answers |
+|---|---|
+| `probe6_crosslingual_strict.py` | one AND-query per language, 20 claims — also holds the gold set |
+| `probe7_crosslingual_pairs.py` | the same terms as fused two-term queries, per language and combined |
+
+Like the earlier probes these are a record: they hard-code one index file and that
+library's bibkeys; `PROJECT_ROOT` and `RESEARCH_LIBRARY` come from the environment.
