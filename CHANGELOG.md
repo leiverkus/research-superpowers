@@ -38,6 +38,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   Later is not the same as right: `supersedes` is for a later source that engages the
   earlier one and says it fails. See "Research chronology" in
   `docs/frontmatter-schema.md`.
+- **`wiki-to-graph.py timeline <slug>`: a debate in publication order.** For one page —
+  usually a concept or a synthesis — it lists every connected source by year, with the
+  typed stance each takes toward the page and toward the earlier sources in the list, and
+  closes with a `Superseded by:` line when a source says the position no longer stands.
+  Nothing is inferred; it is the existing edges, sorted. Also exposed as the MCP tool
+  `graph_timeline`. `drafting-manuscript` runs it before sketching a section and hands
+  the result to the `drafter`.
+  - Source nodes carry `year` and typed edges carry `basis` in `graph.json`,
+    `graph.graphml` and `graph.html`; `relations` prints the basis.
+  - `lint-wiki.py` adds the advisory `SUPERSEDED-POSITION` for a concept that a source
+    `supersedes`. It points at the timeline and decides nothing.
 - **`PAGE-OUT-OF-RANGE` no longer reads the frontmatter.** Relations now sit on the later
   page, so a `because` there routinely gives the *earlier* work's page, with nothing in
   the sentence marking whose page it is; a review flag's `detail` does the same. Three

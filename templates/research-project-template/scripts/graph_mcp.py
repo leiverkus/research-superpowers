@@ -86,6 +86,15 @@ TOOLS = {
             },
         },
     },
+    "graph_timeline": {
+        "cmd": "timeline", "pos": ["node"], "opt": [],
+        "description": "The sources around one page (usually a concept or synthesis) in publication order, each with its typed stance toward the page and toward the earlier sources in the list. Use it before presenting positions side by side: it shows which came first, who answered whom, and whether the position has been superseded.",
+        "schema": {
+            "type": "object",
+            "properties": {"node": {"type": "string", "description": "Page slug or a unique substring."}},
+            "required": ["node"],
+        },
+    },
     "graph_search": {
         "cmd": "search", "pos": ["term"], "opt": [],
         "description": "Find wiki pages by id or title substring.",
@@ -155,7 +164,7 @@ def handle(msg: dict) -> None:
             "capabilities": {"tools": {}},
             "serverInfo": SERVER_INFO,
             "instructions": "Query the research wiki's knowledge graph (live). "
-                            "Use graph_search/neighbors/path/god_nodes/bridges/relations/stats.",
+                            "Use graph_search/neighbors/path/god_nodes/bridges/relations/timeline/stats.",
         })
     elif method == "tools/list":
         reply(mid, {"tools": [

@@ -84,6 +84,11 @@ relations:
 | `ANACHRONISM` | a `contradicts` / `supports` / `builds-on` / `cites` edge from an earlier source to a later one | no |
 | `SUPERSEDED-CITED` | a synthesis page or manuscript cites a superseded source without what superseded it | no |
 | `EVIDENCE-DATE` | `evidence_until` is later than the source | no |
+| `SUPERSEDED-POSITION` | a concept (or other non-source page) that a source `supersedes` | no |
+
+To read a debate in order, run `python scripts/wiki-to-graph.py timeline <slug>`: it lists the
+sources around a page by year, with each one's stance toward the page and toward the earlier
+sources. `SUPERSEDED-POSITION` points there; it is a pointer, not a verdict.
 
 `SUPERSEDED-CITED` does not fail because citing an older position is right when the
 text treats it as research history, and a linter cannot see that. Later is also not the

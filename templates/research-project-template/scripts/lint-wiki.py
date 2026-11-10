@@ -779,6 +779,10 @@ def lint_chronology(pages: dict[str, Path], root: Path) -> tuple[list[str], list
         return issues, ["  No dated source pages yet — chronology n/a."]
 
     superseded_by: dict[str, list[tuple[str, str]]] = {}
+    # Positions, as opposed to sources: a concept (or any non-source page) that a
+    # source says no longer stands. Reported as a pointer, never as a verdict —
+    # whether the position is really abandoned is the user's call, like `stable`.
+    superseded_positions: dict[str, list[tuple[str, str]]] = {}
     counts = {t: 0 for t in TEMPORAL_RELATIONS}
     for name in sorted(years):
         fm, path = fms[name], pages[name]
@@ -794,6 +798,10 @@ def lint_chronology(pages: dict[str, Path], root: Path) -> tuple[list[str], list
             target = _relation_target(rel.get("target", ""))
             if rtype in counts and target in pages:
                 counts[rtype] += 1
+            if (rtype in SUPERSEDING_RELATIONS and target in pages and target not in years
+                    and fms.get(target, {}).get("type") != "source"):
+                superseded_positions.setdefault(target, []).append(
+                    (name, str(rel.get("basis") or "")))
             if target not in years or target == name:
                 continue
             a, b = years[name], years[target]
@@ -852,6 +860,11 @@ def lint_chronology(pages: dict[str, Path], root: Path) -> tuple[list[str], list
                f"time-directed relations: {directed}")
     if directed:
         summary += " (" + ", ".join(f"{t} {c}" for t, c in counts.items() if c) + ")"
+    for target in sorted(superseded_positions):
+        by = ", ".join(f"[[{n}]] ({years[n]}{', ' + basis if basis else ''})"
+                       for n, basis in sorted(superseded_positions[target], key=lambda x: years[x[0]]))
+        advisory.append(f"  SUPERSEDED-POSITION: {pages[target]} — superseded by {by}. "
+                        f"See `wiki-to-graph.py timeline {target}`.")
     if not (issues or advisory):
         advisory.append("  No chronology findings.")
     return issues, [summary] + advisory
