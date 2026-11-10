@@ -395,6 +395,17 @@ One source from the shared library, worked up in two halves — the **Erschließ
 all) and one **Focus block per ingest** (what this project takes under one
 question). `ingest-source` owns the full template; see also **Ingest depth** below.
 
+*Sources are not equal voices.* A source is dated by the year in its `bibkey`
+(`orig_year` for a reprint or translation; `evidence_until` for a stated data
+cut-off). What a later source does to an earlier position is a typed relation on the
+**later** page — `responds-to`, `supersedes`, or `revises` when an author corrects
+their own earlier view — with a `basis` (`new-evidence`, `new-method`,
+`reinterpretation`, `argument`). Syntheses and manuscripts keep positions in their
+time: a researcher's view is their latest one, and an abandoned or replaced position
+is research history. Later is not the same as right — `supersedes` needs a later
+source that engages the earlier one. `scripts/lint-wiki.py` reports the order under
+`Research chronology`.
+
 ### Synthesis (`knowledge/synthesis/`)
 Cross-cutting analyses that connect several sources and concepts. The structure
 follows the argument and is deliberately free, with two required parts:

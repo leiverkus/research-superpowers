@@ -23,6 +23,10 @@ two different papers). Nothing checked it. Now something does:
     exits 0. Nothing else catches this.
   * the same key never means different works in two .bib files
 
+The chronology checks cover only what dates can decide: that a `supersedes` /
+`revises` / `responds-to` edge runs from a later source to an earlier one, and
+that a superseded source is not cited without what superseded it.
+
 Content checks (contradictions between pages, stale claims) do NOT belong
 here — use the semantic-wiki-review skill for those. This script only
 *surfaces* the review findings that skill records as `review_flags:`
@@ -78,7 +82,18 @@ OVERRIDE_WARN_COUNT = 5
 # line instead, so it cannot quietly become the dumping ground for whatever
 # nobody wants to source.
 RELATION_CONFIDENCE = ("extracted", "inferred", "ambiguous", "asserted")
-RELATION_KEYS = {"target", "type", "confidence", "because"}
+RELATION_KEYS = {"target", "type", "confidence", "because", "basis"}
+# Relation types that are directed in time: they only make sense from a later
+# source to an earlier one. `contradicts` is deliberately not among them — it is
+# the type for a disagreement that is live on both sides.
+TEMPORAL_RELATIONS = ("supersedes", "revises", "responds-to")
+# The two that say the earlier position no longer stands in some respect. A
+# `responds-to` leaves the debate open and so dates nothing.
+SUPERSEDING_RELATIONS = ("supersedes", "revises")
+# Older types that also cannot point forward in time, but that existing wikis
+# already carry in that direction (the ingest skill once showed it as an
+# example) — reported, not failed.
+STANCE_RELATIONS = ("contradicts", "supports", "builds-on", "cites")
 INFERENCE_WARN_THRESHOLD = 0.50
 
 REVIEW_FLAG_KINDS = ("overstatement", "weak-support", "stale", "missing-citation", "open-question")
@@ -721,6 +736,125 @@ def report_source_depth(pages: dict[str, Path], verbose: bool = False) -> list[s
     if not (no_map or thin or uncovered_pages):
         lines_out.append("  Every source page carries a map and its Kernthesen.")
     return lines_out
+
+
+_BIBKEY_YEAR = re.compile(r"-(\d{4})[a-z]?-")
+
+
+def source_year(fm: dict) -> int | None:
+    """The year a source's position entered the discussion: `orig_year` when the
+    page declares one (reprint, translation, unrevised later edition), otherwise
+    the year in the bibkey. No separate publication-year field exists on purpose
+    — the bibkey already carries it and is checked against the .bib entry, so a
+    second copy could only drift."""
+    orig = fm.get("orig_year")
+    if isinstance(orig, int) and not isinstance(orig, bool):
+        return orig
+    m = _BIBKEY_YEAR.search(str(fm.get("bibkey") or ""))
+    return int(m.group(1)) if m else None
+
+
+def lint_chronology(pages: dict[str, Path], root: Path) -> tuple[list[str], list[str]]:
+    """Research chronology: is the order in which positions were published
+    respected by the edges between them, and by what cites them?
+
+    Returns (issues, advisory). Only CHRONO-ORDER is an issue: a `supersedes` /
+    `revises` / `responds-to` edge from an earlier source to a later one is
+    impossible, and those types are new, so no existing wiki can be broken by
+    failing on it. Everything else is advisory — ANACHRONISM because older
+    wikis carry such edges, SUPERSEDED-CITED because citing an older position
+    is legitimate when the text treats it as research history, which a linter
+    cannot see."""
+    issues: list[str] = []
+    advisory: list[str] = []
+
+    fms: dict[str, dict] = {}
+    for name, path in pages.items():
+        fm = parse_frontmatter(path)
+        if fm:
+            fms[name] = fm
+    years = {n: y for n, fm in fms.items()
+             if fm.get("type") == "source" and (y := source_year(fm)) is not None}
+    if not years:
+        return issues, ["  No dated source pages yet — chronology n/a."]
+
+    superseded_by: dict[str, list[tuple[str, str]]] = {}
+    counts = {t: 0 for t in TEMPORAL_RELATIONS}
+    for name in sorted(years):
+        fm, path = fms[name], pages[name]
+        until = fm.get("evidence_until")
+        latest = max(years[name], source_year({"bibkey": fm.get("bibkey")}) or years[name])
+        if isinstance(until, int) and not isinstance(until, bool) and until > latest:
+            advisory.append(f"  EVIDENCE-DATE: {path} — evidence_until {until} is later than "
+                            f"the source itself ({latest})")
+        for rel in fm.get("relations") or []:
+            if not isinstance(rel, dict):
+                continue
+            rtype = str(rel.get("type", "")).strip()
+            target = _relation_target(rel.get("target", ""))
+            if rtype in counts and target in pages:
+                counts[rtype] += 1
+            if target not in years or target == name:
+                continue
+            a, b = years[name], years[target]
+            if rtype in TEMPORAL_RELATIONS and a < b:
+                issues.append(f"  CHRONO-ORDER: {path} ({a}) --{rtype}--> [[{target}]] ({b}) — "
+                              f"an earlier source cannot {rtype.replace('-', ' ')} a later one. "
+                              f"Move the edge to the later page, or set orig_year if a date is wrong.")
+            elif rtype in STANCE_RELATIONS and a < b:
+                advisory.append(f"  ANACHRONISM: {path} ({a}) --{rtype}--> [[{target}]] ({b}) — "
+                                f"the edge belongs on the later page (responds-to / supersedes / "
+                                f"contradicts), since the earlier source cannot have taken a stance on it.")
+            if rtype in SUPERSEDING_RELATIONS and a >= b:
+                superseded_by.setdefault(target, []).append((name, str(rel.get("basis") or "")))
+
+    def later_positions(slug: str) -> set[str]:
+        seen: set[str] = set()
+        todo = [slug]
+        while todo:
+            for newer, _ in superseded_by.get(todo.pop(), []):
+                if newer not in seen:
+                    seen.add(newer)
+                    todo.append(newer)
+        return seen
+
+    def check(where: str, cited: set[str]) -> None:
+        for old in sorted(cited & set(superseded_by)):
+            if cited & later_positions(old):
+                continue
+            newer = ", ".join(
+                f"[[{n}]] ({years[n]}{', ' + basis if basis else ''})"
+                for n, basis in superseded_by[old])
+            advisory.append(f"  SUPERSEDED-CITED: {where} cites [[{old}]] ({years[old]}) "
+                            f"without {newer}, which supersedes it")
+
+    for name in sorted(fms):
+        if fms[name].get("type") != "synthesis":
+            continue
+        cited = {_relation_target(raw) for raw in find_wikilinks(pages[name])}
+        cited |= {_relation_target(r.get("target", ""))
+                  for r in fms[name].get("relations") or [] if isinstance(r, dict)}
+        check(str(pages[name]), cited)
+
+    by_key = {str(fms[n].get("bibkey")): n for n in years}
+    out = root / "output"
+    for q in sorted(out.glob("**/*.qmd")) if out.is_dir() else []:
+        if not _not_build(q):
+            continue
+        try:
+            text = _strip_code(q.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
+        check(str(q), {by_key[k] for k in set(_CITEKEY.findall(text)) if k in by_key})
+
+    directed = sum(counts.values())
+    summary = (f"  Dated sources: {len(years)} ({min(years.values())}–{max(years.values())}) · "
+               f"time-directed relations: {directed}")
+    if directed:
+        summary += " (" + ", ".join(f"{t} {c}" for t, c in counts.items() if c) + ")"
+    if not (issues or advisory):
+        advisory.append("  No chronology findings.")
+    return issues, [summary] + advisory
 
 
 def report_review_flags(pages: dict[str, Path]) -> tuple[list[str], int]:
@@ -1388,6 +1522,10 @@ def main():
     rel_issues = lint_relations(pages)
     print("\n".join(rel_issues) if rel_issues else "  No relation issues.")
 
+    print("\n=== Research chronology ===")
+    chrono_issues, chrono_advisory = lint_chronology(pages, Path("."))
+    print("\n".join(chrono_issues + chrono_advisory))
+
     print("\n=== Status distribution ===")
     print("\n".join(lint_status_distribution(pages)))
 
@@ -1430,7 +1568,7 @@ def main():
               f"Re-run with --strict-gates to fail on them.")
 
     total_issues = (len(fm_issues) + len(broken) + len(orphans) + len(rel_issues)
-                    + len(dups) + len(cite_issues))
+                    + len(dups) + len(cite_issues) + len(chrono_issues))
     if args.strict_gates:
         total_issues += len(gate_findings)
     print(f"\n{'=' * 40}")

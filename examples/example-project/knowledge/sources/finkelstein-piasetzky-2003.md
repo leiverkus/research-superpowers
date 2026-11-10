@@ -7,11 +7,6 @@ tags: [chronology, iron-age, radiocarbon, levant]
 bibkey: finkelstein-2003-wrong
 status: review
 author: llm
-relations:
-  - target: mazar-2011
-    type: contradicts
-    confidence: inferred
-    because: "Mazar 2011's Modified Conventional Chronology is a direct counter-position to the Low-Chronology 14C dating argued here; the rebuttal postdates this 2003 source, so the link is added, not stated in it."
 ---
 
 ## Bibliographic Reference
@@ -54,5 +49,5 @@ The article also contains a methodological appendix on inter-laboratory calibrat
 ## Connections
 
 - Supports: [[chronology-debate]] — synthesis page that uses this source as the 14C anchor for the *Low Chronology* position
-- Contradicted by: Mazar 2011 (counter-position, *Modified Conventional Chronology*) — not yet ingested
+- Later response: [[mazar-2011]] (counter-position, *Modified Conventional Chronology*) — the typed edge sits on that page, because a 2003 paper cannot take a stance on a 2011 one
 - Complemented by: Regev et al. 2020 (current Rehov 14C dataset) — not yet ingested

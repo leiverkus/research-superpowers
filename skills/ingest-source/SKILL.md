@@ -46,7 +46,7 @@ Before closing the ingest, check that all five artefacts exist and are linked:
 (3) BibTeX entry in `output/bibtex/references.bib` with matching key,
 (4) entry in `knowledge/_meta/log.md`,
 (5) `scripts/lint-wiki.py` exit code 0 for this source,
-(6) every `## Connections` line that asserts a stance toward another page (confirms / contradicts / supplements / builds-on / cites) has a matching entry in the page's `relations:` frontmatter, each with a `confidence` value (see "Typed relations" below). Plain mentions stay as wikilinks — no `relations:` entry required for them,
+(6) every `## Connections` line that asserts a stance toward another page (confirms / contradicts / supplements / builds-on / cites) has a matching entry in the page's `relations:` frontmatter, each with a `confidence` value (see "Typed relations" below). Plain mentions stay as wikilinks — no `relations:` entry required for them. No stance edge points from this source to a *later* one, and what the source says about earlier positions — its own author's included — is recorded as `responds-to` / `supersedes` / `revises` (see "Research chronology" below),
 (7) the BibTeX entry's `keywords` field carries 3–8 curated terms (first ingest) or has newly-recognized terms unioned in (re-ingest under a new focus) — see "BibTeX Entry Convention" below.
 
 If any condition is missing: explain to the user which, ask for a short reason for skipping, write it to `knowledge/_meta/gate-overrides.log`, and close out the ingest.
@@ -99,6 +99,7 @@ Create a task-list item for each:
 9. **Identify entities** mentioned in passages relevant to the focus (persons, places, artefacts, concepts). Only entities relevant to the focus — others can be added later.
 10. **Create or append `knowledge/sources/<slug>.md`** using the Source template (frontmatter + focus block — see below)
 11. **Derive typed relations** — for every connection that asserts a *stance* toward another page (confirms / contradicts / supplements / builds-on / cites), add a structured entry to the page's `relations:` frontmatter (see "Typed relations" below). This lifts the relation semantics into the machine-readable, typed graph layer instead of leaving them as flat wikilinks. Set `confidence: extracted` only when a verbatim quote + page backs the relation, else `inferred` (`ambiguous` if the relation is unclear), and add a one-line `because` with the quote/page where possible. **Never `asserted` during ingest** — that value marks an edge the project puts there on its own authority, and an ingest reads a source rather than deciding anything.
+    - **Place the source in the research history** (see "Research chronology" below): which earlier positions does it answer, replace or — in the author's own case — take back? Write those as `responds-to` / `supersedes` / `revises` edges with a `basis`. Then look the other way: does the wiki already hold a *later* source that answers this one? If so, the edge belongs on that later page; add or correct it there instead of writing a forward-pointing edge here.
 12. **Create/extend entity pages** — for each NEW entity, `knowledge/entities/<entity-slug>.md`; for existing, update with wikilink back to source. **Follow the Entity template in the project's `CLAUDE.md` (§ Page types)** — it carries the same two halves as a source page: what the thing *is* (location and authority data, what one sees, history of research, the evidence, what is contested) and what *this project* takes from it. An entity created during ingest may start with the second half only, but the page is not finished until the first exists — that is the half a later, different question needs.
 13. **Add BibTeX entry** to `output/bibtex/references.bib` with key = slug. On first ingest, include a `keywords` field: 3–8 terms — the method/topic's canonical name plus known synonyms and aliases (spelling variants, other disciplines' names, stems — the same discipline `drafting-manuscript`'s "Searching for a concept, not a string" documents). This is the one field that changes on re-ingest: union any newly-recognized terms in, deduped case-insensitively (see "BibTeX Entry Convention" below). Every other field is fixed at first ingest and does not change.
 
@@ -230,12 +231,17 @@ relations:
     type: contradicts
     confidence: extracted
     because: "Rejects the 10th-c. dating of Megiddo VA–IVB: «…verbatim…» (p. 156)."
-  - target: mazar-2011
-    type: contradicts
-    confidence: inferred
-    because: "Mazar later defends the Modified Conventional Chronology against this position; not stated in this source."
+  - target: finkelstein-1996-archaeology-united-monarchy
+    type: revises
+    basis: new-evidence
+    confidence: extracted
+    because: "«In light of the Tel Rehov dates I no longer hold…» (p. 152)."
 ---
 ```
+
+A source that is a reprint, a translation or an unrevised later edition also carries
+`orig_year`, and one that states its data cut-off carries `evidence_until` — both
+optional, both described under "Research chronology" below.
 
 The `relations:` block is **optional per the schema** (`scripts/lint-wiki.py` still passes a page without it), but this skill writes it by default for every stance-bearing connection — that is what populates the *typed*, confidence-tagged graph layer at ingest time (see "Typed relations" below). Plain entity mentions need no entry: the `## Mentioned entities` wikilinks already become `wikilink` edges.
 
@@ -345,6 +351,7 @@ The source-wide boundary lives above, in "What this source does not address".*
 
 ## Connections
 - Confirms / contradicts / supplements: [[other-source]]
+- Responds to / supersedes / revises: [[earlier-source]] — and why (new evidence, new method, reinterpretation, argument)
 - Referenced in: …
 *Union of all focus passes. Every stance line here (confirms / contradicts /
 supplements / builds-on / cites) is mirrored by a typed entry in the
@@ -395,6 +402,9 @@ sticking to these keeps `relations --type …` queries useful):
 | supplements / extends / builds on | `builds-on` |
 | draws on / cites / relies on | `cites` |
 | (generic association, no stance) | `mentions` |
+| answers / engages / replies to an earlier work | `responds-to` |
+| replaces / renders obsolete / overturns an earlier position | `supersedes` |
+| the same author corrects or abandons their own earlier position | `revises` |
 
 **`confidence` — be honest, lint measures it.** `lint-wiki.py` reports the
 `inferred + ambiguous` share as the wiki's inference-rate, so do not inflate to
@@ -403,7 +413,7 @@ sticking to these keeps `relations --type …` queries useful):
 - `extracted` — explicitly supported by *this* source, ideally with a verbatim
   quote and page in `because`.
 - `inferred` — a defensible link you are adding, not stated in the source
-  (e.g. "Mazar later rebuts this"). The honest default when there is no quote.
+  (e.g. "shares the dating method of X"). The honest default when there is no quote.
 - `ambiguous` — the relation is real but its type/direction is unclear.
 
 **`because`** is one line, ideally a quote + page for `extracted` entries. It is
@@ -417,6 +427,59 @@ relations:
     confidence: extracted
     because: "«The conventional dating of Megiddo VA–IVB to the 10th century cannot be sustained» (p. 156)."
 ```
+
+## Research chronology
+
+Two sources in a wiki are not two equal voices. One was written knowing the other,
+and often knowing finds the other could not. Researchers also change their minds. A
+wiki that records only "A contradicts B" loses this, and a manuscript drafted from it
+sets a position from 1996 beside one from 2020 as if both were on the table today.
+
+**When a source is dated.** By the year in its bibkey — there is no separate
+publication-year field. Two optional frontmatter fields correct the cases where that
+year misleads:
+
+```yaml
+orig_year: 1996        # the text is a reprint / translation / unrevised later edition
+evidence_until: 2005   # data cut-off the source itself states (last season, dataset, curve)
+```
+
+Set `orig_year` when the edition you cite is later than the text. Do not set it for a
+revised edition whose argument changed. Set `evidence_until` only when the source says
+what it could take into account; do not estimate it.
+
+**Three relation types are directed in time.** They run from the later source to the
+earlier one, and `lint-wiki.py` fails the build when the dates say otherwise:
+
+| `type` | Meaning | Typical wording in the source |
+|---|---|---|
+| `responds-to` | engages an earlier work explicitly; the debate stays open | "contra X", "in reply to", "X has argued … but" |
+| `supersedes` | replaces an earlier position, which in this respect no longer stands | "can no longer be maintained", "is now ruled out by" |
+| `revises` | the same author corrects their own earlier position | "I previously argued", "contrary to my earlier view" |
+
+`contradicts` remains the type for a disagreement that is live on both sides.
+
+**`basis` says why** the later work departs from the earlier one:
+
+| `basis` | The later work has … |
+|---|---|
+| `new-evidence` | finds, data or texts the earlier work could not know |
+| `new-method` | the same material under a different method (new calibration curve, statistical model) |
+| `reinterpretation` | the same material and method, read differently |
+| `argument` | a logical or conceptual objection |
+
+**Later is not the same as right.** A 2022 paper that ignores a 2015 rebuttal has not
+superseded it. Write `supersedes` with `confidence: extracted` only when the later
+source engages the earlier one by name and says the earlier position fails; otherwise
+use `responds-to`, or `contradicts` if it does not engage it at all. Self-revision is
+the strongest case and the easiest to miss — search the source for the author's own
+earlier works in the bibliography and for first-person retractions.
+
+**No edges forward in time.** A 2003 source cannot take a stance on a 2011 one. When
+you ingest an older source and the wiki already holds its later answer, put the edge
+on the later page and leave a prose pointer in this page's `## Connections`
+("Later response: [[mazar-2011]]"). `lint-wiki.py` reports forward-pointing stance
+edges as `ANACHRONISM`.
 
 ## MCP Optimisation (recommended)
 

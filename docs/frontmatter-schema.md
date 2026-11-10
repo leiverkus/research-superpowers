@@ -10,7 +10,7 @@ Every `knowledge/**/*.md` page begins with a YAML frontmatter block. The normati
 
 ## Optional fields
 
-`tags`, `sources`, `bibkey` (required on sources), `parent_bibkey` (on a source that is a chapter in an acquired volume — see below), `depth` (how thoroughly a source is worked up — see below), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
+`tags`, `sources`, `bibkey` (required on sources), `parent_bibkey` (on a source that is a chapter in an acquired volume — see below), `depth` (how thoroughly a source is worked up — see below), `orig_year` and `evidence_until` (when a source's position dates from, and what it could know — see below), `hypothesis` (on syntheses), `bibliography` (per-page override of the project default), `methodology` (per-page override of the project default), `relations` (structured, confidence-tagged links — see below), `review_flags` (single-page content-review findings — see below), and the authority IDs `orcid` / `wikidata_qid` / `idai_gazetteer_id` / `gnd_id` (on entities; `orcid` for living researchers, the key that covers working scientists for cross-project linkage) and, on concepts, `wikidata_qid` — the primary cross-project *concept* join key — with `getty_aat_id` as an optional extra where the Getty AAT thesaurus has a precise term (heritage-only, so most modern/DH/method concepts have none).
 
 ## Field semantics in short
 
@@ -29,7 +29,8 @@ Wikilinks (`[[slug]]`) in the body already express connections, and that stays t
 ```yaml
 relations:
   - target: finkelstein-2003   # page slug (filename without extension)
-    type: cites                # free vocabulary: cites, contradicts, builds-on, mentions, supports
+    type: cites                # free vocabulary: cites, contradicts, builds-on, mentions, supports,
+                               # and the time-directed responds-to, supersedes, revises
     confidence: inferred       # extracted | inferred | ambiguous | asserted
     because: "Builds on Finkelstein's Low-Chronology dates (p. 290)."  # optional rationale
 ```
@@ -38,6 +39,56 @@ relations:
 - **confidence** — `extracted` (explicitly supported, e.g. a verbatim quote with page), `inferred` (added by the model), `ambiguous` (unclear), `asserted` (a decision the project made, not a finding it read — the edge records a position taken while writing and is grounded in no source). `lint-wiki.py` reports the **inference-rate** (share of `inferred` + `ambiguous`), mirroring the SOFT-GATE override-rate as an audit signal; `asserted` is counted on its own line beside it, never inside it, because it answers a different question — not *how much did the model guess?* but *how much does this project assert on its own authority?*
   > **`asserted` is for synthesis pages that record decisions**, the kind a writing phase produces: which side of a controversy the work takes, which reading it rejects and why. It is not a licence to skip sourcing — an `asserted` edge without a `because` is flagged by the linter, because an assertion that gives no reason cannot be reviewed.
 - **because** (optional) — a one-line rationale for the edge, ideally with a quote or page. Recorded per edge and shown in the graph viz and `relations` query; the natural place to ground an `inferred` relation when hardening it to `extracted`, and **required in practice for `asserted`**, where it is the only thing standing between a decision and an assertion. `lint-wiki.py` reports the share of relations that carry one.
+
+## Research chronology
+
+Sources are not equal voices: one was written knowing the other, and researchers change
+their minds. Three pieces record that.
+
+**When a source is dated.** By the year in its `bibkey`. There is deliberately no
+separate publication-year field — the bibkey carries the year and is checked against
+the `.bib` entry. Two optional fields correct the cases where it misleads:
+
+```yaml
+orig_year: 1996        # first publication of the text as ingested (reprint, translation, unrevised edition)
+evidence_until: 2005   # data cut-off the source itself states
+```
+
+**Time-directed relation types.** They run from the later source to the earlier one:
+
+| `type` | Meaning |
+|---|---|
+| `responds-to` | engages an earlier work explicitly; the debate stays open |
+| `supersedes` | replaces an earlier position, which in this respect no longer stands |
+| `revises` | the same author corrects their own earlier position |
+
+`contradicts` stays the type for a disagreement that is live on both sides.
+
+**`basis`** (optional, on any relation) says why the later work departs:
+`new-evidence`, `new-method`, `reinterpretation` or `argument`.
+
+```yaml
+relations:
+  - target: finkelstein-1996-archaeology-united-monarchy
+    type: revises
+    basis: new-evidence
+    confidence: extracted
+    because: "«In light of the Tel Rehov dates I no longer hold…» (p. 152)."
+```
+
+`lint-wiki.py` reports this in its `Research chronology` section:
+
+| Finding | Meaning | Fails the build |
+|---|---|---|
+| `CHRONO-ORDER` | a `responds-to` / `supersedes` / `revises` edge from an earlier source to a later one | yes |
+| `ANACHRONISM` | a `contradicts` / `supports` / `builds-on` / `cites` edge from an earlier source to a later one | no |
+| `SUPERSEDED-CITED` | a synthesis page or manuscript cites a superseded source without what superseded it | no |
+| `EVIDENCE-DATE` | `evidence_until` is later than the source | no |
+
+`SUPERSEDED-CITED` does not fail because citing an older position is right when the
+text treats it as research history, and a linter cannot see that. Later is also not the
+same as right: `supersedes` is for a later source that engages the earlier one and says
+it fails, not for any later source that disagrees.
 
 ## `depth` — how thoroughly a source is worked up
 
@@ -113,7 +164,7 @@ review_flags:
     # resolved: 2026-07-10       # optional — set when state moves to resolved
 ```
 
-- **kind** — the class of concern (enum above). A conflict *between two pages* is not a flag; it is a `relations: contradicts` edge.
+- **kind** — the class of concern (enum above). `stale` means superseded or complicated by a *later* source — later by publication, not by ingest date; it also covers a page that sets an older and a newer position side by side as equals. A conflict *between two pages* is not a flag; it is a `relations: contradicts` edge.
 - **state** — `open` gates drafting: `drafting-manuscript` will not draft from a page with an open flag without a logged override, and `wiki-lint` surfaces open flags in its `Review flags` section (advisory — it does **not** fail the exit code on them; only a *malformed* flag fails, via schema validation).
 - **Resolve in place**, don't delete: set `state: resolved` (and optionally a `resolved:` date) so the audit trail survives.
 

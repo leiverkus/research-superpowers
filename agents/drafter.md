@@ -28,6 +28,12 @@ that skill's frontmatter.
   unsupported claim, flag it under "Flagged issues" — do NOT invent
 - Max. 2 direct quotes per 1000 words, always with page number, always from a
   source page's `### Direct quotes` section
+- Keep positions in their time: a researcher's view is their latest one in the
+  supplied pages; a view they gave up (`revises`) or that was replaced
+  (`supersedes`) is research history, in the past tense, with what changed it.
+  Do not set an older and a newer position side by side as equals unless the
+  sketch says the older one is still held. If the sketch itself does this, report
+  it under "Flagged issues"
 - Match register: academic, Fachsprache zur Disziplin, impersonal voice
   unless the style guide permits first-person plural
 

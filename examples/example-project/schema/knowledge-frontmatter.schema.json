@@ -93,6 +93,20 @@
         "steiner-killebrew-2014-oxford-handbook-levant"
       ]
     },
+    "orig_year": {
+      "type": "integer",
+      "description": "Optional, type=source only. The year the text AS INGESTED was first published, when that is earlier than the year in the bibkey: a reprint, a translation, an unrevised later edition, a collected-papers volume. The bibkey keeps the year of the edition actually cited; orig_year says when the position entered the discussion. lint-wiki.py's chronology checks date a source by orig_year when present, otherwise by the bibkey year. Do NOT set it for a revised edition whose argument changed \u2014 that text dates from the revision.",
+      "examples": [
+        1996
+      ]
+    },
+    "evidence_until": {
+      "type": "integer",
+      "description": "Optional, type=source only. The source's data cut-off, as a year: the last excavation season, find, dataset or calibration curve it could take into account, as the source itself states it. A publication year says when an argument appeared, not what it knew \u2014 a 2014 final report on seasons through 2005 has evidence_until: 2005. Set it only when the source says so; leave it out rather than guess.",
+      "examples": [
+        2005
+      ]
+    },
     "based_on": {
       "type": "string",
       "enum": [
@@ -188,7 +202,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Relation type. Free vocabulary; common values: cites, contradicts, builds-on, mentions, supports."
+            "description": "Relation type. Free vocabulary; common values: cites, contradicts, builds-on, mentions, supports. Three types are DIRECTED IN TIME and only make sense from a later source to an earlier one (lint-wiki.py fails the build when the dates say otherwise): responds-to = engages an earlier work explicitly, the debate still open; supersedes = replaces an earlier position, which in this respect no longer stands; revises = the same author corrects their own earlier position. Use contradicts for a disagreement that is live on both sides."
           },
           "confidence": {
             "type": "string",
@@ -199,6 +213,16 @@
               "asserted"
             ],
             "description": "extracted = explicitly supported by the source (e.g. verbatim quote with page); inferred = added by the model; ambiguous = relation unclear; asserted = a decision the project made, not a finding it read \u2014 the edge is grounded in an editorial act (a position taken while writing, a controversy the work decides) and in no source, so neither extracted nor inferred is true of it. Requires a `because` naming the decision. The inferred+ambiguous share is reported as the inference-rate by lint-wiki.py; asserted is counted and reported separately, because it measures something else \u2014 how much the project asserts on its own authority \u2014 and folding the two together would make both unreadable."
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "new-evidence",
+              "new-method",
+              "reinterpretation",
+              "argument"
+            ],
+            "description": "Optional. WHY the later work departs from the earlier one, on a supersedes / revises / responds-to / contradicts edge. new-evidence = finds, data or texts the earlier work could not know; new-method = the same material under a different method (a new calibration curve, a statistical model); reinterpretation = the same material and method read differently; argument = a logical or conceptual objection. The distinction matters when writing: new evidence dates the older position, a reinterpretation only disputes it."
           },
           "because": {
             "type": "string",
@@ -229,7 +253,7 @@
               "missing-citation",
               "open-question"
             ],
-            "description": "The class of concern. overstatement = epistemic overreach (claim stronger than the source supports); weak-support = assertion without a resolving [[source]] / @citekey; stale = superseded or complicated by a newer ingest; missing-citation = a claim that needs a citation it lacks; open-question = an unresolved point flagged for the author."
+            "description": "The class of concern. overstatement = epistemic overreach (claim stronger than the source supports); weak-support = assertion without a resolving [[source]] / @citekey; stale = superseded or complicated by a later source \u2014 later by publication, not by when it was ingested; missing-citation = a claim that needs a citation it lacks; open-question = an unresolved point flagged for the author."
           },
           "detail": {
             "type": "string",

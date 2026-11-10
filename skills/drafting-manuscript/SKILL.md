@@ -311,6 +311,11 @@ The counter-position line is not decoration. A section that cannot name what arg
 - Every citation key MUST exist in `output/bibtex/references.bib`
 - Direct quotes: inline with `>` or an em-dash, always with page number
 - No uncited claims in argumentative sections (exception: common knowledge, clearly marked)
+- **Positions carry their date.** Before sketching a section, read the `Research chronology` section of `lint-wiki.py` and the `relations:` of the source pages you cite. Then:
+  - A researcher's view is what they hold in their **latest** source in the wiki. An earlier view they gave up (`revises`) appears as history, in the past tense, with what changed their mind: "Finkelstein first dated … [@finkelstein-1996-…]; after the Tel Rehov dates he moved to … [@finkelstein-2003-…]".
+  - A source with an incoming `supersedes` is not cited as the state of the question. Cite it together with what superseded it, and say on what `basis` — new evidence dates the older position, a reinterpretation only disputes it.
+  - Positions from different decades are not listed as parallel options unless the wiki shows the earlier one is still held (`contradicts`, or a `responds-to` that leaves it open). Order them in time and name the finds or arguments that moved the discussion.
+  - Later is not the same as right. Where a later source merely ignores an earlier objection, say so; do not present it as settled.
 - **Same author, same year, several works** — citeproc disambiguates the rendered citation on its own (*2026a*, *2026b*), so the manuscript needs nothing. What a human and the next agent need is a way to look up which is which, and that goes in a `shortlabel` field on the BibTeX entry, never in `note`:
   ```bibtex
   @incollection{hensel-2026-obadja,
@@ -437,6 +442,7 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 | "I'll draft all the sections and we can discuss at the end" | Discussion after the fact is editing, not steering. By then the drift is expensive to undo — which is why it never gets undone. |
 | "Section 3 needs a point from section 5, I'll pull it forward" | That is drift. Either change the outline and say so, or respect the section's "Not here" line. |
 | "The source is rich here, so I'll go deeper than the sketch said" | Source richness is not an argument. The sketch is the contract; if it is wrong, renegotiate it — don't silently exceed it. |
+| "Both positions are in the wiki, so I'll present both" | One may be thirty years older, and its author may have left it since. Check the years and the `supersedes` / `revises` edges before giving them equal weight. |
 | "The subagent's deviations line is minor, I won't mention it" | Then the stages bought nothing. Deviations go to the user verbatim. |
 | "Thesis: 'this chapter examines the Low Chronology'" | That is a topic, not a thesis. A thesis can be wrong; a topic cannot. Rewrite it as a claim. |
 | "The source roughly says …" | Either a verbatim quote with page, or a paraphrase with a citation. No hearsay. |
