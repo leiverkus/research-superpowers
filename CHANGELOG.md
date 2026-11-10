@@ -100,6 +100,7 @@ the literature search asks who answered a work. Also a one-command macOS setup.
   the sentence marking whose page it is; a review flag's `detail` does the same. Three
   such anchors fired on correct pages in two live projects. The body carries the same
   claims with their pages, so a PDF with the wrong pagination is still caught there.
+
 ### Fixed
 
 - **`sync-project.py --apply` left an in-sync project on its old `plugin_version`.**
