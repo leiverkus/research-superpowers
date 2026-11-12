@@ -147,6 +147,11 @@ Git is already the sync — the cloud carries only what git cannot hold.
   the ranking. The alias-building recipe lives in `drafting-manuscript`
   ("Searching for a concept, not a string").
 
+  A plain query of 3–6 words that finds fewer pages than `--limit` is filled from
+  its two-word pairs. Those hits are marked `~` and name the pair that found them:
+  they matched **part** of the query, so read the page before relying on one.
+  `--no-relax` returns only pages that carry every word.
+
   The page it reports is the **physical** PDF page — exactly what you need to *open*
   the file, and exactly what you must **not** cite. Read the printed page number off
   the page itself.

@@ -85,6 +85,29 @@ machine-generated expansions, every variant here is hand-written and deliberate.
 Fusion changes RANKING only, never recall: a passage no query matches stays
 invisible — that gap belongs to curated keywords (above), not to more aliases.
 
+A THIN RESULT IS FILLED WITH TWO-TERM RELAXATIONS — AND SAYS SO
+-----------------------------------------------------------------
+Bare words are AND-ed on ONE page. Three or four terms taken from a paraphrase
+rarely all sit on the page that answers the question — one reworded term sinks the
+whole query. Measured on a 3,131-document library with 20 wiki claims of known
+source: one 3–4-term query found 10 of the sources; the same terms as fused
+two-term queries found 17 (docs/measurements/2026-07-17-semantic-search/, addendum
+2026-11-10).
+
+So when a plain query of 3–6 terms returns fewer page hits than `--limit`, the
+free slots are filled from its two-term pairs, rank-fused like `--q` variants.
+Three rules keep that honest:
+
+  * strict hits come first and are untouched — relaxation can only ADD;
+  * every added hit is marked (`~` / `"relaxed": true`) and names the pair that
+    found it, because it matched PART of the query and must not be read as a
+    full match;
+  * a query that already says how its terms combine (`OR`, `NOT`, `NEAR`,
+    parentheses) or that comes with `--q` variants is never rewritten.
+
+`--no-relax` gives the strict answer alone — use it when "no page has all of
+these" is the finding you are after.
+
 USAGE
 -----
     python scripts/bib-search.py index            # build / update (incremental)
@@ -96,6 +119,7 @@ USAGE
     python scripts/bib-search.py "shasu" --json
     python scripts/bib-search.py '"random labelling"' --q '"random labeling"' \
         --q 'relabel* OR shuffl*'                 # alias variants, rank-fused (RRF)
+    python scripts/bib-search.py "nomads architecture invisible" --no-relax   # strict AND only
 
 The query is FTS5 syntax: bare words are AND-ed, `"..."` is a phrase, `OR`/`NOT`/
 `NEAR(a b, 5)` work, a trailing `*` is a prefix search. Punctuation that FTS5 would
@@ -348,6 +372,39 @@ _FTS_SAFE = re.compile(r'^[\w\s"*^]+$', re.UNICODE)
 # consensus across aliases over position within any single alias's ranking.
 RRF_K = 60
 
+# Relaxation (see the module docstring): a query of this many bare terms at most is
+# broken into its two-term pairs when the strict AND leaves room under `limit`.
+# Seven terms would already be 21 pair queries — a sentence, not a query.
+RELAX_MIN_TERMS = 3
+RELAX_MAX_TERMS = 6
+_RELAX_TERM = re.compile(r'"[^"]+"|\S+')
+_FTS_OPERATORS = {"AND", "OR", "NOT"}
+
+
+def relax_pairs(query: str) -> list[str]:
+    """The two-term sub-queries of a plain multi-term query, or [] if it is not one.
+
+    "Plain" means bare words, prefixes (`nomad*`) and quoted phrases — a phrase is
+    ONE term and is never split. Anything that already says how its terms combine
+    (`OR`, `NOT`, `NEAR(...)`, parentheses, a column filter, `^`) is left alone:
+    the user wrote a query, not a bag of words, and rewriting it would answer a
+    question they did not ask.
+    """
+    q = query.strip()
+    outside_phrases = re.sub(r'"[^"]*"', " ", q)
+    if q.count('"') % 2 or any(c in outside_phrases for c in "():^"):
+        return []
+    terms = _RELAX_TERM.findall(q)
+    if any(t in _FTS_OPERATORS or t.upper().startswith("NEAR") for t in terms):
+        return []
+    seen: list[str] = []
+    for t in terms:
+        if t not in seen:
+            seen.append(t)
+    if not RELAX_MIN_TERMS <= len(seen) <= RELAX_MAX_TERMS:
+        return []
+    return [f"{x} {y}" for i, x in enumerate(seen) for y in seen[i + 1:]]
+
 
 def _fallback_query(q: str) -> str:
     """Quote every token so FTS5 treats punctuation as literal.
@@ -391,8 +448,31 @@ def _page_rows(con: sqlite3.Connection, query: str, limit: int, key: str | None)
         return con.execute(sql, params).fetchall()
 
 
+def _fuse(con: sqlite3.Connection, queries: list[str], limit: int,
+          key: str | None) -> list[tuple]:
+    """Reciprocal rank fusion over the per-query page lists.
+
+    Every query contributes its own top-`limit`, so an alias's best hit is in the
+    pool no matter how a sibling ranks. The snippet kept is the one from the list
+    where the page ranked best (ties: the earlier query). Returns
+    [(bibkey, page, snippet, [queries that matched])], best first, NOT yet capped.
+    """
+    score: dict = {}
+    best: dict = {}
+    hit_queries: dict = {}
+    for qi, q in enumerate(queries):
+        for rank, (b, p, s, _) in enumerate(_page_rows(con, q, limit, key), 1):
+            pid = (b, p)
+            score[pid] = score.get(pid, 0.0) + 1.0 / (RRF_K + rank)
+            hit_queries.setdefault(pid, []).append(q)
+            if pid not in best or (rank, qi) < best[pid][0]:
+                best[pid] = ((rank, qi), s)
+    ordered = sorted(score, key=lambda pid: (-score[pid], pid))
+    return [(b, p, best[(b, p)][1], hit_queries[(b, p)]) for b, p in ordered]
+
+
 def search(library: Path, query: str, *, limit: int = 20, key: str | None = None,
-           variants: list[str] | None = None) -> list[dict]:
+           variants: list[str] | None = None, relax: bool = False) -> list[dict]:
     """`limit` bounds page hits only. Keyword hits (capped separately by
     KEYWORD_HIT_CAP, a safety valve — curated sets are normally a handful) are
     always returned in full and listed first.
@@ -409,6 +489,13 @@ def search(library: Path, query: str, *, limit: int = 20, key: str | None = None
     above. Fused page hits carry a `queries` field naming the queries that
     matched that page; a single-query search returns exactly what it always did.
     Keyword hits are unioned over all queries, deduped, still listed first.
+
+    `relax` (single-query searches only — with `variants` the caller is already
+    running narrow queries) fills what the strict query leaves free under `limit`
+    with the fused hits of its two-term pairs. Strict hits keep their place and
+    order; every added hit carries `relaxed: True` and the pairs that found it.
+    Off by default here so library callers get exactly what they asked for; the
+    CLI turns it on.
     """
     db = index_path(library)
     if not db.exists():
@@ -433,34 +520,38 @@ def search(library: Path, query: str, *, limit: int = 20, key: str | None = None
 
     if len(queries) == 1:
         rows = _page_rows(con, query, limit, key)
-        con.close()
         page_hits = [{"bibkey": b, "page": p, "snippet": " ".join(s.split()),
                       "matched": "text"} for b, p, s, _ in rows]
-        return keyword_hits + page_hits
+        extra: list[dict] = []
+        pairs = relax_pairs(query) if relax and len(page_hits) < limit else []
+        if pairs:
+            for q in pairs:
+                for b, kw, _ in _keyword_rows(con, q, key):
+                    if (b, kw) not in seen_kw:
+                        seen_kw.add((b, kw))
+                        extra.append({"bibkey": b, "page": None, "snippet": kw,
+                                      "matched": "keyword", "relaxed": True,
+                                      "queries": [q]})
+            have = {(h["bibkey"], h["page"]) for h in page_hits}
+            room = limit - len(page_hits)
+            for b, p, s, qs in _fuse(con, pairs, limit, key):
+                if room <= 0:
+                    break
+                if (b, p) in have:
+                    continue
+                extra.append({"bibkey": b, "page": p, "snippet": " ".join(s.split()),
+                              "matched": "text", "relaxed": True, "queries": qs})
+                room -= 1
+        con.close()
+        return keyword_hits + page_hits + extra
 
     # ── reciprocal rank fusion over the per-query page lists ────────────────
-    # Every query contributes its own top-`limit`, so an alias's best hit is in
-    # the pool no matter how a sibling ranks — the cap below can reorder it out
-    # only by rank consensus, never by a noisy sibling's BM25 flood. The snippet
-    # shown is the one from the list where the page ranked best (ties: the
-    # earlier query).
-    score: dict = {}
-    best: dict = {}
-    hit_queries: dict = {}
-    for qi, q in enumerate(queries):
-        for rank, (b, p, s, _) in enumerate(_page_rows(con, q, limit, key), 1):
-            pid = (b, p)
-            score[pid] = score.get(pid, 0.0) + 1.0 / (RRF_K + rank)
-            hit_queries.setdefault(pid, []).append(q)
-            if pid not in best or (rank, qi) < best[pid][0]:
-                best[pid] = ((rank, qi), s)
+    # The cap can reorder an alias's best hit out only by rank consensus, never
+    # by a noisy sibling's BM25 flood — see _fuse.
+    fused = _fuse(con, queries, limit, key)[:limit]
     con.close()
-
-    ordered = sorted(score, key=lambda pid: (-score[pid], pid))[:limit]
-    page_hits = [{"bibkey": b, "page": p,
-                  "snippet": " ".join(best[(b, p)][1].split()),
-                  "matched": "text", "queries": hit_queries[(b, p)]}
-                 for b, p in ordered]
+    page_hits = [{"bibkey": b, "page": p, "snippet": " ".join(s.split()),
+                  "matched": "text", "queries": qs} for b, p, s, qs in fused]
     return keyword_hits + page_hits
 
 
@@ -499,6 +590,9 @@ def main() -> int:
                     help="an additional query variant (repeatable) — one alias per --q; "
                          "all queries are merged by reciprocal rank fusion and each hit "
                          "reports which queries matched it")
+    ap.add_argument("--no-relax", action="store_true",
+                    help="do not fill a thin result with two-term relaxations of the "
+                         "query (the default does, for plain queries of 3–6 terms)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -576,7 +670,7 @@ def main() -> int:
 
     try:
         hits = search(library, args.query, limit=args.limit, key=args.key,
-                      variants=args.variants)
+                      variants=args.variants, relax=not args.no_relax)
     except (FileNotFoundError, IndexSchemaMismatch) as e:
         print(f"  ✗ {e}", file=sys.stderr)
         return 1
@@ -589,12 +683,22 @@ def main() -> int:
         print(f"  no hits for: {queries}")
         return 1
     fused = f", rank-fused over {1 + len(args.variants)} queries" if args.variants else ""
-    print(f"  {len(hits)} hit(s){fused} — page numbers are PHYSICAL PDF pages, not printed ones\n")
+    print(f"  {len(hits)} hit(s){fused} — page numbers are PHYSICAL PDF pages, not printed ones")
+    relaxed = [h for h in hits if h.get("relaxed")]
+    if relaxed:
+        # Say it before the list, not after: a relaxed hit matched only PART of the
+        # query, and a reader who takes it for a full match draws the wrong conclusion.
+        print(f"  {len(hits) - len(relaxed)} matched every term; {len(relaxed)} more "
+              f"matched only two of them (marked ~, with the pair under 'via').")
+    print()
     for h in hits:
+        mark = "~ " if h.get("relaxed") else ""
         if h["matched"] == "keyword":
-            print(f"  {h['bibkey']} · keyword: \"{h['snippet']}\"")
+            print(f"  {mark}{h['bibkey']} · keyword: \"{h['snippet']}\"")
+            if "queries" in h:
+                print(f"      via: {' · '.join(h['queries'])}")
         else:
-            print(f"  {h['bibkey']} · p. {h['page']}")
+            print(f"  {mark}{h['bibkey']} · p. {h['page']}")
             print(f"      {h['snippet']}")
             # which alias hit which source is the drafting skill's reporting
             # discipline — surface it instead of leaving it to be reconstructed

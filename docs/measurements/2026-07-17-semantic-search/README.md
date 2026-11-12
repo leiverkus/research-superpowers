@@ -235,3 +235,21 @@ check that the hit page is the cited page.
 
 Like the earlier probes these are a record: they hard-code one index file and that
 library's bibkeys; `PROJECT_ROOT` and `RESEARCH_LIBRARY` come from the environment.
+
+### What was built from it (same day)
+
+`bib-search.py` now does the "narrow beats long" step itself: when a plain query of 3–6
+terms leaves room under `--limit`, the free slots are filled from its two-term pairs,
+rank-fused, each added hit marked as a partial match with the pair that found it
+(`--no-relax` for the strict answer alone). `probe8_relaxation.py` re-runs the gold set
+through the CLI with one query per claim in the source's language:
+
+| | top 1 | top 5 | top 10 | top 40 |
+|---|---|---|---|---|
+| strict (`--no-relax`) | 4 | 8 | 10 | 10 |
+| default (relaxed) | 5 | 11 | 14 | **17** |
+
+No source ranked worse under relaxation — strict hits keep their place by construction.
+The three still missing are the three from above (not indexed, a poor text layer, a
+paraphrase). The cross-language gap is untouched by this: relaxation rearranges the
+words you typed, it does not translate them.
