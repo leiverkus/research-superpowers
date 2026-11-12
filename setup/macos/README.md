@@ -76,7 +76,6 @@ what Homebrew cannot do, and ends with a check of every piece.
 | GitHub CLI | `brew "gh"` | pull requests and releases of your own repositories |
 | Claude desktop app | `cask "claude"` | Cowork, the Code tab |
 | Graphviz | `brew "graphviz"` (commented out in the Brewfile) | plugin maintainers only: regenerate `docs/assets/phase-flow.svg` |
-| dao-searxng MCP | your own SearXNG instance (Docker) | web search with source classes; see [`docs/recommended-mcps.md`](../../docs/recommended-mcps.md) |
 
 ## What the script cannot do for you
 

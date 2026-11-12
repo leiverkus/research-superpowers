@@ -221,17 +221,17 @@ Source: `research-skills/peer-review/references/` has general checklists. Add:
 
 ## MCP Optimisation (recommended)
 
-> If `dao-paper-search-mcp` and `dao-searxng-mcp` (see [`docs/recommended-mcps.md`](../../docs/recommended-mcps.md)) are available in the project, use them for the Cited Evidence Audit section of the review report. Otherwise, do the spot-checks manually (open the full text, compare the claim with the original passage).
+> If `dao-paper-search-mcp` (see [`docs/recommended-mcps.md`](../../docs/recommended-mcps.md)) is available in the project, use it for the Cited Evidence Audit section of the review report. Otherwise, do the spot-checks manually (open the full text, compare the claim with the original passage).
 
-Extended Cited Evidence Audit (5 spot-checks) with MCP:
+Extended Cited Evidence Audit (5 spot-checks):
 
 | Citation | Claim | Source verifies? | source_class | Note |
 |---|---|---|---|---|
 | `[@bibkey, p. X]` | <claim> | yes / no / partial | primary_publisher / aggregator / ... | <reason> |
 
 - For each cited DOI: `dao-paper-search-mcp.search_crossref(query=<doi>)` or equivalent adapter, checking that the hit's `identifiers.doi` is that DOI; compare `inline_citation.authoritative_bibliography_line` from the MCP response against the manuscript bibliography — discrepancies are Major Issues.
-- For web citations (online sources): `dao-searxng-mcp.fetch_url(url=...)` and check `source_class`. Aggregator or suspect classification without an explanatory note in the manuscript is at minimum a Minor Issue.
-- If no MCPs are available: drop the `source_class` column; do spot-checks by hand.
+- For web citations (online sources): fetch the page and classify it per [`docs/source-classes.md`](../../docs/source-classes.md). Aggregator or suspect classification without an explanatory note in the manuscript is at minimum a Minor Issue.
+- Without `dao-paper-search-mcp`: check DOIs by hand (resolve them, compare author, year and title); keep the `source_class` column.
 
 ## Red Flags
 
