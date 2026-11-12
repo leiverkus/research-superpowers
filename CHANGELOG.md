@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.45.0] — 2026-11-12
+
+Minor: research-superpowers now runs fully under OpenCode 2.x — subagents, plugin
+scripts and the session-start drift check included. OpenCode users run
+`opencode/install.sh` once; Claude Code users see only wording changes in five skills.
+Synced projects need no update.
+
 ### Fixed
 
 - **OpenCode: the subagents could not be dispatched.** OpenCode does not read
