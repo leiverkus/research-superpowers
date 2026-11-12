@@ -115,7 +115,7 @@ design: "[[<slug>-design]]"
 
 # <Title> — Research Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `research-superpowers:executing-research-plan` to run this plan task by task. Tasks use checkbox (`- [ ]`) syntax so each maps onto one task-list item.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use the `executing-research-plan` skill (`research-superpowers:executing-research-plan` in Claude Code) to run this plan task by task. Tasks use checkbox (`- [ ]`) syntax so each maps onto one task-list item.
 
 **Research Question:** <precise guiding question>
 **Hypothesis (pre-registered, immutable):** <one sentence>
@@ -143,7 +143,7 @@ design: "[[<slug>-design]]"
 
 # <Title> — Research Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `research-superpowers:executing-research-plan` to run this plan task by task.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use the `executing-research-plan` skill (`research-superpowers:executing-research-plan` in Claude Code) to run this plan task by task.
 
 **Research Question:** <precise guiding question>
 **Method sketch:** <which hermeneutic / source-critical / interpretive procedures, on which material>

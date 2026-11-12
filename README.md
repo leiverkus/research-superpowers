@@ -68,7 +68,7 @@ That installs and activates it. Restart Claude Code and you'll see a "Research S
   ```
   /plugin install ~/code/research-superpowers
   ```
-- **OpenCode**: symlink `skills/` into your project's `.claude/skills/` — OpenCode reads SKILL.md files natively. Details in [`docs/installation.md`](docs/installation.md#recommended-path-for-opencode-users).
+- **OpenCode** (2.x): run `opencode/install.sh` from the clone — it links the skills, the generated subagents and the session-start plugin into `~/.config/opencode/`. Details in [`opencode/README.md`](opencode/README.md).
 
 ### Prerequisites
 

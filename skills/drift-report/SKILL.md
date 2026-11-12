@@ -36,7 +36,7 @@ Kill switch: `RESEARCH_SUPERPOWERS_NO_DRIFT_CHECK=1`.
 ## Manual run (this skill's job)
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/hooks/drift_check.py" --force --human
+python3 "${CLAUDE_PLUGIN_ROOT:-$RESEARCH_SUPERPOWERS_DIR}/hooks/drift_check.py" --force --human
 ```
 
 `--force` ignores the fingerprints (checks everything now — this is how you
@@ -61,7 +61,9 @@ the wiki-lint scope only exists there.
 `migrate-citekeys.py` and `sync-project.py` are maintainer tools operating *across* projects, so they are
 not mirrored into the template — `python scripts/merge-bibs.py` from a project root
 fails with "No such file or directory". Run them from the plugin:
-`python3 "$CLAUDE_PLUGIN_ROOT/scripts/merge-bibs.py" …`. The report's `→` lines
+`python3 "${CLAUDE_PLUGIN_ROOT:-$RESEARCH_SUPERPOWERS_DIR}/scripts/merge-bibs.py" …`
+(Claude Code sets `CLAUDE_PLUGIN_ROOT`; the OpenCode plugin sets
+`RESEARCH_SUPERPOWERS_DIR` for every shell command). The report's `→` lines
 already carry the absolute path. Everything else in the table (`bib-search.py`,
 `optimize-pdf.py`, `lint-wiki.py`) is template-mirrored and runs project-relative.
 

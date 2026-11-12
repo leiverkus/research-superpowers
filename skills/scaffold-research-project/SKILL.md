@@ -77,7 +77,7 @@ Create a task-list item for each. Complete in order; do not write files until al
    Wait for explicit confirmation. **Do not write any files before confirmation.**
 
 7. **Locate the template.** Try, in order:
-   1. Plugin cache: `~/.claude/plugins/cache/<marketplace>/research-superpowers/templates/research-project-template/`. Use Bash `ls` to confirm if Bash is available; otherwise try common marketplace names (`leiverkus-research`, `claude-plugins-community`).
+   1. Plugin root: `${CLAUDE_PLUGIN_ROOT:-$RESEARCH_SUPERPOWERS_DIR}/templates/research-project-template/` (Claude Code sets `CLAUDE_PLUGIN_ROOT`, the OpenCode plugin sets `RESEARCH_SUPERPOWERS_DIR`). Failing that, the Claude Code plugin cache: `~/.claude/plugins/cache/<marketplace>/research-superpowers/templates/research-project-template/`. Use Bash `ls` to confirm if Bash is available; otherwise try common marketplace names (`leiverkus-research`, `claude-plugins-community`).
    2. User-supplied path: if the user has the plugin checked out as a development clone, ask for the path.
    3. Fallback: fetch each template file from GitHub raw URLs (`https://raw.githubusercontent.com/leiverkus/research-superpowers/main/templates/research-project-template/...`) via the `WebFetch` tool. Slower but works without any local clone.
 
@@ -113,7 +113,7 @@ Create a task-list item for each. Complete in order; do not write files until al
    ```
    Use the Edit tool with the original placeholder block as `old_string`.
 
-   **`plugin_version` is not a user answer** — read it from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json`
+   **`plugin_version` is not a user answer** — read it from `${CLAUDE_PLUGIN_ROOT:-$RESEARCH_SUPERPOWERS_DIR}/.claude-plugin/plugin.json`
    and copy the `version` string verbatim. It records which plugin version this project's copied
    `schema/` and `scripts/` came from, and it is what lets `scripts/sync-project.py` tell an **old
    copy** from a **local patch** later. Leaving it at `0.0.0` is not fatal — the project is then

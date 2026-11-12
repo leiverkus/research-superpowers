@@ -135,18 +135,18 @@ Edits you make to the cloned files take effect on the next Claude Code session.
 
 ## Recommended path for OpenCode users
 
-[OpenCode](https://opencode.ai/) reads `SKILL.md` files natively from `.claude/skills/<name>/SKILL.md`. So even though OpenCode has no `/plugin install` command, you can use the same plugin:
+[OpenCode](https://opencode.ai/) 2.x reads `SKILL.md` files natively, but not Claude Code agents or hooks. OpenCode has no `/plugin install`; one script does the equivalent:
 
 ```bash
 # Clone the repo
 git clone https://github.com/leiverkus/research-superpowers ~/code/research-superpowers
 
-# In your research project root, symlink the skills directory:
-cd /path/to/your-research-project
-ln -s ~/code/research-superpowers/skills .claude/skills
+# Link skills, subagents and the session-start plugin into ~/.config/opencode/
+~/code/research-superpowers/opencode/install.sh
+opencode service restart   # or quit and reopen the OpenCode app
 ```
 
-OpenCode now discovers all 17 skills and the 7 agents. The SessionStart hook is Claude-Code-specific, so OpenCode users don't get the index injection — instead, mention "Research Superpowers" in your project's `AGENTS.md` and OpenCode will load skills on demand.
+OpenCode then has all skills (global, so `scaffold-research-project` works before a project exists), the subagents the skills dispatch, and the plugin that injects the skill index and runs the drift check at session start. Everything is a symlink, so `git pull` updates it. Details and what remains different: [`opencode/README.md`](../opencode/README.md).
 
 ## Create your first research project
 
