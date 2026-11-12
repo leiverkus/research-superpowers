@@ -45,8 +45,11 @@ in its system context, exactly as in Claude Code.
 
 ### How it works
 
-- Hook: `experimental.chat.system.transform` — appends the index to the
-  system-prompt array OpenCode builds for each request.
+- Hook (OpenCode 2.x plugin API): `setup(ctx)` registers
+  `ctx.session.hook("context")`, which merges the index into the system parts
+  OpenCode builds for each request. OpenCode 2.x no longer loads the 1.x
+  `experimental.chat.system.transform` format; with the old plugin the index
+  silently never arrived.
 - **GWDG / Qwen safe:** it merges the index into the existing leading system
   block instead of adding a second system message (which OpenAI-compatible
   backends like GWDG reject with `HTTP 400 "System message must be at the
