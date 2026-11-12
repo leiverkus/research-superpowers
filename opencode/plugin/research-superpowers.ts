@@ -4,9 +4,15 @@
 // plugin. Claude Code injects a compact skill index (hooks/session-context.md)
 // at session start via its `SessionStart` hook so the assistant knows which
 // research skills exist and when to invoke them. OpenCode has no SessionStart
-// hook, so we achieve the same effect through `experimental.chat.system.transform`:
-// we append the skill index to the system-prompt array that OpenCode assembles
-// for every LLM call.
+// hook, so we achieve the same effect through the `session.context` hook: we
+// merge the skill index into the system-prompt parts that OpenCode assembles
+// for every LLM request.
+//
+// V2 port (2026-11-12): opencode 2.x no longer loads V1 plugins
+// (`{ id, server }` + `experimental.chat.system.transform`). Under V2 the
+// index was silently never injected. Now `{ id, setup(ctx) }` with
+// `ctx.session.hook("context")`; system parts are `{ type: "text", text }`
+// objects instead of strings. Contract: ~/.config/opencode/tests/plugins.test.ts.
 //
 // Two design constraints, both learned from this machine's setup:
 //
@@ -25,7 +31,7 @@
 //   b) the current project's .claude/skills symlink → <repo>/hooks/session-context.md
 //   c) the EMBEDDED_INDEX fallback below (self-contained; always works)
 
-import type { Plugin } from "@opencode-ai/plugin"
+import type { Plugin } from "@opencode/plugin"
 import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join, dirname } from "node:path"
 
@@ -106,45 +112,44 @@ function resolveIndexFile(dir: string): string | null {
 
 // ── Plugin ──────────────────────────────────────────────────────────────────
 
-const researchSuperpowers: Plugin = async ({ directory }) => {
-  // Resolve the index once per session. The plugin function runs per project,
-  // so `directory` is stable for this instance.
-  const active = isResearchProject(directory)
-  let index: string | null = null
-  if (active) {
-    const file = resolveIndexFile(directory)
-    if (file) {
-      try {
-        index = readFileSync(file, "utf8")
-      } catch {
-        index = EMBEDDED_INDEX
-      }
-    } else {
-      index = EMBEDDED_INDEX
-    }
-  }
-
-  return {
-    "experimental.chat.system.transform": async (_input, output) => {
-      if (!index) return
-      const system = output.system
-      if (!Array.isArray(system)) return
-      // Idempotent: never inject twice (e.g. if the array is re-transformed).
-      if (system.some((s) => typeof s === "string" && s.includes(MARKER))) return
-
-      const block = `${MARKER}\n${index}\n</research-superpowers>`
-
-      // GWDG-safe: merge into the existing leading system block rather than
-      // appending a new entry that some OpenAI-compatible backends turn into a
-      // second system message.
-      if (system.length > 0 && typeof system[system.length - 1] === "string") {
-        system[system.length - 1] += `\n\n${block}`
-      } else {
-        system.push(block)
-      }
-    },
+function loadIndex(directory: string): string | null {
+  if (!isResearchProject(directory)) return null
+  const file = resolveIndexFile(directory)
+  if (!file) return EMBEDDED_INDEX
+  try {
+    return readFileSync(file, "utf8")
+  } catch {
+    return EMBEDDED_INDEX
   }
 }
 
 export const id = "research-superpowers"
-export default { id, server: researchSuperpowers }
+
+export default {
+  id,
+  async setup(ctx) {
+    // Resolved once per plugin instance; the location is stable for it.
+    const index = loadIndex(ctx.location.directory)
+    if (!index) return // outside research projects: register nothing
+
+    const block = `${MARKER}\n${index}\n</research-superpowers>`
+
+    await ctx.session.hook("context", (event) => {
+      const system = event.system
+      // Idempotent: never inject twice (the hook fires on every request of a
+      // tool loop, and the same event may be transformed again).
+      if (system.some((part) => part.type === "text" && part.text.includes(MARKER))) return
+
+      // GWDG-safe: merge into the last existing text part instead of adding a
+      // part that OpenAI-compatible backends would turn into a second system
+      // message ("System message must be at the beginning." → HTTP 400).
+      const i = system.length - 1
+      const last = system[i]
+      if (last && last.type === "text") {
+        system[i] = { ...last, text: `${last.text}\n\n${block}` }
+      } else {
+        system.push({ type: "text", text: block })
+      }
+    })
+  },
+} satisfies Plugin.Plugin

@@ -20,6 +20,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   before, 17 after, none ranked worse. The `search()` function keeps its old
   behaviour unless called with `relax=True`.
 
+### Fixed
+
+- **OpenCode: the skill index never reached the system prompt under OpenCode 2.x.**
+  OpenCode 2.x no longer loads 1.x plugins, and `opencode/plugin/research-superpowers.ts`
+  still used the 1.x format (`{ id, server }` with `experimental.chat.system.transform`).
+  Nothing failed visibly: research projects simply ran without the skill index. The
+  plugin now uses the 2.x API (`setup(ctx)` with `ctx.session.hook("context")`) and
+  merges the index into the last system text part, still without a second system
+  message (GWDG-safe). Outside research projects it registers no hook at all. Checked
+  live with OpenCode 2.2.7: the index is present in a project with `knowledge/` and
+  absent elsewhere. Users of the symlinked plugin only need to restart OpenCode.
+
 ## [0.43.1] — 2026-11-10
 
 Patch: the library search recipe now asks for every language the library holds.
