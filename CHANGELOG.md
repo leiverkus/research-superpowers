@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.43.2] — 2026-11-12
+
+Patch: the OpenCode session-start plugin works again under OpenCode 2.x. No skill,
+script or schema changed, so synced projects need no update.
+
 ### Fixed
 
 - **OpenCode: the skill index never reached the system prompt under OpenCode 2.x.**
