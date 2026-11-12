@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.44.0] — 2026-11-12
+
+Minor: `bib-search.py` fills a thin result from the query's two-term pairs, marked as
+relaxed hits. Synced projects get the new script with the next
+`sync-project.py --apply`.
+
 ### Added
 
 - **`bib-search.py` fills a thin result from the query's two-term pairs.** Bare words
