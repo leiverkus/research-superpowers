@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Removed
+
+- **`dao-searxng-mcp` is discontinued.** It was the optional MCP for web search
+  with a `source_class` label per hit. Its general web search had become unusable
+  (the meta-search engines behind it block automated queries), its scholarly
+  search duplicated `dao-paper-search-mcp`, and the self-hosted Docker stack broke
+  silently. General web search is now the host's own tool (`WebSearch` in Claude
+  Code, `websearch` in OpenCode).
+
+### Changed
+
+- **Web citations are classified by a written rubric** instead of the MCP's
+  `source_class` field. New [`docs/source-classes.md`](docs/source-classes.md)
+  defines the same six labels (`primary_publisher`, `academic_repository`,
+  `preprint_server`, `aggregator`, `suspect`, `grey_lit_or_unknown`) with hosts and
+  criteria; `drafting-manuscript`, `requesting-peer-review` and
+  `semantic-wiki-review` fetch the page and apply it. Existing wiki flags and
+  review reports stay valid. `requesting-peer-review` keeps its `source_class`
+  column without any MCP.
+- Docs, the project template's `CLAUDE.md` and the plugin description name only
+  `dao-paper-search-mcp`. Projects scaffolded earlier still mention the old MCP in
+  their own `CLAUDE.md`; that line is informational and can be deleted by hand.
+
 ## [0.45.0] — 2026-11-12
 
 Minor: research-superpowers now runs fully under OpenCode 2.x — subagents, plugin

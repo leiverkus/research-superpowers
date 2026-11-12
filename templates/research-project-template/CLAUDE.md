@@ -856,10 +856,10 @@ we recommend:
   Propylaeum, OpenAlex, Crossref, Semantic Scholar and others; returns
   structurally verified citation blocks (Author-Year + references line)
   and authority IDs (Wikidata, iDAI.gazetteer, GND) for entity pages.
-- **`dao-searxng-mcp`** — web search with `source_class` detection
-  (primary / aggregator / suspect) and automatic DOI detection.
 
-Both are **optional**: skills keep working without them. Setup and
+It is **optional**: skills keep working without it. Cited web sources are
+classified by the rubric in `research-superpowers/docs/source-classes.md`.
+Setup and
 rationale: see `research-superpowers/docs/recommended-mcps.md`.
 
 ### Ingest workflow in a team

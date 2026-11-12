@@ -1,13 +1,14 @@
 # Recommended MCPs
 
-Two MCP servers (by the same author as this plugin) cover gaps that `research-superpowers` alone can only declare:
+One MCP server (by the same author as this plugin) covers a gap that `research-superpowers` alone can only declare:
 
 | MCP | Closes the gap of … | Used by |
 |---|---|---|
 | [`dao-paper-search-mcp`](https://github.com/leiverkus/dao-paper-search-mcp) | Structurally verified citations (no "Author-Year hallucination"), DAO-specific search (Zenon DAI, IAA, ADAJ, IxTheo, Propylaeum) plus cross-platform search (OpenAlex, Crossref, Semantic Scholar, arXiv, CORE, Zenodo, bioRxiv), Wikidata / iDAI.gazetteer entity resolution | `literature-review`, `literature-scout`, `ingest-source` |
-| [`dao-searxng-mcp`](https://github.com/leiverkus/dao-searxng-mcp) | Web search with `source_class` detection (primary / aggregator / suspect) — makes the "don't cite academia.edu" discipline enforceable rather than aspirational | `semantic-wiki-review`, `requesting-peer-review`, `drafting-manuscript` |
 
-Both are **optional**. If they aren't set up, the affected skills fall back to manual API calls / the documented bucket lists. The plugin is fully standalone-functional.
+It is **optional**. Without it, the affected skills fall back to manual API calls and the documented bucket lists. The plugin is fully standalone-functional.
+
+> **`dao-searxng-mcp` is discontinued.** It added web search with a `source_class` label per hit. General web search is now the host's own tool (`WebSearch` in Claude Code, `websearch` in OpenCode), and the skills classify cited URLs themselves by the rubric in [`source-classes.md`](source-classes.md) — same six labels, so existing wiki flags and review reports stay valid.
 
 ## `dao-paper-search-mcp`
 
@@ -59,50 +60,9 @@ In `~/.config/opencode/opencode.json` under `mcp`:
   - `inline_citation.authoritative_bibliography_line` — ready references-list line
   - `audit.source_class`, `audit.warn_marker` — aggregator/suspect warning with ⚠️ marker
 
-## `dao-searxng-mcp`
+## Fallback — what happens without the MCP
 
-### Install — Docker stack (recommended — ships SearXNG too)
-
-```bash
-git clone https://github.com/leiverkus/dao-searxng-mcp.git
-cd dao-searxng-mcp
-cp .env.example .env
-echo "SEARXNG_SECRET_KEY=$(openssl rand -hex 32)" >> .env
-cp searxng-config/settings.yml.example searxng-config/settings.yml
-sed -i.bak "s/REPLACE_WITH_RANDOM_HEX_STRING/$(openssl rand -hex 32)/" \
-  searxng-config/settings.yml && rm searxng-config/settings.yml.bak
-docker compose up -d
-```
-
-After startup: SearXNG UI at <http://localhost:8888>, MCP server (HTTP transport) at <http://127.0.0.1:3333/mcp>.
-
-### Connect — Claude Code / OpenCode
-
-HTTP transport:
-
-```json
-{
-  "mcpServers": {
-    "dao-searxng": { "url": "http://127.0.0.1:3333/mcp" }
-  }
-}
-```
-
-stdio transport (alternative): see the repo README.
-
-### What skills use
-
-- **Search tools**: `web_search`, `news_search`, `science_search`, `fetch_url`
-- **Per-hit annotation** (skills route on these):
-  - `source_class`: `primary_publisher` | `academic_repository` | `preprint_server` | `aggregator` | `suspect` | `grey_lit_or_unknown`
-  - `doi_detected`: DOI string when found in title/snippet/text (hand to `dao-paper-search-mcp` for verification)
-  - `oa_url_heuristic`: `likely` | `maybe` | `no`
-  - `content_type`, `content_extraction`: HTTP headers and Readability status
-- **Output**: pre-formatted Markdown with `(domain)` labels and an automatic "Sources:" section
-
-## Fallback — what happens without the MCPs
-
-Skills that mention these MCPs consistently use a **soft-preference pattern**:
+Skills that mention the MCP consistently use a **soft-preference pattern**:
 
 > If `dao-paper-search-mcp` is available in the project, use the MCP tools instead of the manual API calls below — they return structurally verified citation blocks. Otherwise stay on the manual path.
 
@@ -110,4 +70,4 @@ The manual path (the documented database bucket list, manual BibTeX entry, manua
 
 ## Version pinning
 
-Recommended: before serious research use, pin concrete version tags instead of `@main`. Both MCPs evolve; a pinned tag makes research runs reproducible. Tags are published under each repo's "Releases".
+Recommended: before serious research use, pin a concrete release instead of `@main`. The MCP evolves; a pinned version makes research runs reproducible. Releases are published on PyPI and under the repo's "Releases".

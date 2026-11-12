@@ -59,7 +59,7 @@ Three skills look at the wiki, and they do *different* things:
 
 - **`wiki-lint`** runs `scripts/lint-wiki.py` — a deterministic, CI-tauglich Python script. It checks frontmatter completeness, wikilink resolution, status distribution, and (since Phase 3) the rate of SOFT-GATE overrides. Fast, mechanical, repeatable. Asks: *is the wiki well-formed?*
 - **`wiki-graph`** runs `scripts/wiki-to-graph.py` — also deterministic — and exports the wiki as a graph (`graph.json` / `graph.graphml`). It surfaces god nodes (most-connected pages), bridges (entities joining otherwise-unconnected sources), and the inference-rate of structured relations. Asks: *what shape does the knowledge have?* Validation is `wiki-lint`'s job; this is structure analysis.
-- **`semantic-wiki-review`** is an LLM-driven content audit. It reads pages, builds a claim ledger, and flags contradictions, stale syntheses, unsupported claims, missing cross-references, and (with `dao-searxng-mcp`) aggregator/suspect citations. Slow, judgement-based, not a CI gate. Asks: *are the claims sound?*
+- **`semantic-wiki-review`** is an LLM-driven content audit. It reads pages, builds a claim ledger, and flags contradictions, stale syntheses, unsupported claims, missing cross-references, and aggregator/suspect citations (by the rubric in [`source-classes.md`](source-classes.md)). Slow, judgement-based, not a CI gate. Asks: *are the claims sound?*
 
 Earlier versions promised semantic checks in `wiki-lint`. They were never implemented. v0.2 split the work so the lint script only claims what it actually does, and the LLM work lives in its own skill that's invoked manually.
 
@@ -84,7 +84,7 @@ This is also why the skill never silently overwrites an existing source page. Th
 
 ## MCPs are soft-preference, not required
 
-The plugin ships standalone. Two recommended MCPs ([`dao-paper-search-mcp`](https://github.com/leiverkus/dao-paper-search-mcp) and [`dao-searxng-mcp`](https://github.com/leiverkus/dao-searxng-mcp)) add structurally verified citations and source-class detection — exactly the discipline problems the plugin's red flags talk about. Each skill that benefits from these MCPs has an "MCP Optimisation (recommended)" section that names the soft-preference: *if* the MCP is available, use it; otherwise stay on the documented manual path.
+The plugin ships standalone. One recommended MCP ([`dao-paper-search-mcp`](https://github.com/leiverkus/dao-paper-search-mcp)) adds structurally verified citations — exactly the discipline problems the plugin's red flags talk about. Each skill that benefits from these MCPs has an "MCP Optimisation (recommended)" section that names the soft-preference: *if* the MCP is available, use it; otherwise stay on the documented manual path.
 
 The plugin must never *require* an MCP to function. See [`recommended-mcps.md`](recommended-mcps.md) for setup.
 

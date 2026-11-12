@@ -176,14 +176,14 @@ The dated report (step 6) stays as the human-readable digest and is the only
 place the report-only categories (missing cross-references, suspect citations)
 live. Findings and report are two views of the same audit — keep them consistent.
 
-## MCP Optimisation (recommended)
+## Web-source classification
 
-> If `dao-searxng-mcp` (see [`docs/recommended-mcps.md`](../../docs/recommended-mcps.md)) is available in the project, use its `source_class` detection for every cited URL. Otherwise judge aggregator status manually via hostname heuristic (academia.edu, researchgate.net, scribd.com, …).
+> Classify every cited URL per [`docs/source-classes.md`](../../docs/source-classes.md). (Until v0.45 the optional `dao-searxng-mcp` did this; it is discontinued — the labels are unchanged.)
 
 Procedure:
 
 1. Collect every external URL from the audited source / synthesis pages (frontmatter `sources:` or body links).
-2. Per URL: call `fetch_url` / `web_search` via `dao-searxng-mcp`; the tool annotates with `source_class` (`primary_publisher` | `academic_repository` | `preprint_server` | `aggregator` | `suspect` | `grey_lit_or_unknown`).
+2. Per URL: fetch the page (`WebFetch` / `webfetch`) and assign its `source_class` (`primary_publisher` | `academic_repository` | `preprint_server` | `aggregator` | `suspect` | `grey_lit_or_unknown`) by the rubric in `docs/source-classes.md`.
 3. URLs with `source_class=aggregator` or `suspect` go into the new "Suspect / aggregator citations" issue category, with a note on whether the primary source (DOI) is known.
 4. No automatic fix — the report is advisory; the user decides replacement or retention with rationale.
 

@@ -8,7 +8,7 @@ Five minutes from "I just installed this" to "my first source is in the wiki."
 - Python 3.10+ for the wiki linter (`pyyaml` only — no other dependencies)
 - A PDF of a scholarly source you want to ingest (any field — the example uses Levantine archaeology)
 
-Optional but recommended: see [`recommended-mcps.md`](recommended-mcps.md) for `dao-paper-search-mcp` (verified citations) and `dao-searxng-mcp` (web-source classification). Skip these for the quickstart; the plugin works without them.
+Optional but recommended: see [`recommended-mcps.md`](recommended-mcps.md) for `dao-paper-search-mcp` (verified citations). Skip it for the quickstart; the plugin works without it.
 
 ## 1. Install the plugin
 
