@@ -8,7 +8,7 @@ One MCP server (by the same author as this plugin) covers a gap that `research-s
 
 It is **optional**. Without it, the affected skills fall back to manual API calls and the documented bucket lists. The plugin is fully standalone-functional.
 
-> **`dao-searxng-mcp` is discontinued (v0.45.1).** It added web search with a `source_class` label per hit. General web search is now the host's own tool (`WebSearch` in Claude Code, `websearch` in OpenCode), and the skills classify cited URLs themselves by the rubric in [`source-classes.md`](source-classes.md) — same six labels, so existing wiki flags and review reports stay valid.
+> **`dao-searxng-mcp` is discontinued.** It added web search with a `source_class` label per hit. General web search is now the host's own tool (`WebSearch` in Claude Code, `websearch` in OpenCode), and the skills classify cited URLs themselves by the rubric in [`source-classes.md`](source-classes.md) — same six labels, so existing wiki flags and review reports stay valid.
 
 ## `dao-paper-search-mcp`
 
