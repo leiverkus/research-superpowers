@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.46.0] — 2026-11-12
+
+Minor: `dao-searxng-mcp` is discontinued. Web citations are now classified by a
+written rubric (`docs/source-classes.md`, same six labels). Synced projects need
+no update; their own `CLAUDE.md` may still mention the old MCP, which is harmless.
+
 ### Removed
 
 - **`dao-searxng-mcp` is discontinued.** It was the optional MCP for web search
