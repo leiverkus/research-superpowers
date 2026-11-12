@@ -6,6 +6,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- **OpenCode: the subagents could not be dispatched.** OpenCode does not read
+  Claude Code agent files (no `.claude/agents` path), and the Claude frontmatter
+  does not carry over: without `mode:` an agent became a primary agent the
+  `subagent` tool cannot launch, `disallowedTools` was ignored (so `peer-reviewer`
+  could write), and `model: sonnet`/`inherit` and keys such as `implements` went
+  into the provider request. `scripts/build-opencode-agents.py` now generates
+  `opencode/agents/` from `agents/` with `mode: subagent` and a `permission:` block
+  (`Agent` → `subagent: deny`, `Write`/`Edit` → `edit: deny`); CI fails when the two
+  drift apart.
+- **OpenCode: `$CLAUDE_PLUGIN_ROOT` was empty.** `drift-report`, `ingest-source` and
+  `scaffold-research-project` called plugin scripts through it, which OpenCode never
+  sets (`python3 "/hooks/drift_check.py"`). They now use
+  `${CLAUDE_PLUGIN_ROOT:-$RESEARCH_SUPERPOWERS_DIR}`, and the OpenCode plugin sets
+  `RESEARCH_SUPERPOWERS_DIR` for every shell command.
+- **OpenCode: no drift check at session start.** The plugin now runs
+  `hooks/drift_check.py` in the background in a research project, like Claude Code's
+  second `SessionStart` hook, and adds any findings to the first session's system
+  prompt. `RESEARCH_SUPERPOWERS_NO_DRIFT_CHECK=1` switches it off.
+- **OpenCode install instructions were incomplete.** The documented
+  `.claude/skills` link per project brought skills only — no agents, no plugin —
+  and scaffolded projects never got it, so in practice OpenCode saw no skills.
+  `opencode/install.sh` now links skills (globally, so `scaffold-research-project`
+  works before a project exists), the generated subagents and the plugin into
+  `~/.config/opencode/`; it never overwrites, and `--uninstall` removes only its own
+  links. README, quickstart, installation guide and `opencode/README.md` describe it.
+- **Skill texts assumed Claude Code.** `using-research-powers` no longer claims
+  OpenCode has `TodoWrite` (2.x has no task tool), and `writing-research-plan` names
+  the plain skill `executing-research-plan` next to the Claude Code form
+  `research-superpowers:executing-research-plan`.
+
+### Added
+
+- **Contract tests for the OpenCode plugin** (`bun test opencode/tests`, run in CI):
+  index injection, project scoping, shell environment, drift check with a stub.
+
 ## [0.44.0] — 2026-11-12
 
 Minor: `bib-search.py` fills a thin result from the query's two-term pairs, marked as

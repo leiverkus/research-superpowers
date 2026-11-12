@@ -169,9 +169,9 @@ The skill itself tells you which.
 
 **In Claude Code:** Use the `Skill` tool. The skill content is presented to you — follow it. Never `Read` a skill file in place of invoking it.
 
-**In OpenCode:** Skills load natively from `skills/<name>/SKILL.md` and `.claude/skills/<name>/SKILL.md`. Trigger them via natural language or the built-in `skill` tool (e.g. `skill({ name: "ingest-source" })`).
+**In OpenCode:** Skills load natively once installed (see `opencode/README.md`). Trigger them via natural language or the built-in `skill` tool (e.g. `skill({ name: "ingest-source" })`). Skill names carry no `research-superpowers:` prefix there. The subagents (`source-ingester`, `drafter`, …) are launched with the `subagent` tool.
 
-**"Task-list item"** in a checklist means whatever task tracker the host gives you: `TaskCreate` / `TaskUpdate` in current Claude Code, `TodoWrite` in older Claude Code builds and in OpenCode. The skills name the concept, not the tool, so they survive a rename.
+**"Task-list item"** in a checklist means whatever task tracker the host gives you: `TaskCreate` / `TaskUpdate` in current Claude Code, `TodoWrite` in older Claude Code builds. OpenCode 2.x has no task tool — keep the list as a checklist in your reply or in the plan file. The skills name the concept, not the tool, so they survive a rename.
 
 ## The Research Project Template
 

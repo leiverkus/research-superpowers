@@ -28,13 +28,13 @@ After install, start a session inside a research project (scaffold one from `tem
 
 ## Install (OpenCode)
 
-OpenCode v1.x reads `SKILL.md` files natively from `.claude/skills/<name>/SKILL.md` ([OpenCode docs](https://opencode.ai/docs/skills/)). Symlink or copy the plugin's `skills/` directory under your project's `.claude/`:
+OpenCode 2.x reads `SKILL.md` files natively ([OpenCode docs](https://opencode.ai/docs/skills/)), but not Claude Code agents or hooks. One script installs all three pieces — skills, generated subagents, session-start plugin — as symlinks into `~/.config/opencode/`:
 
 ```bash
-ln -s /path/to/research-superpowers/skills .claude/skills
+/path/to/research-superpowers/opencode/install.sh
 ```
 
-Agents discover skills via OpenCode's built-in `skill` tool and load them on demand. No separate slash-commands needed.
+What it links and why: [`opencode/README.md`](../opencode/README.md).
 
 ## Skill topology
 

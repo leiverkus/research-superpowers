@@ -21,15 +21,15 @@ Open Claude Code in any directory, then:
 
 Restart Claude Code (`exit`, then `claude` again). You should see a "Research Superpowers" notice on session start.
 
-**OpenCode users:** symlink the skills into your project's `.claude/skills/`:
+**OpenCode users:** clone the repo and run its installer once:
 
 ```bash
 git clone https://github.com/leiverkus/research-superpowers ~/code/research-superpowers
-cd /path/to/your-research-project
-ln -s ~/code/research-superpowers/skills .claude/skills
+~/code/research-superpowers/opencode/install.sh
+opencode service restart
 ```
 
-(OpenCode reads SKILL.md files natively from `.claude/skills/<name>/SKILL.md`.)
+(It links the skills, the subagents and the session-start plugin into `~/.config/opencode/` — see [`opencode/README.md`](../opencode/README.md).)
 
 Need more detail or hit a snag? See [`installation.md`](installation.md) — all three install paths, prerequisites, and troubleshooting.
 
