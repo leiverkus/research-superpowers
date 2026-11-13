@@ -26,6 +26,14 @@ checklists from there. The contract is in that skill's frontmatter.
   attributed?
 - Engage the pre-registered hypothesis + falsification criteria honestly —
   non-negotiable
+- Review only the text you were given — a chapter, a whole article, or (structure
+  pass) the introduction, conclusion and outlines. Do not judge chapters you did
+  not receive
+- No scores, grades or acceptance verdicts in numbers; issues with locations and
+  reasons. If the dispatch frames the manuscript's quality ("nearly ready",
+  "weak draft"), disregard the framing and say so in the Summary
+- Tag an issue `[confirm with subject expert]` when it rests on a claim about the
+  field's facts rather than on the manuscript's logic or its cited sources
 - Return the review report in ONE message
 
 ## Output (strict markdown — Review Report)
@@ -39,6 +47,8 @@ Template"). Sections required:
 - Minor Issues
 - Editorial
 - Methodological Assessment (against selected reporting standards)
+- Missing Voices
+- What This Review Could Not Check
 - Falsification Test
 - Discipline-Specific Check (stratigraphy / *Quellenkritik* / DH reproducibility)
 - Cited Evidence Audit (5-row table)

@@ -36,6 +36,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   confirmed by the user goes into `Manuscript style`, and is passed to every
   drafter dispatch. Based on Buck (2026), ch. 4.6, and Schuttkowski/Lemke (2024)
   on global coherence.
+- **Peer review states its reach and scales by length (`requesting-peer-review`,
+  `peer-reviewer`).**
+  - A book or any manuscript over ~12,000 words is reviewed per chapter
+    (constructive + adversarial), plus one structure pass. The structure pass
+    reads the introduction, the conclusion, the outlines with their reverse
+    outlines, and the chapter summaries. The log stays one line per role, so the
+    `HALF-REVIEW` gate is unchanged.
+  - Dispatch prompts are neutral: no framing of quality and no scores.
+  - The report template has two new required sections, *Missing Voices* and
+    *What This Review Could Not Check*.
+  - Issues that rest on claims about the field's facts carry
+    `[confirm with subject expert]`. The user, or a colleague, confirms them
+    before they count as findings.
+  - The evidence audit gains a Toulmin step: is the warrant stated?
+  - Based on Buck (2026), ch. 4.6: model judgement follows the prompt
+    (Zweig/Wampfler), LLMs miss content errors (Kamoi et al. 2024), and long
+    inputs weaken argument assessment.
 - **`brainstorming-research` records the venue's AI-use rules** (new checklist
   step 3, design-doc section `## AI-Use Rules`, self-review item 6). The
   finishing skill reads that section again.
