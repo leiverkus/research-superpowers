@@ -63,18 +63,19 @@ oversight — the reason in the log makes that traceable.
 1. **Confirm target manuscript** and render status (`make render` must succeed)
 2. **Identify discipline** — Theologie, Biblische Archäologie, Alte Geschichte, Digital Humanities, Mixed Methods — each has specific review criteria
 3. **Select reporting standard** — CONSORT (RCT), STROBE (observational), MRC Framework (complex interventions), PRISMA (systematic review), ARRIVE (animal), TRIPOD (prediction models); **discipline-specific:** stratigraphic documentation (archaeology), Formkritik/Quellenkritik (theology), source criticism (DH)
-4. **Dispatch constructive reviewer subagent** (see `agents/peer-reviewer.md`) with role `constructive`
-5. **Dispatch adversarial reviewer subagent** (fresh context) with role `adversarial`
-6. **Collate reviews** into a single `output/<target>/reviews/<date>-review.md` document
-7. **Classify each issue:** Major / Minor / Editorial / Out-of-scope
-8. **Walk the user through each Major and Minor** — decision: accept → revise, reject (with rationale), defer (with log)
-9. **Log decisions** in `knowledge/_meta/log.md`, one line per pass, in this exact shape — `lint-wiki.py`'s `HALF-REVIEW` gate reads it, and an unlogged pass is an unverifiable claim that the review happened:
+4. **Scope the dispatches by length** — see [Review scope](#review-scope). An article or a single chapter is reviewed whole; a book or any manuscript over ~12,000 words is reviewed **per chapter** (one constructive and one adversarial dispatch per chapter) plus one **structure pass** over the whole. Long inputs measurably weaken model judgement of argument; a review of 80,000 words at once is a review of the first and last chapters
+5. **Dispatch constructive reviewer subagent** (see `agents/peer-reviewer.md`) with role `constructive`
+6. **Dispatch adversarial reviewer subagent** (fresh context) with role `adversarial`
+7. **Collate reviews** into a single `output/<target>/reviews/<date>-review.md` document
+8. **Classify each issue:** Major / Minor / Editorial / Out-of-scope. Keep the reviewer's `[confirm with subject expert]` tag on the issue — it travels into the walk-through
+9. **Walk the user through each Major and Minor** — decision: accept → revise, reject (with rationale), defer (with log). An issue tagged `[confirm with subject expert]` is a model's claim about the field, not a finding: the user decides whether they can confirm it from their own expertise or whether it goes to a human colleague first. Present the two sections *Missing voices* and *What this review could not check* as well — they are where the review is honest about its own reach
+10. **Log decisions** in `knowledge/_meta/log.md`, one line per pass, in this exact shape — `lint-wiki.py`'s `HALF-REVIEW` gate reads it, and an unlogged pass is an unverifiable claim that the review happened:
    ```
    ## [YYYY-MM-DD] review | constructive | <one-line verdict>
    ## [YYYY-MM-DD] review | adversarial | <one-line verdict>
    ```
    If a pass is **skipped**, log it anyway with the deciding reason (`review | adversarial | SKIPPED — <reason>, decided by <who>`). The gate then still reports the gap, which is correct: the manuscript went out on half a review, and the record should say so.
-10. **If accepted issues → revisions needed:** route back to `drafting-manuscript` with issue list
+11. **If accepted issues → revisions needed:** route back to `drafting-manuscript` with issue list
 
 ## Process Flow
 
@@ -95,8 +96,10 @@ digraph peer_review {
 
     "Confirm manuscript + render" -> "Identify discipline";
     "Identify discipline" -> "Select reporting standard(s)";
-    "Select reporting standard(s)" -> "Dispatch constructive reviewer";
-    "Select reporting standard(s)" -> "Dispatch adversarial reviewer";
+    "Scope by length" [shape=box];
+    "Select reporting standard(s)" -> "Scope by length";
+    "Scope by length" -> "Dispatch constructive reviewer" [label="per chapter if long"];
+    "Scope by length" -> "Dispatch adversarial reviewer" [label="per chapter if long"];
     "Dispatch constructive reviewer" -> "Collate reviews";
     "Dispatch adversarial reviewer" -> "Collate reviews";
     "Collate reviews" -> "Classify issues";
@@ -108,6 +111,26 @@ digraph peer_review {
     "Log decisions" -> "Done";
 }
 ```
+
+## Review scope
+
+| Manuscript | Dispatches |
+|---|---|
+| Article, single chapter, grant narrative (≲ 12,000 words) | 1 constructive + 1 adversarial, whole text |
+| Book, thesis, or longer manuscript | per chapter: 1 constructive + 1 adversarial; then **1 structure pass** over the whole |
+
+The **structure pass** (role `constructive`, fresh context) does not reread every
+chapter. It receives the introduction, the conclusion, the outline files with
+their claim chains and section reverse outlines (`output/<target>/outline/*.md`,
+written by `drafting-manuscript`), and the chapter-level review summaries. It
+asks only global questions: does the book's thesis survive the sequence of
+chapters, are any chapters doing the same job, does the conclusion answer what
+the introduction asks, is a key term used in two senses across chapters?
+
+Collate per-chapter reports under one dated review document with a section per
+chapter. Log **one line per role** as before (the `HALF-REVIEW` gate reads
+that), naming the chapters covered in the verdict — e.g.
+`## [2026-11-13] review | adversarial | ch. 1–6 + structure; 4 Major (ch. 3, 5)`.
 
 ## Reviewer Assignment
 
@@ -122,6 +145,15 @@ Two subagents, FRESH context each:
 - Goal: find holes, challenge interpretations, flag methodological gaps
 - Tone: rigorous external reviewer (Reviewer 2)
 - Prompts: "Which claim is inadequately supported?" "What alternative explanation isn't addressed?" "Which sources are missing?" "Is the statistical/stratigraphic/philological method defensible?"
+
+**Dispatch prompts are neutral.** A model's verdict follows the prompt more than
+the text: the same essay, framed three different ways, is graded anywhere from
+good to failing. So the dispatch states the role, the materials and the
+template — and nothing about how good the manuscript is, how much work went
+into it, what the author hopes to hear, or how close the deadline is. No
+scores, grades or acceptance probabilities are asked for; the review's output is
+issues with locations and reasons. The adversarial role is a *way of reading*
+(look for the weakest link), not a presumption that the text is weak.
 
 Both subagents receive:
 - The manuscript file
@@ -148,7 +180,7 @@ reporting_standard: <CONSORT|STROBE|...|discipline-specific>
 <2–3 sentences: overall impression>
 
 ## Major Issues
-1. **<Issue>** — <why it matters, where it lives (section/line), suggested resolution>
+1. **<Issue>** — <why it matters, where it lives (section/line), suggested resolution>. Tag `[confirm with subject expert]` when the issue rests on a claim about the field's facts (a date, a reading, a find, what the literature holds) rather than on the manuscript's own logic or its cited sources
 ...
 
 ## Minor Issues
@@ -159,6 +191,22 @@ reporting_standard: <CONSORT|STROBE|...|discipline-specific>
 
 ## Methodological Assessment
 <assessment against the selected reporting standard>
+
+## Missing Voices
+Which schools, positions, language areas or kinds of evidence does the argument
+not engage that a specialist reader would expect? (E.g. German- or
+French-language scholarship, Israeli excavation reports, a rival dating model,
+epigraphic or iconographic evidence.) Model-assisted research leans towards the
+most-cited, recent, English-language mainstream — name what that bias would
+have hidden here. "None identified" only after checking.
+
+## What This Review Could Not Check
+Be explicit about the review's own reach: claims that need first-hand knowledge
+of a site, a collection, unpublished material or a language you cannot verify;
+sources you could not open; technical judgements (statistics, stratigraphy,
+textual criticism) where your assessment is a plausibility check, not an expert
+verdict. A reader of this review should know which of its silences mean
+"checked, fine" and which mean "not checkable here".
 
 ## Falsification Test
 Quantitative/mixed: does the manuscript honestly engage with the pre-registered falsification criteria? Hermeneutic: does it state what evidence or reading would refute its thesis, and engage it? If no, flag.
@@ -178,7 +226,8 @@ Both reviewer roles (constructive and adversarial) apply the evidence framework 
    - **Reproducibility audit** — DH / computational
 4. **Confounders** — which alternative explanations does the manuscript NOT discuss?
 5. **Logical fallacies** — ad hominem, affirming the consequent, equivocation, cherry-picking, generalisation from single finds
-6. **Falsification test** — would the author acknowledge what would refute the thesis, and engage it honestly?
+6. **Argument structure (Toulmin)** — for each central claim: what is the *data* (the evidence cited), what is the *warrant* (the rule that licenses the step from data to claim — a dating convention, a typological assumption, a hermeneutic principle), and is the warrant stated or silently assumed? An unstated warrant that a specialist would contest is a Major Issue
+7. **Falsification test** — would the author acknowledge what would refute the thesis, and engage it honestly?
 
 Adversarial reviewers may apply this checklist more harshly (Reviewer 2); constructive reviewers name gaps constructively with a suggested improvement.
 
@@ -242,10 +291,16 @@ Extended Cited Evidence Audit (5 spot-checks):
 | "I know the literature, external review is overkill" | Blind spots are by definition what you don't see. |
 | "Falsification check is only for quantitative work" | Qualitative work also has to say what would refute its thesis. |
 | "I'll handle Minor Issues later" | Later means never. Freeze them in the review document. |
+| "The book is one manuscript, one dispatch is cleaner" | Long inputs weaken judgement of argument. Per chapter, plus a structure pass. |
+| "I'll tell the reviewer this is nearly ready, so it focuses on polish" | Then the verdict is the one you asked for. Neutral dispatch: role, materials, template. |
+| "The reviewer says the dating is wrong — accept it" | A tagged field claim is the model's, not a finding. The user confirms it or a colleague does. |
+| "Nothing is missing — the review found no gaps" | Then the *Missing voices* and *Could not check* sections say why. Silence is not coverage. |
 
 ## Key Principles
 
-- **Two passes, fresh context each** — constructive + adversarial, kept separate
+- **Two passes, fresh context each** — constructive + adversarial, kept separate; per chapter for long manuscripts, plus a structure pass
+- **Neutral dispatch** — no framing of quality, no scores; the prompt must not decide the verdict
+- **The review states its own reach** — missing voices, what could not be checked, field claims tagged for expert confirmation
 - **Discipline-specific checklist** — no universal template
 - **Falsification check** — quantitative: honest engagement with the pre-registered hypothesis; hermeneutic: the manuscript says what would refute its thesis
 - **Classify before revising** — Major / Minor / Editorial / Out-of-scope before editing
