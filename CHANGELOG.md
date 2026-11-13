@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.47.0] — 2026-11-13
+
+Minor: these changes come from an evaluation of Isabella Buck, *Wissenschaftliches
+Schreiben mit KI* (2nd ed., UVK/utb 2026). The plugin already kept the human in
+charge of an AI-assisted workflow; this release closes the gaps the book points
+to:
+- AI-use disclosure
+- the author formulates the thesis
+- global coherence and precision of the prose
+- reviews that state their own reach
+- scope-faithful extraction
+- visible search limits
+- personal data
+- tested analysis code
+
+All changes are in skills and agents, so synced projects need no update. Two
+`CLAUDE.md` additions apply only to newly scaffolded projects: the precision
+rules and the `Style profile` placeholder under `Manuscript style`. Existing
+projects can copy them by hand if they want.
+
 ### Added
 
 - **`finishing-a-research-project` asks for an AI-use disclosure** (new checklist
