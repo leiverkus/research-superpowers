@@ -322,6 +322,19 @@ project's discipline and genre.** Defaults:
   counts on Draft tasks so the draft is forced to elaborate rather than compress.
 - **Register:** academic, discipline-appropriate Fachsprache, impersonal voice
   (adjust here if the project wants first-person plural, essayistic tone, etc.).
+- **Precision before fluency.** Terms of art are repeated exactly, never varied
+  for elegance; connectives (*because*, *although*, *whereas*, *indem*,
+  *wenngleich*) must assert the relation the argument actually makes; hedges and
+  scope qualifiers from the sources stay in; no rhetorical questions or
+  promotional adjectives.
+- **Every drafted section comes with a reverse outline** (function + main
+  statement per paragraph) so you can check intent without rereading.
+
+#### Style profile
+
+<Optional. Filled by `drafting-manuscript` from 2–3 pages of your own published
+prose, then confirmed by you: sentence length, person, hedging, how sources are
+introduced, paragraph length, reader guidance. Delete this placeholder if unused.>
 
 ## Frontmatter schema
 

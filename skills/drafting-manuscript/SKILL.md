@@ -115,7 +115,11 @@ place to redirect — that is the entire point of the stage.
 
 **STOP 3 — Section prose (per section, Stage B).** The prose for THIS section
 only, plus an explicit line on where it deviates from the approved sketch (or
-"no deviations"). Present. Wait. On approval, append to the target file, set the
+"no deviations"), plus its **reverse outline** — one line per paragraph: its
+function and its main statement (see [Reverse outline](#reverse-outline)). The
+reverse outline is what lets the user check in thirty seconds whether the prose
+says what they mean; reading a thousand words for that is what gets skipped.
+Present. Wait. On approval, append to the target file, set the
 section's `Status: approved`, and move to the next section — one section per
 turn, never two.
 
@@ -154,16 +158,17 @@ so out loud.
 10. **STOP 2** — present the sketch, wait for approval, revise until the argument is right
 11. **Draft prose for this section only** — against the approved sketch; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
 12. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
-13. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass
-14. **STOP 3** — present the prose + the deviation line, wait for approval, revise
+13. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass. Then **write the reverse outline** (see [Reverse outline](#reverse-outline)) and read it against the sketch: a paragraph whose function you cannot name, two paragraphs with the same main statement, or a paragraph that only lines up facts (*knowledge telling*) is fixed now, before STOP 3. Check the [precision rules](#precision-rules) on the same pass
+14. **STOP 3** — present the prose + the deviation line + the reverse outline, wait for approval, revise
 15. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 9 for the next section
 16. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
 
 ### Stage C — Finishing
 
-17. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
-18. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
-19. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
+17. **Chapter coherence check** — once every section is approved, read the chapter as a whole, because each section passing on its own does not make the chapter cohere (LLM prose is typically coherent locally and breaks globally). (a) Join the section reverse outlines and read them against the outline's thesis and claim chain: does each section hand on what the next one starts from, does any step of the chain have no section carrying it? (b) **Introduction ↔ conclusion**: is every question, aim or promise the introduction announces answered or explicitly bracketed in the conclusion, and does the conclusion claim nothing the chapter did not argue? (c) Terminology: is each key term used in one sense throughout? Present the findings as a short list with locations; fix only what the user approves — this is a check, not a rewrite pass
+18. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
+19. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
+20. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
 
@@ -194,6 +199,7 @@ digraph drafting {
     "Append to .qmd; Status=approved" [shape=box];
     "Sections left?" [shape=diamond];
 
+    "Chapter coherence check" [shape=box];
     "Verify citations" [shape=box];
     "Citations complete?" [shape=diamond];
     "Fix citations" [shape=box];
@@ -233,7 +239,8 @@ digraph drafting {
     "STOP 3: section approved?" -> "Append to .qmd; Status=approved" [label="yes"];
     "Append to .qmd; Status=approved" -> "Sections left?";
     "Sections left?" -> "Next unapproved section" [label="yes"];
-    "Sections left?" -> "Verify citations" [label="no"];
+    "Sections left?" -> "Chapter coherence check" [label="no"];
+    "Chapter coherence check" -> "Verify citations";
 
     "Verify citations" -> "Citations complete?";
     "Citations complete?" -> "Fix citations" [label="no"];
@@ -333,6 +340,36 @@ At STOP 2, this block goes into the outline **under the section it belongs to**,
 
 The counter-position line is not decoration. A section that cannot name what argues against it has not engaged the debate, and a reviewer will say so — cheaper to hear it here.
 
+## Reverse outline
+
+Written after the prose, from the prose — not copied from the sketch. One line
+per paragraph:
+
+```markdown
+#### Reverse outline — S3
+| ¶ | Function | Main statement |
+|---|----------|----------------|
+| 1 | claim | The Negev argument rests on three sites anchored by the horizon they date |
+| 2 | grounding | Tel Masos II is dated only by its pottery [@finkelstein-1999-hazor, p. 61] |
+| 3 | example | … |
+| 4 | counter-position | Mazar reads Arad independently [@mazar-2011-iron] |
+| 5 | rebuttal | … |
+| 6 | handoff | The circularity is methodological, not evidential → S4 |
+```
+
+**Functions** (use these words, so a gap is visible): `claim`, `grounding`,
+`example`, `counter-position`, `rebuttal` / `concession`, `definition`,
+`method`, `significance`, `transition`, `handoff`. A paragraph that can only be
+labelled `facts` is *knowledge telling* — information lined up without being
+turned towards the section's claim. Rewrite it so it states what the facts show
+for the argument, or cut it.
+
+**What the user reads it for:** does each line say what *they* mean? does the
+sequence follow the approved steps? is any step missing, doubled, or in a
+paragraph that does two jobs? The reverse outline is stored in the outline file
+under the section, below its approved sketch, and is updated if the prose is
+revised.
+
 ## Citation Rules
 
 - Inline citations: `[@finkelstein-2003]` or `[@finkelstein-2003, p. 152]`
@@ -429,6 +466,48 @@ What belongs in the alias list, in order of how often it is the one that pays:
 
 > **A third avenue: curated keywords, once they exist.** Both the alias-query technique above and the rejected vector index are *derived-from-text* mechanisms — they infer intent from what a paper's prose happens to say. A curated `keywords` field on the BibTeX entry (see `ingest-source`'s BibTeX Entry Convention) is neither: it records what a human or LLM understood the source to be about, at ingest time. `bib-search.py` checks it automatically and lists a keyword hit first, ahead of any page hit — cheaper and higher-precision than building an alias query, when it exists. It does not replace the alias-query technique above: most of the library predates this field and carries none yet. Check keywords first, fall back to the alias recipe when a source has none.
 
+### Precision rules
+
+Fluent prose is not yet precise prose. The typical failures of model-written
+academic text are not grammatical; they are these:
+
+- **Terms of art are fixed.** Once a term is introduced — *Low Chronology*,
+  *Stratum VA–IVB*, *Formgeschichte*, *random labelling* — it is repeated
+  exactly, not varied for elegance. A synonym tells the reader a second concept
+  has appeared. Use the wording of the outline and the wiki's concept pages; if
+  two sources name the same thing differently, say so once and pick one.
+- **Connectives carry logic.** *because*, *therefore*, *although*, *whereas*,
+  *by contrast*, *thus*, *indem*, *wenngleich*, *während* each assert a specific
+  relation (cause, consequence, concession, contrast, means, time). Use the one
+  the sketch's step actually asserts; if the relation is only sequence, do not
+  dress it as consequence. Check every connective against the sketch on the
+  step-13 pass.
+- **No simplification at the cost of precision.** Do not drop the qualifiers the
+  source gives — *probably*, *in the excavated area*, *for the 10th-century
+  levels*, the sample size. A hedged claim in the source stays hedged in the prose.
+- **Reader guidance follows the discipline's conventions.** Announcements, back
+  references, and short summaries are welcome where the genre uses them;
+  rhetorical questions, dramatic openers ("But what if…?") and promotional
+  adjectives (*groundbreaking*, *crucial*, *fascinating*) are not.
+- **No filler moves.** No paragraph opens by restating the previous one; no
+  section closes with a generic "this shows the importance of …" sentence. The
+  handoff says what the next section starts from.
+
+### Style anchor (optional)
+
+A project can anchor the prose to a voice instead of to the model's default
+register — the counterweight to every manuscript sounding the same. Ask the
+user for 2–3 pages of **their own published prose** (or, failing that, one
+article from the target venue they consider well written). Analyse it for:
+sentence length and rhythm, person (*I* / *we* / impersonal), how claims are
+hedged, how sources are introduced (author-prominent or claim-prominent),
+paragraph length, and the reader-guidance moves it uses. Write the result as
+5–10 concrete bullets into the project's root `CLAUDE.md` under
+`Manuscript style` → `Style profile`, **show them to the user, and keep only
+what they confirm**. The style profile then travels into every drafter dispatch.
+A profile describes the user's voice; it never licenses imitating another
+author's wording.
+
 > **Per-project house style.** Density, example-richness, and target register are tunable per project in the root `CLAUDE.md` ("Manuscript style"). Read it before drafting; it overrides the defaults here.
 
 ## MCP Optimisation (recommended)
@@ -449,6 +528,7 @@ The subagent receives:
 - List of source pages (paths) with allowed citation keys
 - **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 11). Without these, the subagent can only bullet-reflow
 - The section's word budget from the outline (a floor for development, not a ceiling to pad toward)
+- The project's **`Manuscript style` block** from the root `CLAUDE.md`, including the `Style profile` if one exists
 
 Its report includes a **deviations-from-sketch** line. Carry that into STOP 3 verbatim — do not quietly absorb it. A deviation the user never sees is exactly the drift the stages are meant to surface.
 
@@ -479,6 +559,9 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 | "The user's thesis is weak, I'll quietly use my better one" | Put yours next to theirs, with the reason. A silent replacement is the same drift as in prose, one level up. |
 | "Thesis: 'this chapter examines the Low Chronology'" | That is a topic, not a thesis. A thesis can be wrong; a topic cannot. Rewrite it as a claim. |
 | "The source roughly says …" | Either a verbatim quote with page, or a paraphrase with a citation. No hearsay. |
+| "I'll vary the term so the prose reads less repetitively" | In a scholarly text a new word is a new concept. Terms of art are repeated exactly. |
+| "Each section was approved, so the chapter is coherent" | Sections pass locally; chapters break globally. Run the chapter coherence check — reverse outlines against the claim chain, introduction against conclusion. |
+| "The reverse outline is just the sketch again" | It is written from the prose. If it matches the sketch line by line without you rereading the paragraphs, you copied it. |
 | "I've turned every wiki bullet into a sentence — done" | That is bullet-reflow, not prose. Each substantive point needs development: grounding, an example from the source, and why it matters. |
 | "The wiki page is thin, so the paragraph is thin" | The wiki points to the depth; the source holds it. Reach back to the quotes/examples or the PDF and cite — don't ship a thin paragraph. |
 | "It needs more depth, I'll just add explanation I know" | Grounded elaboration comes from the source and is cited. Explanation from memory is invention. |
@@ -498,6 +581,8 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 - **Elaborate from the source, not from memory** — the wiki says *what* is claimed; the source holds the examples and explanations. Reach back and cite; a thin wiki page is a pointer, not a limit
 - **Develop, don't reflow** — a wiki bullet becomes a developed passage (assertion → grounding → example → significance), not one flat sentence
 - **Deviations are surfaced, not absorbed** — prose that leaves the sketch says so
+- **Every section comes with its reverse outline** — function and main statement per paragraph, so intent can be checked without rereading
+- **Precise before fluent** — fixed terms, connectives that mean what they assert, qualifiers kept
 - **Every citation verified** — bibkey existence before commit
 - **Render check is part of drafting** — not "later"
 - **One draft per run, one log entry** — keep changes traceable
