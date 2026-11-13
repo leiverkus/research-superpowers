@@ -128,9 +128,9 @@ Because `methodology: hermeneutic`, the review is a single-pass "synthesis revie
 
 Conditions 1 and 5 are exactly where the checked-in example stops: there `chronology-debate.md` is still `status: review` and carries an open `weak-support` flag, so drafting never starts and no override is logged. Here we got past it in Phase 6 by promoting the synthesis to `stable` after resolving the flag — that promotion is the difference between the two.
 
-Drafting runs in three stages, and no prose is written until the argument is settled.
+Drafting runs in three stages, and no prose is written until the argument is settled — starting from a thesis you state yourself.
 
-**Stage A — architecture.** The skill writes `output/article/outline/main.md` — the path is derived from the target file, `article/main.qmd` → `article/outline/main.md`: a thesis, a claim chain, and a claim per section. Not a table of contents — a table of contents cannot be wrong, and the point of this stage is to put something on the table that *can* be.
+**Stage A — architecture.** First the skill asks *you* for the thesis — **STOP 0**. You answer roughly: "the fortresses don't decide anything, because their dates come from the same pottery". The skill keeps that sentence verbatim in the outline and builds on it. Then it writes `output/article/outline/main.md` — the path is derived from the target file, `article/main.qmd` → `article/outline/main.md`: a thesis, a claim chain, and a claim per section. Not a table of contents — a table of contents cannot be wrong, and the point of this stage is to put something on the table that *can* be.
 
 ```markdown
 ## Thesis

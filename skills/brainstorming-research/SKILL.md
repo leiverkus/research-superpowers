@@ -29,15 +29,16 @@ Every research project goes through this process. A single-source review, a shor
 Create a task-list item for each. Complete in order:
 
 1. **Explore project context** — read existing `input/ideas/*`, `input/description/*`, recent `knowledge/_meta/log.md`, check git for parallel work
-2. **Ask clarifying questions — one at a time** — what is the research question, what has been seen already, what would success look like
-3. **Assess scope** — is this a single focused inquiry or an umbrella of independent sub-projects? If the latter, decompose first (each sub-project gets its own design doc)
-4. **Propose 2–3 approaches** — with trade-offs and your recommendation, grounded in disciplinary norms
-5. **Surface hidden constraints** — ethics (ancient human remains, epigraphic access permissions), data rights, linguistic reach, time horizon, collaborator availability
-6. **Present design in sections** — get user approval after each: question, state of the field (short), method, data, output target, risks
-7. **Write design doc** — save to `input/ideas/<slug>-design.md` using the template below
-8. **Design self-review** — scan for placeholders, contradictions, scope creep, ambiguous claims; fix inline
-9. **User reviews the written doc** — ask for sign-off on the file before handing off
-10. **Transition to writing-research-plan** — once approved, invoke that skill. Do NOT invoke anything else.
+2. **Ask clarifying questions — one at a time** — what is the research question, what has been seen already, what would success look like. **The user formulates the question first**, in their own words, however rough; you sharpen it afterwards (see [Phase 1](#the-process))
+3. **Ask for the AI-use rules** — which institution / publisher / journal / funder will receive the output, and what do their rules say about AI tools (allowed uses, required disclosure form)? Unknown is a valid answer — record it as an open point. This goes into the design doc's `AI-Use Rules` section and is read again by `finishing-a-research-project`
+4. **Assess scope** — is this a single focused inquiry or an umbrella of independent sub-projects? If the latter, decompose first (each sub-project gets its own design doc)
+5. **Propose 2–3 approaches** — with trade-offs and your recommendation, grounded in disciplinary norms
+6. **Surface hidden constraints** — ethics (ancient human remains, epigraphic access permissions), data rights, linguistic reach, time horizon, collaborator availability
+7. **Present design in sections** — get user approval after each: question, state of the field (short), method, data, output target, risks
+8. **Write design doc** — save to `input/ideas/<slug>-design.md` using the template below
+9. **Design self-review** — scan for placeholders, contradictions, scope creep, ambiguous claims; fix inline
+10. **User reviews the written doc** — ask for sign-off on the file before handing off
+11. **Transition to writing-research-plan** — once approved, invoke that skill. Do NOT invoke anything else.
 
 ## Process Flow
 
@@ -119,6 +120,13 @@ sensitivity, bias in transmission traditions.
 ## Feasibility
 Time frame, tools (see CLAUDE.md §5), need for collaborators.
 
+## AI-Use Rules
+Target institution / venue: <university, journal, publisher, funder — or "open">.
+What their rules allow and require (e.g. "AI permitted for language editing and
+literature search; disclosure statement in acknowledgements required").
+Required disclosure form: statement in text | tool overview page | AI Usage Card | not specified.
+Open points: <rules not yet checked — ask supervisor / read author guidelines>.
+
 ## Scope Boundaries (what is NOT investigated)
 Explicit mention of related questions that fall out of scope.
 
@@ -130,8 +138,10 @@ Hand off to writing-research-plan to produce `input/ideas/<slug>-plan.md`.
 
 **Phase 1 — Understanding the idea:**
 - Read recent project activity first (existing design docs, log, commits)
-- Ask one question per message. Prefer multiple-choice where possible
+- Ask one question per message. Prefer multiple-choice where possible — except for the research question itself, which is open
 - Focus: what is the question, what has already been looked at, what would success look like?
+- **The question comes from the user, Socratically.** Before you offer any formulation of your own, ask the user to state what they want to understand and why ("I am investigating X, because I want to understand Y, in order to Z"). A rough sentence, a voice-note transcript or a paragraph of free writing is enough. Then work on *their* text: ask what a term means, what would count as an answer, which case they have in mind, what they would expect to find. Offer your own variants only after that, as alternatives to compare against theirs — never as the starting point. The reason: formulating the question is the thinking; a polished suggestion that the user merely approves looks like agreement but skips it (automation bias — a machine-made formulation reads as better than one's own and gets accepted unchecked)
+- If the user explicitly asks you to propose the question ("schlag du was vor"), do so, but say that the design doc will mark it as agent-proposed until they have reworded or confirmed it in their own words
 
 **Phase 2 — Divergent exploration** (carried over from scientific-brainstorming):
 - Cross-domain analogies (e.g. transferring trade-network analysis from economic history to Iron Age ceramic distribution)
@@ -157,6 +167,7 @@ After writing the document, look at it with fresh eyes:
 3. **Falsifiability:** Could the question in principle also be answered in the negative? If not: rephrase
 4. **Ambiguity:** Could "*Quellenkritik*" mean two different methods here? Make it explicit
 5. **Scope boundary:** Is there ONE explicit line "not investigated: …"? If not, add one
+6. **AI-use rules:** Is the `AI-Use Rules` section filled — or its open points named?
 
 Fix errors inline, no second review pass.
 
@@ -170,6 +181,8 @@ Wait for the reply. Only invoke `writing-research-plan` after approval.
 
 ## Key Principles
 
+- **The user's question first** — elicit their formulation before offering yours; your variants sharpen theirs, they don't replace it
+- **AI-use rules on record** — the venue's rules are captured in the design doc, not discovered at submission
 - **One question per message** — don't overload
 - **Multiple choice preferred** — easier to answer
 - **YAGNI** — cut unneeded sub-questions

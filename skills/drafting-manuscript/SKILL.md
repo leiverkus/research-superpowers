@@ -44,9 +44,9 @@ Turn stable synthesis pages into publishable prose. Every claim gets a citation.
 
 But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs in the shared library (`<library>/pdf/<bibkey>.pdf`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow).
 
-And the wiki tells you *what is claimed* — never *what this chapter argues*. The claim chain is the author's contribution, not the wiki's, and it is the thing that drifts: drafted in one pass, a chapter wanders into whatever the sources happen to be rich about, and the drift only becomes visible once thousands of words exist and are expensive to throw away. So the argument is **settled on paper and discussed before any prose exists**, then carried out one section at a time, each section's argument agreed before it is written. See [The three stages](#the-three-stages).
+And the wiki tells you *what is claimed* — never *what this chapter argues*. The claim chain is the author's contribution, not the wiki's — which is why the thesis comes **from the author first** (STOP 0), and you sharpen it rather than propose it. A thesis the user merely approves looks like agreement but skips the thinking: a polished machine formulation reads as better than one's own and is accepted unchecked (automation bias). Formulating the thesis *is* the author's work; checking it against the wiki, naming its gaps and its strongest counter-position is yours. And the claim chain is the thing that drifts: drafted in one pass, a chapter wanders into whatever the sources happen to be rich about, and the drift only becomes visible once thousands of words exist and are expensive to throw away. So the argument is **settled on paper and discussed before any prose exists**, then carried out one section at a time, each section's argument agreed before it is written. See [The three stages](#the-three-stages).
 
-**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`. Three stages: we settle the argument architecture first, then go section by section — argument, then prose, with a check-in at each."
+**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`. Three stages: you state the thesis in your own words, we settle the argument architecture on it, then go section by section — argument, then prose, with a check-in at each."
 
 <SOFT-GATE>
 Before drafting, check:
@@ -72,16 +72,36 @@ overriding. Note which page and flag `kind` in the override reason.
 
 | Stage | Produces | Ends at |
 |-------|----------|---------|
-| **A — Architecture** | Thesis + claim chain + per-section claims, in the outline file | **STOP 1**: user approves the architecture |
+| **A — Architecture** | The author's thesis, then the sharpened thesis + claim chain + per-section claims, in the outline file | **STOP 0**: author states thesis · **STOP 1**: user approves the architecture |
 | **B — Section loop** | Per section: an argument sketch, then its prose | **STOP 2** and **STOP 3**, per section |
 | **C — Finishing** | Citation check, render, log | Done |
 
 Stage B repeats per section. A chapter is finished when every section in the outline has `Status: approved`.
 
 <STAGE-GATE>
-Three stops. At each one you **present and wait** — the message that presents a
-stop ends there. Do not present a stop and continue past it in the same message;
+Four stops. At each one you **present (or ask) and wait** — the message that
+presents a stop ends there. Do not present a stop and continue past it in the same message;
 that is not a check-in, it is an announcement.
+
+**STOP 0 — The author's thesis (start of Stage A, after reading).** Before you
+write any outline, ask the user: *what does this chapter establish, in one or
+two sentences — and roughly how does it get there?* Rough is fine: a sentence,
+a list of steps, a voice-note transcript, a paragraph of free writing. Do not
+offer a candidate thesis in the same message; a suggestion on the table becomes
+the answer. Wait. Record their words verbatim in the outline's
+`Author's formulation` field. Then build the thesis and claim chain **on that
+formulation**: sharpen it, check each step against the synthesis and source
+pages, and say plainly where the wiki does not carry it, where it is a topic
+rather than a claim, and what the strongest counter-position is. If you propose
+a substantially different thesis, present it as an alternative *next to* theirs,
+with the reason — not as a silent replacement. On resume (outline exists), STOP 0
+is already done.
+
+If the user explicitly asks you to propose the thesis ("schlag du vor", "you
+suggest one"), do so — that is an override of STOP 0: note it in
+`knowledge/_meta/gate-overrides.log`, mark the outline's `Author's formulation`
+as `agent-proposed — not yet in the author's words`, and at STOP 1 ask them to
+restate the thesis in their own words before the chain is approved.
 
 **STOP 1 — Architecture (end of Stage A).** The outline file is written; present
 the thesis and the claim chain (not the whole file — the user can read it) and
@@ -124,25 +144,26 @@ so out loud.
 3. **Read all referenced synthesis pages** fully
 4. **Read all cited source pages** — the full page, especially the `### Direct quotes` and `### Examples & illustrations` sections (the raw material for depth), not just the one-line claims
 5. **Resume check** — if an outline already exists at the derived path, read it and continue from the first section whose `Status` is not `approved`. Do not restart the chapter.
-6. **Write the outline** — thesis, claim chain, per-section claims, to `output/<book|article>/outline/<basename>.md` (see [Outline file](#outline-file)). Distribute `target_word_count` into per-section budgets
-7. **STOP 1** — present thesis + claim chain, wait for approval, revise until the chain holds
+6. **STOP 0 — ask for the author's thesis** — one or two sentences plus a rough path, in their own words; no candidate of yours in that message. Wait. Skip on resume
+7. **Write the outline** — the author's formulation verbatim, then the sharpened thesis, claim chain, per-section claims, to `output/<book|article>/outline/<basename>.md` (see [Outline file](#outline-file)). Distribute `target_word_count` into per-section budgets
+8. **STOP 1** — present thesis + claim chain, wait for approval, revise until the chain holds
 
 ### Stage B — Section loop (repeat per section)
 
-8. **Sketch the section's argument** — claim, steps with their evidence, the concrete material, the counter-position and how it is handled, the handoff to the next section (see [Section argument sketch](#section-argument-sketch)). Write it into the outline under that section. Bullets, not prose
-9. **STOP 2** — present the sketch, wait for approval, revise until the argument is right
-10. **Draft prose for this section only** — against the approved sketch; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
-11. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
-12. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass
-13. **STOP 3** — present the prose + the deviation line, wait for approval, revise
-14. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 8 for the next section
-15. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
+9. **Sketch the section's argument** — claim, steps with their evidence, the concrete material, the counter-position and how it is handled, the handoff to the next section (see [Section argument sketch](#section-argument-sketch)). Write it into the outline under that section. Bullets, not prose
+10. **STOP 2** — present the sketch, wait for approval, revise until the argument is right
+11. **Draft prose for this section only** — against the approved sketch; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
+12. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
+13. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass
+14. **STOP 3** — present the prose + the deviation line, wait for approval, revise
+15. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 9 for the next section
+16. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
 
 ### Stage C — Finishing
 
-16. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
-17. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
-18. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
+17. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
+18. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
+19. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
 
@@ -154,6 +175,7 @@ digraph drafting {
     "Back to synthesis / ingest / lint" [shape=box];
     "Read synthesis + source pages" [shape=box];
     "Outline exists?" [shape=diamond];
+    "STOP 0: author states thesis" [shape=box];
     "Write outline: thesis + claim chain" [shape=box];
     "Resume at first unapproved section" [shape=box];
     "STOP 1: architecture approved?" [shape=diamond];
@@ -187,7 +209,8 @@ digraph drafting {
     "Gate passes?" -> "Read synthesis + source pages" [label="yes"];
     "Read synthesis + source pages" -> "Outline exists?";
     "Outline exists?" -> "Resume at first unapproved section" [label="yes"];
-    "Outline exists?" -> "Write outline: thesis + claim chain" [label="no"];
+    "Outline exists?" -> "STOP 0: author states thesis" [label="no"];
+    "STOP 0: author states thesis" -> "Write outline: thesis + claim chain";
     "Write outline: thesis + claim chain" -> "STOP 1: architecture approved?";
     "STOP 1: architecture approved?" -> "Revise outline" [label="no"];
     "Revise outline" -> "STOP 1: architecture approved?";
@@ -249,9 +272,15 @@ status: draft | approved
 
 # Outline: <Chapter title>
 
+## Author's formulation
+
+<The user's own words at STOP 0, verbatim — rough is fine. Or
+`agent-proposed — not yet in the author's words` if STOP 0 was overridden.
+Kept as written; the sharpened version goes below.>
+
 ## Thesis
 
-<ONE sentence: what this chapter establishes that the reader did not have
+<ONE sentence, sharpened from the author's formulation: what this chapter establishes that the reader did not have
 before. Not a topic ("this chapter discusses the Low Chronology") — a claim
 ("the Low Chronology's stratigraphic case rests on three sites whose sequences
 are themselves dated by the pottery they are meant to date"). If you cannot
@@ -348,7 +377,7 @@ The single most common failure of wiki-driven drafting is **bullet-reflow**: eac
 
 A single terse wiki bullet typically becomes a **developed passage**, not a single sentence. If a paragraph has assertions but no example and no explanation, it is not finished.
 
-**Reach-back procedure** (checklist step 11) — escalate only as far as needed:
+**Reach-back procedure** (checklist step 12) — escalate only as far as needed:
 
 1. The source page's `### Direct quotes` and `### Examples & illustrations` sections — the cheapest, already-extracted depth.
 2. If still too thin: open the **original PDF** at `<library>/pdf/<bibkey>.pdf` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
@@ -411,7 +440,7 @@ What belongs in the alias list, in order of how often it is the one that pays:
 
 ## Subagent dispatch (per section, not per chapter)
 
-For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/drafter.md`) at checklist step 10 — **one section, after its sketch has passed STOP 2**. Never fan out across sections: a chapter drafted in parallel cannot be steered, which is the failure this skill's staging exists to prevent.
+For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/drafter.md`) at checklist step 11 — **one section, after its sketch has passed STOP 2**. Never fan out across sections: a chapter drafted in parallel cannot be steered, which is the failure this skill's staging exists to prevent.
 
 The subagent receives:
 - **The approved argument sketch** for this section — its contract; the prose must carry out *this* argument, not a reasonable-looking alternative
@@ -446,6 +475,8 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 | "The source is rich here, so I'll go deeper than the sketch said" | Source richness is not an argument. The sketch is the contract; if it is wrong, renegotiate it — don't silently exceed it. |
 | "Both positions are in the wiki, so I'll present both" | One may be thirty years older, and its author may have left it since. Check the years and the `supersedes` / `revises` edges before giving them equal weight. |
 | "The subagent's deviations line is minor, I won't mention it" | Then the stages bought nothing. Deviations go to the user verbatim. |
+| "I'll propose a strong thesis, the user can just approve it" | Approving is not formulating. Ask first (STOP 0); sharpen what they say. A thesis the author never put into words is one they cannot defend. |
+| "The user's thesis is weak, I'll quietly use my better one" | Put yours next to theirs, with the reason. A silent replacement is the same drift as in prose, one level up. |
 | "Thesis: 'this chapter examines the Low Chronology'" | That is a topic, not a thesis. A thesis can be wrong; a topic cannot. Rewrite it as a claim. |
 | "The source roughly says …" | Either a verbatim quote with page, or a paraphrase with a citation. No hearsay. |
 | "I've turned every wiki bullet into a sentence — done" | That is bullet-reflow, not prose. Each substantive point needs development: grounding, an example from the source, and why it matters. |
@@ -458,6 +489,7 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 
 ## Key Principles
 
+- **The thesis is the author's** — asked for before anything is proposed; you sharpen, check and challenge it
 - **Architecture before prose** — the thesis and claim chain are settled and approved before a single paragraph exists
 - **The argument is agreed before it is written** — per section: sketch, discuss, then draft. Redirecting twenty lines is free; redirecting a thousand words is not
 - **A stop is a stop** — present and wait; never present and continue in the same message
