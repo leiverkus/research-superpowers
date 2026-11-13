@@ -6,6 +6,36 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`finishing-a-research-project` asks for an AI-use disclosure** (new checklist
+  item 9, section "AI-Use Disclosure"). It drafts the statement from the project's
+  own records (`log.md`, `author:` fields, outlines, review reports,
+  `gate-overrides.log`), summarised by task rather than by prompt, in the form
+  the venue requires: a statement in the manuscript (default), a tool overview
+  page, or an AI Usage Card (Wahle et al. 2023). AI is never listed as an author
+  or cited as a source. Based on Buck, *Wissenschaftliches Schreiben mit KI*
+  (2nd ed. 2026), ch. 3.4.
+- **`brainstorming-research` records the venue's AI-use rules** (new checklist
+  step 3, design-doc section `## AI-Use Rules`, self-review item 6). The
+  finishing skill reads that section again.
+
+### Changed
+
+- **`drafting-manuscript` gets the thesis from the author first (new STOP 0).**
+  Before writing the outline, the skill asks the user what the chapter
+  establishes, in their own words, and offers no candidate of its own in that
+  message. The answer goes verbatim into the outline's new `Author's formulation`
+  field. The skill then sharpens and checks that formulation against the wiki
+  and names counter-positions. An alternative thesis appears next to the user's,
+  never in its place. "You suggest one" is a logged override, and the
+  formulation is marked `agent-proposed` until the user restates it. The reason
+  is automation bias: an approved machine thesis is one the author never
+  formulated. Checklist steps from 6 onward shift by one.
+- **`brainstorming-research` elicits the research question Socratically.** The
+  user states the question first, and the agent works on that formulation before
+  it offers variants.
+
 ## [0.46.0] — 2026-11-12
 
 Minor: `dao-searxng-mcp` is discontinued. Web citations are now classified by a

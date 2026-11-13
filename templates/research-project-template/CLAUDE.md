@@ -494,7 +494,10 @@ exists. Nothing is drafted in one pass.
 
 Steps:
 1. LLM gathers relevant Synthesis and Source pages.
-2. **Architecture first.** LLM writes an outline — thesis, claim chain, a claim
+2. **Your thesis first.** The LLM asks you what the chapter establishes, in
+   your own words (rough is fine), before it proposes anything; it then sharpens
+   and checks that formulation against the wiki.
+   **Architecture next.** LLM writes an outline — your formulation, the sharpened thesis, claim chain, a claim
    per section with its evidence, scope boundary and word budget — to
    `output/<book|article>/outline/<basename>.md` (derived from the target file:
    `book/text/03-methods.qmd` → `book/outline/03-methods.md`). It is never
