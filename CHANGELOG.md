@@ -16,6 +16,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   page, or an AI Usage Card (Wahle et al. 2023). AI is never listed as an author
   or cited as a source. Based on Buck, *Wissenschaftliches Schreiben mit KI*
   (2nd ed. 2026), ch. 3.4.
+- **Reverse outline per section and a chapter coherence check
+  (`drafting-manuscript`, `drafter`).** STOP 3 now presents a reverse outline
+  with the prose: one line per paragraph, its function (claim, grounding,
+  example, counter-position, …) and its main statement. The outline is written
+  from the prose and stored in the outline file. A paragraph that can only be
+  labelled `facts` (knowledge telling) is rewritten before STOP 3. The new Stage C
+  step 17 joins the reverse outlines and reads them against the claim chain. It
+  also checks introduction against conclusion and term consistency, and fixes
+  only what the user approves. Stage C steps are renumbered 18–20.
+- **Precision rules and an optional style anchor (`drafting-manuscript`,
+  `drafter`, template `CLAUDE.md`).**
+  - Terms of art are fixed, with no synonym variation.
+  - Connectives must assert the relation the sketch asserts.
+  - Source qualifiers stay in the prose.
+  - No rhetorical questions, promotional adjectives or filler openers.
+
+  Optionally, a `Style profile` drawn from 2–3 pages of the user's own prose and
+  confirmed by the user goes into `Manuscript style`, and is passed to every
+  drafter dispatch. Based on Buck (2026), ch. 4.6, and Schuttkowski/Lemke (2024)
+  on global coherence.
 - **`brainstorming-research` records the venue's AI-use rules** (new checklist
   step 3, design-doc section `## AI-Use Rules`, self-review item 6). The
   finishing skill reads that section again.

@@ -35,7 +35,13 @@ that skill's frontmatter.
   sketch says the older one is still held. If the sketch itself does this, report
   it under "Flagged issues"
 - Match register: academic, Fachsprache zur Disziplin, impersonal voice
-  unless the style guide permits first-person plural
+  unless the style guide permits first-person plural. If the parent supplies a
+  **style profile** (from the project's `CLAUDE.md` → `Manuscript style`), it
+  overrides these defaults
+- Follow the skill's **precision rules**: terms of art are repeated exactly, never
+  varied; every connective asserts the relation the sketch's step asserts;
+  qualifiers and hedges from the source stay in; no rhetorical questions, no
+  promotional adjectives, no filler openers or closers
 
 ## The approved sketch is your contract
 
@@ -95,6 +101,14 @@ into one flat sentence produces dense, unreadable prose. Instead:
 <the actual prose, ready to paste>
 
 ---
+
+### Reverse outline
+| ¶ | Function | Main statement |
+|---|----------|----------------|
+<one row per paragraph, written from the prose you just wrote — functions from
+the skill's list (claim, grounding, example, counter-position, rebuttal /
+concession, definition, method, significance, transition, handoff). A paragraph
+you can only label `facts` is knowledge telling: rewrite it before returning.>
 
 ### Deviations from the sketch
 <Per approved step: carried out as sketched, or how it departed and why. Plus
