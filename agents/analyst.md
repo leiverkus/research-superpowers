@@ -29,6 +29,20 @@ dispatch, review) are the parent's job, not yours.
 - Verify assumptions with code (normality, independence, stationarity,
   whichever apply). If assumptions fail: report, don't silently proceed
 - Fix random seeds — irreproducibility is rejection
+- **Test the code, not just the result.** Code that runs can still compute the
+  wrong thing. For every non-trivial computation add a **control check** in the
+  script: a case with a known answer (a toy dataset, a textbook example, a
+  synthetic sample with a planted effect, a calibration against a published
+  value), or an invariant (counts sum to n, probabilities to 1, a reversed input
+  gives the mirrored output). Report each check in the Analysis Report
+- **Name why this procedure.** One sentence per statistical procedure on why it
+  fits the data and the plan's question (and what the plan pre-registered);
+  a test chosen because it came out significant is not a reason
+- **Independent recomputation for the load-bearing result.** For the number the
+  hypothesis verdict rests on, compute it a second way — a different
+  implementation or library, a simpler closed-form or resampling estimate — and
+  report whether the two agree. Disagreement is reported, not resolved by
+  picking one
 - Run the script; capture stdout/stderr; save numerical outputs as JSON/CSV
   under `output/data-analysis/results/` and plots as PNG/SVG
 - Write an assumption-check note at `knowledge/synthesis/<task-slug>-assumptions.md`
@@ -51,6 +65,15 @@ dispatch, review) are the parent's job, not yours.
 
 ### Assumption-check results
 | Check | Expected | Got | Pass/Fail |
+
+### Control checks (code correctness)
+| Check | Known / expected | Got | Pass/Fail |
+
+### Procedure rationale
+- <procedure> — <why it fits; pre-registered: yes/no>
+
+### Independent recomputation (load-bearing result)
+| Quantity | Method 1 | Method 2 | Agree? |
 
 ### Numerical result (summary)
 <key stats, effect sizes, CIs, posteriors — one table>

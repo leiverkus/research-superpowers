@@ -289,6 +289,15 @@ worth reading instead of the PDF.>
 
 ### 2. <…> (pp. 155–165)
 
+*⚠ **Keep each thesis exactly as wide as the source makes it.** The typical
+failure of a model-written summary is not invention but **over-generalisation**:
+the qualifiers fall away and the claim grows. Carry over the source's hedges
+(*probably*, *tentatively*, *may*), its scope (which site, stratum, region,
+period, corpus, manuscript tradition, sample), and its conditions ("if the
+Arad sequence holds…"). If the source says *in Strata VA–IVB at Megiddo*, the
+thesis does not say *in Iron IIA*; if it says *suggests*, the thesis does not
+say *shows*. When in doubt, quote the qualifying phrase verbatim with its page.*
+
 *⚠ **These are the SOURCE's theses, not the project's.** Include what the current
 question has no use for — that is precisely what makes a shifted question
 findable later. The temptation is to write ten restatements of the focus, which
@@ -593,6 +602,7 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 | "Re-ingest means I should overwrite the old focus block" | No — append. The old focus is still valid (the project still needs that aspect). New focus = new block. |
 | "If two focuses are similar I'll just pick one" | The skill warns at similar-focus detection but the user decides. Don't pretend two focus questions are the same when they aren't. |
 | "I'll just leave the contradiction as a `[[wikilink]]`" | Then the graph sees a generic edge and loses the stance. Mirror every confirms / contradicts / builds-on / cites into a typed `relations:` entry — that is the whole point of the typed-edge layer. |
+| "The qualifier is a detail — the gist is what matters" | The qualifier often *is* the claim. Dropping "in the excavated area" or "probably" turns a local, hedged finding into a general one the author never made — and the draft will cite it under their name. |
 | "I'll mark every relation `extracted` so it looks solid" | No — `extracted` means a quote + page backs it. Model-added links are `inferred`. Lint reports the inference-rate; inflating it is dishonest and hides which edges still need grounding. |
 
 ## Key Principles
@@ -606,3 +616,4 @@ For batch ingest (≥ 3 sources), dispatch `source-ingester` subagent per source
 - **Capture the examples, not just the claims** — the concrete cases a source uses (an artefact, site, dataset, passage) are what let a later draft develop a point instead of reflowing a bullet. Record them (or their page anchor) in `### Examples & illustrations`; a claim page with no examples produces dense prose downstream.
 - **Status: review on first pass** — only moves to `stable` after user review.
 - **Explicit boundaries** — name what the source does NOT address (within the focus). This honesty saves later confusion.
+- **Scope-faithful** — every thesis and claim keeps the source's hedges, scope and conditions; a summary that is wider than its source is a misquotation.
