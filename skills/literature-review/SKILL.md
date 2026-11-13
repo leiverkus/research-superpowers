@@ -79,6 +79,7 @@ reason (e.g. "narrow topic with small source corpus"), write it into
    - **Forward pass (5a)** — a topic search finds what was written *about* the question, not what was written *in reply to* a given work, and not the same author's later word on it. For every A-graded work that is not among the newest in the corpus, run `python scripts/forward-search.py <bibkey-or-doi> --author` and screen what comes back (see "The forward pass" below). Add the replies and later statements that bear on the question to the table, graded like any other candidate; record the outcome per work in the guide.
 6. **Generate `literaturguide.md`** — it **opens with the weighted source table** (required; columns `Grade | Autor Jahr | Kurztitel | OA/Zugang | DOI/Link` — see "The weighted source table" below), followed by the 9 prose sections (research question, primary sources, debates, methods, open access, gaps, recommended reading order, follow-up searches, BibTeX overview) — the **debates** section is written in the order things were published and carries the forward-pass block (see "The forward pass"); prose layout per the canonical example (see "Reference Content"). Carry each candidate's `oa_pdf` / DOI into the table for the acquisition phase; **do not download here.**
 7. **Export BibTeX** → merge into `output/bibtex/references.bib` (resolve key conflicts with user before merging)
+   The guide **ends** with the section *Was diese Suche nicht sehen kann* (see [What this search cannot see](#what-this-search-cannot-see-required--last-section-of-the-guide)).
 8. **Write audit log** → `input/bibliography/audit-log-<date>.json` — include the forward pass: per work the `forward-search.py --json` result (or "manual"), and which candidates were kept
 9. **Update `knowledge/_meta/log.md`** with date, query, result count, guide path
 10. **Transition:** offer to run `acquire-sources` on the A+B set — it auto-downloads the Open-Access PDFs and writes a manual-download worklist (`acquisition-todo.md`) for the rest; then `ingest-source` per acquired source. The `● Bibliothek` sources are already present, so `acquire-sources` skips them.
@@ -153,7 +154,38 @@ Column rules:
 - **DOI/Link** — a clickable DOI (preferred) or landing / OA-PDF URL; `—` if none.
 
 The 9 prose sections (reading order, debates, methods, gaps, full bibliography,
-audit log) follow the table and add the qualitative depth. This table — not the
+audit log) follow the table and add the qualitative depth. The guide **closes**
+with a required section on what the search could not see (below).
+
+## What this search cannot see (required — last section of the guide)
+
+A search returns what its databases index, in the languages and document types
+they cover. A reader of the guide — the user, a supervisor, a reviewer — must be
+able to see the edges of the net, or the list reads as complete when it is not.
+Write it from this search's actual audit log, not as boilerplate:
+
+```markdown
+## Was diese Suche nicht sehen kann
+
+- **Durchsucht:** <databases actually queried, with date> · **nicht durchsucht:**
+  <relevant ones skipped or unavailable — e.g. ATLA, L'Année philologique,
+  JSTOR full text, paid indexes>
+- **Sprachen:** queries run in <de, en, fr, …>; not covered: <e.g. Hebrew,
+  Italian, Spanish scholarship>
+- **Dokumenttypen:** <how well monographs, edited volumes, Festschriften,
+  excavation reports, dissertations are covered — OpenAlex and Crossref are thin
+  on all of them>
+- **Nicht digitalisiert / nicht offen:** <older literature, print-only series,
+  paywalled items not checked beyond metadata>
+- **Ranking-Verzerrung:** citation-count and recency ordering favour the
+  most-cited, recent, English-language work; name any A-sources found only
+  through the forward pass or the library, not the topic search
+- **Empfohlene Ergänzung:** <the manual routes that would close the gaps —
+  library catalogue (K10plus/DNB), a specialist bibliography, the reference lists
+  of the A-sources, asking a colleague>
+```
+
+A search is never "complete"; this section says how incomplete, and where. This table — not the
 prose-only canonical example — is the binding spec for the weighting; if the
 example shows an ungraded list, the table here takes precedence and is prepended.
 

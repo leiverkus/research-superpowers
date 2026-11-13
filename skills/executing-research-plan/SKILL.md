@@ -50,20 +50,21 @@ deviations go into the deviation log.
 1. **Load the plan** — read `input/ideas/<slug>-plan.md` end-to-end
 2. **Verify the plan is ready** (methodology-aware): `methodology: hermeneutic` → frontmatter `status: ready` is enough (no frozen hypothesis); `methodology: quantitative`/`mixed` (or a task block marked `pre-registered: true`) → `status: pre-registered` + user confirmation of the hypothesis
 3. **Create task-list items** — one per task in the plan (use the plan's own wording)
-4. **Acquisition gate (before any ingest task)** — guarantee the originals are on disk first; run the **Acquisition gate** algorithm below. `literature-review` only searches — without this gate every `source-ingester` hard-stops on a missing PDF.
-5. **Route each task to the right subagent:**
+4. **Personal-data check (before any task that reads `input/data/` or `input/notes/`)** — interviews, questionnaires, field notes or excavation diaries naming living people, correspondence, unpublished data shared by colleagues. Ask once: does this material contain personal or confidential data, and do the consent forms / data agreements allow processing by the AI provider this session uses? If not, or unknown: stop that task and say so — the options are anonymising first (remove names, places, identifiers before the file is read), or running the task with a local / institution-hosted model (e.g. KISSKI/GWDG, a local Ollama or LM Studio model). Record the answer in the plan's task block (`personal_data: none | anonymised | local-model-only`) so the next session does not ask again. Published scholarship and the user's own non-personal notes need no check
+5. **Acquisition gate (before any ingest task)** — guarantee the originals are on disk first; run the **Acquisition gate** algorithm below. `literature-review` only searches — without this gate every `source-ingester` hard-stops on a missing PDF.
+6. **Route each task to the right subagent:**
    - **Ingest task** → `source-ingester` (see `agents/source-ingester.md`)
    - **Analysis task** → `analyst` (runs Python/R in `output/data-analysis/`)
    - **Synthesis task** → main conversation, not subagent (high context integration)
    - **Draft task** → invoke `drafting-manuscript` skill (which may dispatch `drafter`)
-6. **Two-stage review per task:**
+7. **Two-stage review per task:**
    - **Spec reviewer** (fresh subagent): does the output match the task spec exactly?
    - **Quality reviewer** (fresh subagent): is the code/page/result methodologically sound?
    - Any "no" → route back to the executing subagent with reviewer feedback
-7. **Log deviations** — if findings force change, append to `knowledge/_meta/log.md` and mark subsequent analyses as exploratory
-8. **Run wiki-lint after every ingest and synthesis task**
-9. **After all tasks done:** check plan's Verification section; only green on all boxes means complete
-10. **Transition:** if plan output target is book/article → `drafting-manuscript`; if grant → `grant-finder`; if done → `finishing-a-research-project`
+8. **Log deviations** — if findings force change, append to `knowledge/_meta/log.md` and mark subsequent analyses as exploratory
+9. **Run wiki-lint after every ingest and synthesis task**
+10. **After all tasks done:** check plan's Verification section; only green on all boxes means complete
+11. **Transition:** if plan output target is book/article → `drafting-manuscript`; if grant → `grant-finder`; if done → `finishing-a-research-project`
 
 ## Acquisition gate (before any ingest task)
 
@@ -225,7 +226,7 @@ just task spec + output):
 > You are a spec compliance reviewer. Task spec: <paste from plan>. Output: <paste or path>. Does the output match the spec exactly? Report mismatches. Do not assess quality.
 
 **Quality reviewer prompt template:**
-> You are a methodological quality reviewer. Output: <paste or path>. Methodological context: <paste plan Method section>. Is this sound? Check: (1) are assumptions stated, (2) are limitations named, (3) would a peer reviewer accept this? Report issues.
+> You are a methodological quality reviewer. Output: <paste or path>. Methodological context: <paste plan Method section>. Is this sound? Check: (1) are assumptions stated, (2) are limitations named, (3) does the script contain control checks with known answers, and do they pass, (4) does the load-bearing result agree across the independent recomputation, (5) is each procedure's choice justified by the plan rather than by its result, (6) would a peer reviewer accept this? Report issues.
 
 Both "yes" → task done. Any "no" → feedback back to the executing subagent.
 

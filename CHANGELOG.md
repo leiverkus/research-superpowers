@@ -53,6 +53,36 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   - Based on Buck (2026), ch. 4.6: model judgement follows the prompt
     (Zweig/Wampfler), LLMs miss content errors (Kamoi et al. 2024), and long
     inputs weaken argument assessment.
+- **Scope-faithful ingest (`ingest-source`, `source-ingester`,
+  `semantic-wiki-review`).** Theses and claims keep the source's hedges, scope
+  (site, stratum, region, period, corpus, sample) and conditions; widening a
+  claim is named as a misquotation. `semantic-wiki-review` treats
+  over-generalisation explicitly under `kind: overstatement`, with the dropped
+  qualifier in `detail`. The flag kinds are unchanged, so no schema change is
+  needed. Background: LLM summaries over-generalise about five times as often
+  as human ones (Peters & Chin-Yee 2025, via Buck 2026, ch. 4.3).
+- **`literaturguide.md` ends with *Was diese Suche nicht sehen kann*
+  (`literature-review`).** The section is written from the audit log and lists:
+  - which databases were and were not searched
+  - which languages and document types (monographs, Festschriften, excavation
+    reports) are covered
+  - what is not digitised or not open
+  - the ranking bias
+  - the manual routes that would close the gaps
+- **Personal-data check before analysis tasks (`executing-research-plan`, new
+  checklist step 4).** The check applies to `input/data/` and `input/notes/`
+  (interviews, field notes naming people, unpublished data). Unless the
+  material has no personal data, it is anonymised first or processed with a
+  local or institution-hosted model. The answer is recorded per task
+  (`personal_data:`). Later checklist steps shift by one.
+- **Licence visibility (`acquire-sources`).** Known licences are recorded in the
+  audit JSON. The manual worklist reminds you that university-licensed PDFs may
+  not allow processing by an external AI provider.
+- **Analyst control checks (`analyst`, `executing-research-plan`).**
+  - Every script carries control checks with known answers or invariants.
+  - Each statistical procedure gets a one-line rationale.
+  - The load-bearing result is recomputed independently.
+  - The quality reviewer checks all three.
 - **`brainstorming-research` records the venue's AI-use rules** (new checklist
   step 3, design-doc section `## AI-Use Rules`, self-review item 6). The
   finishing skill reads that section again.

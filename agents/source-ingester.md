@@ -48,6 +48,10 @@ declared in that skill's frontmatter.
   append the letter suffix **after the year** (`mazar-2011b-iron-age`)
 - Min. 1 verbatim quote per focus block, with page number, max ~5
 - Min. 1–5 claims per focus block, each one sentence with page reference
+- **Scope-faithful:** every thesis and claim keeps the source's hedges
+  (*probably*, *suggests*), its scope (site, stratum, region, period, corpus,
+  sample) and its conditions. Never widen a claim beyond what the page says;
+  when the qualifier matters, quote it verbatim with the page
 - **BibTeX `keywords`:** on first ingest, 3–8 terms — canonical name plus known
   synonyms/aliases (spelling variants, other disciplines' names, stems). See
   "BibTeX Entry Convention" in the embedded skill.

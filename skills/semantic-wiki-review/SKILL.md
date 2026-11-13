@@ -77,6 +77,11 @@ State the scope to the user before reading.
      `missing-citation` when a specific citation is simply absent).
    - **Overstatement** — a claim stronger than the source supports (superlatives,
      precise figures without consensus). → `review_flags` `kind: overstatement`.
+     This includes **over-generalisation**, the most frequent failure of
+     model-written summaries: a source's hedge (*probably*, *suggests*) or scope
+     (one site, stratum, period, corpus, sample) has fallen away, so the wiki
+     states as general what the source stated as local or tentative. Compare
+     the claim with its cited page; name the dropped qualifier in `detail`.
    - **Missing cross-references** — pages discussing the same entity / concept
      without linking each other. → Report only (a linking suggestion, not a
      content defect); the user or a follow-up adds the wikilink.

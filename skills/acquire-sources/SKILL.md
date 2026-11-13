@@ -143,12 +143,26 @@ already present.
 Do NOT substitute a preprint, prior version, or book review for the original —
 `ingest-source` hard-stops on a missing original.
 
+Licensed PDFs (UB/VPN): check whether your library's licence allows processing
+by the AI provider you use; if not, ingest them with a local or
+institution-hosted model.
+
 Last updated: <YYYY-MM-DD> · <K> of <M> A+B sources still needed.
 
 | ☐ | Citekey | Author Year | Short title | Grade | DOI / landing | Best download URL(s) | Save as (exact filename) |
 |---|---------|-------------|-------------|-------|---------------|----------------------|--------------------------|
 | [ ] | finkelstein-2003 | Finkelstein 2003 | Low Chronology Revisited | A | [10.1179/…](https://doi.org/10.1179/…) | <links or "—"> | `finkelstein-2003-low-chronology.pdf` |
 ```
+
+**Licence note.** Where the resolver returned a licence (Unpaywall / OpenAlex
+`license`, e.g. `cc-by`, `cc-by-nc-nd`) record it in the audit JSON per item. A
+PDF obtained through a university licence (◐ UB) or a publisher platform may come
+with terms that restrict processing by AI services; many licence agreements now
+say so explicitly. That is the user's call, not this skill's — but make it
+visible: the worklist header carries one line, *"Licensed PDFs (UB/VPN): check
+whether your library's licence allows processing by the AI provider you use; if
+not, ingest them with a local or institution-hosted model."* CC-BY / CC-BY-SA
+and public-domain items are unproblematic.
 
 The `Citekey` and `Save as` columns are load-bearing: they tie the manually-downloaded file to its BibTeX key and to the filename `ingest-source` expects. `DOI / landing` gives the canonical resolver; `Best download URL(s)` lists any concrete-but-unfetchable PDF candidate worth a browser try.
 
