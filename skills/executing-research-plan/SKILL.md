@@ -55,7 +55,7 @@ deviations go into the deviation log.
 6. **Route each task to the right subagent:**
    - **Ingest task** → `source-ingester` (see `agents/source-ingester.md`)
    - **Analysis task** → `analyst` (runs Python/R in `output/data-analysis/`)
-   - **Synthesis task** → main conversation, not subagent (high context integration)
+   - **Synthesis task** → main conversation, not subagent (high context integration) — follow [Writing a synthesis](#writing-a-synthesis)
    - **Draft task** → invoke `drafting-manuscript` skill (which may dispatch `drafter`)
 7. **Two-stage review per task:**
    - **Spec reviewer** (fresh subagent): does the output match the task spec exactly?
@@ -193,6 +193,63 @@ digraph executing {
 | "Synthesize / integrate / write synthesis" | inline (main conversation) | `knowledge/synthesis/` |
 | "Draft chapter / section / article" | `drafting-manuscript` skill | `output/**/*.md` |
 
+## Writing a synthesis
+
+A synthesis is where the project says what its sources add up to, and it is
+where model-written text is weakest. The typical failure is not a false
+statement but an empty one: *"a complex picture emerges"*, *"the evidence must
+be assessed in a differentiated way"*, *"cult centralisation played an
+important role"*, *"further research is needed"*. Each sentence is true of
+almost any topic, so it says nothing about this one. Such sentences are the
+model's safe default when it integrates many sources at once: the averaged
+position, hedged on all sides. The rules below make the specific conclusion the
+easier one to write.
+
+1. **Re-read before concluding.** Write the conclusions from the source pages
+   (and their focus blocks) re-read now — not from the ingest summaries still
+   in the conversation, which are compressed already. A synthesis written at
+   the end of a long ingest run is a summary of summaries.
+2. **The author's conclusion first.** Before writing the conclusions, ask the
+   user what they think the material shows, in their own words (rough is fine)
+   — the same discipline as `drafting-manuscript` STOP 0, for the same reason:
+   approving a polished machine conclusion is not drawing one. Do not offer a
+   candidate in that message. If the user asks you to propose, mark the
+   conclusion `agent-proposed` in the page until they restate it.
+3. **Each conclusion is a claim block**, not a paragraph of summary:
+
+   ```markdown
+   ### C1 — <short label>
+   - **Claim:** <one sentence that could turn out wrong>
+   - **Kind:** finding (what the sources report) | reading (an interpretation in
+     the literature — whose) | own thesis (the project's inference — marked as such)
+   - **Carried by:** [[source-a]] (p. 61), [[source-b]] (p. 12–14) — n independent sources
+   - **Concrete anchor:** <the named site / passage / stratum / dating / dataset
+     the claim is about>
+   - **Against:** <the strongest counter-position, cited — or "none found in the wiki">
+   - **Would be wrong if:** <the finding or argument that would overturn it>
+   ```
+
+   A conclusion with no concrete anchor, or nothing that could make it wrong, is
+   not finished: narrow it until it has both, or move it to `What stays open`.
+4. **Specificity test.** For every sentence in the conclusions, swap the topic
+   words for a neighbouring topic (another site, another text, another period).
+   If the sentence is still true, it says nothing here — cut it or make it
+   specific. Typical offenders, in both languages: *komplexes / vielschichtiges
+   Bild*, *differenziert zu betrachten*, *spielt eine wichtige / zentrale Rolle*,
+   *im Spannungsfeld von*, *weitere Forschung ist nötig*, *a nuanced picture
+   emerges*, *plays a crucial role*, *highlights the importance of*,
+   *multifaceted*, *it remains to be seen*.
+5. **Disagreement is a finding, not a conclusion.** "Scholars disagree" says
+   something about the literature. Say who holds what, on which evidence, since
+   when (see the research chronology) — and what the project concludes from
+   that: one side, a third reading, or an explicit bracket with the reason.
+6. **Open questions are specific too.** `What stays open` names the question
+   and what would settle it (a source not yet read, an excavation report, a
+   test) — not "further research is needed".
+7. **Keep the hedges the sources give, and add none of your own.** A conclusion
+   is as strong as its sources carry; the hedge goes on the claim where the
+   evidence is thin, not across the whole page as insurance.
+
 ## Critical Thinking — Cross-Cutting Checklist
 
 Walk through this on every method choice and before every subagent dispatch:
@@ -243,6 +300,12 @@ source fidelity rather than spec compliance.
 > (2) Are alternative readings named where they suggest themselves?
 > (3) Is the hermeneutic position transparent (which pre-understanding
 >     horizon, which method is applied)?
+> (4) Is every conclusion specific? Apply the specificity test from
+>     "Writing a synthesis" to each sentence of the conclusions and quote the
+>     ones that would hold for a neighbouring topic just as well.
+> (5) Is every conclusion a complete claim block — concrete anchor,
+>     carrying sources with pages, kind (finding / reading / own thesis), a
+>     counter-position, and what would make it wrong?
 
 Return findings as correction notes, not as a pass/fail gate. The user
 decides final acceptance.
@@ -274,6 +337,9 @@ If a task surfaces a result that contradicts the pre-registered hypothesis, or i
 | "Review is overkill for such a small task" | Small tasks are exactly where errors slip past. Always both reviews. |
 | "I'll just do it myself instead of dispatching a subagent" | Subagent isolation protects context and forces prompt clarity. |
 | "The synthesis is stable now" | Only the user sets `stable`. |
+| "A complex picture emerges — that's an honest conclusion" | It is true of every topic. Name who holds what, on which evidence, and what the project concludes. |
+| "I just ingested all the sources, I can write the synthesis from that" | You have their summaries in context, already compressed. Re-read the source pages before concluding. |
+| "I'll hedge the conclusions to be safe" | Hedge the claim whose evidence is thin, with the reason. A blanket hedge makes every conclusion unfalsifiable. |
 
 ## Key Principles
 

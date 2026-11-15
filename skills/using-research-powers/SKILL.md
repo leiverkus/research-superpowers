@@ -51,6 +51,7 @@ executing-research-plan    → output/data-analysis/*, knowledge/synthesis/*
                               (runs an acquisition gate before ingest tasks — invokes
                                acquire-sources automatically inside a plan run, not only interactively)
 drafting-manuscript        → output/**/*.qmd (SOFT-GATE: ≥1 stable synthesis + lint green)
+revising-manuscript        → revised text + <name>-revision.md ledger (decisions on disk, approved paragraphs frozen)
 requesting-peer-review     → review documents + revisions
 finishing-a-research-project → rendered publication, archived data, grant follow-up
 ```
@@ -65,7 +66,7 @@ Support skills are context-triggered, not phase-bound:
 - **scaffold-research-project** — when the working directory is not yet a research project
 - **add-to-library** — when adding one PDF straight to the shared library (verify + keyword it), outside the project ingest flow
 - **wiki-lint** — before drafting, before finishing, after bulk ingest
-- **semantic-wiki-review** — when the wiki's *content* needs auditing: contradictions, claims overtaken by newer sources
+- **semantic-wiki-review** — when the wiki's *content* needs auditing: contradictions, claims overtaken by newer sources, generic conclusions
 - **wiki-graph** — to analyse the wiki's structure (god nodes, bridges, clusters) and export it as a graph
 - **drift-report** — to check library and projects for accumulated drift (also runs at session start)
 - **grant-finder** — when planning funding in parallel to publication
@@ -135,7 +136,7 @@ never happened:
 
 ## Skill Priority (multiple skills could apply)
 
-1. **Phase skills first** (brainstorming-research, writing-research-plan, literature-review, acquire-sources, ingest-source, executing-research-plan, drafting-manuscript, requesting-peer-review, finishing-a-research-project) — these determine WHERE in the workflow you are
+1. **Phase skills first** (brainstorming-research, writing-research-plan, literature-review, acquire-sources, ingest-source, executing-research-plan, drafting-manuscript, revising-manuscript, requesting-peer-review, finishing-a-research-project) — these determine WHERE in the workflow you are
 2. **Support skills second** (wiki-lint, semantic-wiki-review, wiki-graph, drift-report, add-to-library, grant-finder) — these refine HOW you do a step
 3. **Host utilities last** (OCR, file conversion, …) — these handle format questions
 
@@ -150,6 +151,7 @@ Trigger examples:
 - "Add this PDF straight to the library", "in die Bibliothek aufnehmen" → **add-to-library**
 - "Analyze the data" → **executing-research-plan** (if plan exists) else **writing-research-plan** first
 - "Write the chapter" → **drafting-manuscript** (if synthesis pages stable) else back to synthesis
+- "Let's go through the text paragraph by paragraph", "Absatz für Absatz überarbeiten" → **revising-manuscript**
 - "Review the manuscript" → **requesting-peer-review**
 - "Find funding" → **grant-finder**
 - "Show me a knowledge graph / which entity bridges my sources / most-connected pages" → **wiki-graph**
@@ -158,7 +160,7 @@ Trigger examples:
 ## Skill Types
 
 **Rigid** (must follow the checklist exactly, do not skip steps):
-- scaffold-research-project, brainstorming-research, writing-research-plan, acquire-sources, ingest-source, add-to-library, executing-research-plan, drafting-manuscript, finishing-a-research-project
+- scaffold-research-project, brainstorming-research, writing-research-plan, acquire-sources, ingest-source, add-to-library, executing-research-plan, drafting-manuscript, revising-manuscript, finishing-a-research-project
 
 **Flexible** (adapt principles to context):
 - literature-review, requesting-peer-review, grant-finder, wiki-lint, semantic-wiki-review, wiki-graph, drift-report

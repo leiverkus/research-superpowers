@@ -8,7 +8,7 @@ Research is a long process with phases that produce stable artefacts: an idea be
 
 ```
 brainstorming-research → writing-research-plan → literature-review ⇄ ingest-source
-   → executing-research-plan → drafting-manuscript → requesting-peer-review → finishing-a-research-project
+   → executing-research-plan → drafting-manuscript → revising-manuscript → requesting-peer-review → finishing-a-research-project
 ```
 
 Plus four cross-cutting skills (`wiki-lint`, `wiki-graph`, `semantic-wiki-review`, `grant-finder`) that fire when context demands them rather than at a fixed phase. See [`phase-flow.md`](phase-flow.md) for the full graph including back-edges.

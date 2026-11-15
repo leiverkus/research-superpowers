@@ -437,6 +437,15 @@ follows the argument and is deliberately free, with two required parts:
 *The evidence base is what makes a synthesis auditable: without it, a reader
 cannot tell a claim resting on four sources from one resting on a hunch.*
 
+Conclusions are **specific claims, not summaries**. Each one names a concrete
+anchor (site, passage, stratum, dating, dataset), the sources and pages that
+carry it, whether it is a finding, a reading from the literature, or the
+project's own thesis, the strongest counter-position, and what would make it
+wrong. A sentence that would be just as true of a neighbouring topic ("a complex
+picture emerges", "further research is needed") is cut or made specific. The
+author states the conclusion first; the LLM sharpens it. Full rules:
+`executing-research-plan` → *Writing a synthesis*.
+
 ## Workflows
 
 **Before any workflow:** the LLM reads `input/description/` (if not yet
@@ -533,6 +542,9 @@ Steps:
    `output/bibtex/references.bib`.
 7. Human revises the draft. The outline is what you revise *against* — keep the
    two in sync, and a chapter picked up weeks later needs no re-litigating.
+   Going through a text paragraph by paragraph with the LLM (`revising-manuscript`)
+   keeps every decision of that discussion in a revision ledger next to the
+   outline, so arguments agreed early are not lost later in the session.
 
 **Want a straight run instead?** Say so ("zieh durch") — the LLM names which
 stops it is skipping and logs the reason. The stages are a default, not a cage.

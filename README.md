@@ -23,7 +23,7 @@ LLM-assisted research is fast but easy to get wrong:
 
 `research-superpowers` makes the discipline structural:
 
-- **17 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
+- **18 skills** with checklists, SOFT-GATES, and red-flag tables for every phase
 - **7 subagents** for context-isolated heavy lifting (ingest, acquire, draft, review, analysis, literature search, lint)
 - **Frontmatter schema** that the linter validates and your editor live-checks
 - **Methodology branching** — `hermeneutic` projects skip frozen-hypothesis pre-registration; `quantitative` keeps it; `mixed` is per sub-study
@@ -137,7 +137,7 @@ Full walkthrough: [`docs/tutorial.md`](docs/tutorial.md).
 
 ```
 brainstorming-research → writing-research-plan → literature-review → acquire-sources ⇄ ingest-source
-   → executing-research-plan → drafting-manuscript → requesting-peer-review → finishing-a-research-project
+   → executing-research-plan → drafting-manuscript → revising-manuscript → requesting-peer-review → finishing-a-research-project
 ```
 
 | Skill | Phase | What it does |
@@ -149,6 +149,7 @@ brainstorming-research → writing-research-plan → literature-review → acqui
 | `ingest-source` | Intake | One acquired PDF → wiki source page + entities + BibTeX + log (hard-stops on a missing original) |
 | `executing-research-plan` | Execution | Routes tasks to subagents; methodology-aware review tiers |
 | `drafting-manuscript` | Drafting | Stable syntheses → publishable prose with inline citations, render-checked |
+| `revising-manuscript` | Revision | Works through an existing text paragraph by paragraph; every decision goes into a revision ledger on disk, re-read before each edit; minimal edits; approved paragraphs stay frozen |
 | `requesting-peer-review` | Review | Two-stage (constructive + adversarial) with discipline-specific checklists |
 | `finishing-a-research-project` | Closing | 13-item closing checklist, DOI, archive |
 
@@ -160,7 +161,7 @@ Cross-cutting (context-triggered, no phase binding):
 | `wiki-lint` | Structural validation (frontmatter, wikilinks, override rate) — runs `scripts/lint-wiki.py` |
 | `drift-report` | Deterministic maintenance findings across library + all registered projects (index, scans, bloat, merge drift, bibkey collisions). Runs automatically at session start, **state-triggered**: fingerprints of library/bibs/wiki are compared against the last look — nothing changed, nothing runs, nothing is said |
 | `wiki-graph` | Structure analysis — runs `scripts/wiki-to-graph.py`; god nodes, bridges, clusters; exports graph.json / graph.graphml |
-| `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, aggregator citations) |
+| `semantic-wiki-review` | LLM content audit (contradictions, stale syntheses, generic conclusions, aggregator citations) |
 | `grant-finder` | DFG / ERC / VolkswagenStiftung / Henkel / Thyssen funding-landscape mapping |
 
 Subagents (`agents/<name>.md`) provide context isolation for heavy tasks; each declares `implements: <skill-name>` and never duplicates the skill's checklist.
@@ -199,7 +200,7 @@ research-superpowers/
 │   ├── knowledge-frontmatter.schema.json
 │   └── README.md
 ├── hooks/                        # SessionStart hook injects the skill index
-├── skills/                       # 17 SKILL.md files (the SOT for each workflow)
+├── skills/                       # 18 SKILL.md files (the SOT for each workflow)
 ├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline

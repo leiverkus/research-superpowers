@@ -15,6 +15,7 @@ digraph research_flow {
     review_gate [shape=diamond, label="Review pass\n(quant: spec+quality,\nherm: synthesis)"];
     synthesis_gate [shape=diamond, label="Synthesis\nstable?"];
     draft [label="drafting-manuscript"];
+    revise [label="revising-manuscript\n(revision ledger)"];
     peer [label="requesting-peer-review"];
     finish [label="finishing-a-research-project"];
     done [shape=doublecircle, label="Published /\narchived"];
@@ -46,7 +47,8 @@ digraph research_flow {
     review_gate -> synthesis_gate [label="yes"];
     synthesis_gate -> draft [label="yes"];
     synthesis_gate -> execute [label="no, more synthesis"];
-    draft -> peer;
+    draft -> revise;
+    revise -> peer;
     peer -> finish;
     finish -> done;
 
@@ -54,7 +56,8 @@ digraph research_flow {
     edge [color="#1e8449", style=bold, fontcolor="#1e8449"];
     ingest -> plan [label="reading revises\nresearch question", constraint=false];
     draft -> execute [label="writing exposes\nanalysis gap", constraint=false];
-    peer -> draft [label="reviewer demands\nrevision", constraint=false];
+    peer -> revise [label="reviewer demands\nrevision", constraint=false];
+    revise -> draft [label="section must be\nre-drafted", constraint=false];
     edge [color=black, style=solid, fontcolor=black];
 
     // Flexible skills — advisory, not a phase
