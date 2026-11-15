@@ -177,7 +177,7 @@ You say "review the article." The skill confirms the manuscript path, identifies
 
 The skill walks you through each Major and Minor: accept (→ revise), reject (with rationale), defer (with reason in log). You accept 4, defer 1. Decisions log to `_meta/log.md`.
 
-Revisions route back to `drafting-manuscript` for one more pass.
+Revisions go to `revising-manuscript`: you work through the affected paragraphs with the LLM, and every decision ("keep the Tel Rehov claim, but say why the spatial separation does not matter") goes into `output/article/outline/main-revision.md`, so it still holds forty paragraphs later. A section that needs rebuilding rather than repair goes back to `drafting-manuscript`.
 
 ## Phase 9 — Finishing (skill: `finishing-a-research-project`)
 

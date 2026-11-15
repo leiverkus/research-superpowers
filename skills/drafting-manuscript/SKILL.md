@@ -135,9 +135,9 @@ so out loud.
 
 - A plan Draft task is current (`executing-research-plan` routes here)
 - Synthesis page(s) are stable and user asks for chapter/article draft
-- Rewriting a chapter after peer-review revisions (iterate via same skill — the outline is the thing you revise against)
+- Re-drafting a section from scratch after peer review (the outline is the thing you revise against)
 
-**NOT for:** first-draft brainstorming (use `brainstorming-research`), unsynthesized material (go back and synthesize first), grant research narratives from scratch (use `grant-finder`).
+**NOT for:** working through an existing text paragraph by paragraph (use `revising-manuscript` — it keeps the decisions of that discussion in a ledger), first-draft brainstorming (use `brainstorming-research`), unsynthesized material (go back and synthesize first), grant research narratives from scratch (use `grant-finder`).
 
 ## Checklist
 
@@ -492,6 +492,12 @@ academic text are not grammatical; they are these:
 - **No filler moves.** No paragraph opens by restating the previous one; no
   section closes with a generic "this shows the importance of …" sentence. The
   handoff says what the next section starts from.
+- **Conclusions are specific.** A concluding sentence that would be just as
+  true of a neighbouring topic (swap the site, text or period) says nothing
+  about this one — *a complex picture emerges*, *further research is needed*.
+  Conclude with what the section or chapter actually showed, about what, on
+  which evidence. The same specificity test as for synthesis pages
+  (`executing-research-plan` → *Writing a synthesis*).
 
 ### Style anchor (optional)
 

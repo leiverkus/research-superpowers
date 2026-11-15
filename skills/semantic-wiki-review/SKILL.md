@@ -82,6 +82,14 @@ State the scope to the user before reading.
      (one site, stratum, period, corpus, sample) has fallen away, so the wiki
      states as general what the source stated as local or tentative. Compare
      the claim with its cited page; name the dropped qualifier in `detail`.
+   - **Generic conclusions** — a synthesis conclusion that would be just as true
+     of a neighbouring topic (swap the site, text or period and it still holds):
+     *a complex picture emerges*, *plays an important role*, *further research
+     is needed*, or a conclusion with no concrete anchor and nothing that could
+     make it wrong. See `executing-research-plan` → *Writing a synthesis*. →
+     `review_flags` `kind: weak-support`, `detail` starting with `generic:` and
+     quoting the sentence. (Weak support, because a claim that names no evidence
+     cannot be checked against any.)
    - **Missing cross-references** — pages discussing the same entity / concept
      without linking each other. → Report only (a linking suggestion, not a
      content defect); the user or a follow-up adds the wikilink.

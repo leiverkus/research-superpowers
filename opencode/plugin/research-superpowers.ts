@@ -77,8 +77,9 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 5. **ingest-source** — one acquired source PDF → wiki content (sources + entities + BibTeX + log)
 6. **executing-research-plan** — work plan tasks via subagents with two-stage review
 7. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd
-8. **requesting-peer-review** — manuscript → constructive + adversarial review
-9. **finishing-a-research-project** — closing checklist, archival
+8. **revising-manuscript** — work through an existing text paragraph by paragraph; decisions kept in a revision ledger, approved paragraphs frozen
+9. **requesting-peer-review** — manuscript → constructive + adversarial review
+10. **finishing-a-research-project** — closing checklist, archival
 
 ## Cross-cutting skills
 
@@ -86,7 +87,7 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 - **wiki-lint** — run scripts/lint-wiki.py (structural, deterministic)
 - **drift-report** — deterministic maintenance findings across library + all projects (index, scans, bloat, merge drift, bibkey collisions); auto-runs state-triggered at session start
 - **wiki-graph** — build/query the knowledge graph (god nodes, bridges, communities; CLI + MCP)
-- **semantic-wiki-review** — LLM content audit (contradictions, stale syntheses)
+- **semantic-wiki-review** — LLM content audit (contradictions, stale syntheses, generic conclusions)
 - **grant-finder** — funding programmes parallel to publication
 
 ## Calling convention

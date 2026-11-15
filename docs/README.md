@@ -13,7 +13,7 @@ Works with the [research-project-template](./../templates/research-project-templ
 - **SOT pattern** — workflow logic lives in exactly one file per workflow (the Skill). Agents and Commands are thin pointers (`implements:` field on agents, ≤ 10-line commands). See [`skill-contract.md`](skill-contract.md).
 - **Centralized frontmatter schema** in [`schema/knowledge-frontmatter.schema.json`](../schema/knowledge-frontmatter.schema.json) — consumed by `scripts/lint-wiki.py`, VS Code `yaml.schemas`, and skills (by reference, not duplicate).
 - **SessionStart hook** injects a ~25-line skill index (~80 % smaller than v0.1's full SKILL.md inject). Skill details are loaded on-demand via the `Skill` tool.
-- **17 skills + 7 subagents** mirror the workflow. Both Claude Code and OpenCode discover skills natively from the `skills/` directory; no separate slash-command shims are needed.
+- **18 skills + 7 subagents** mirror the workflow. Both Claude Code and OpenCode discover skills natively from the `skills/` directory; no separate slash-command shims are needed.
 - **Optional: Recommended MCPs** (v0.3) — [`dao-paper-search-mcp`](https://github.com/leiverkus/dao-paper-search-mcp) for verified academic citations across Zenon DAI / IAA / ADAJ / IxTheo / OpenAlex / Crossref etc. plus Wikidata / iDAI.gazetteer entity resolution. Optional — skills fall back to manual API calls if absent. Cited web sources are classified by the rubric in [`source-classes.md`](source-classes.md). See [`recommended-mcps.md`](recommended-mcps.md).
 
 ## Install (Claude Code)
@@ -54,6 +54,8 @@ executing-research-plan       (review mode methodology-aware —
                                herm: synthesis-review)
    ↓
 drafting-manuscript           (SOFT-GATE: ≥1 stable synthesis + lint green)
+   ↓
+revising-manuscript           (revision ledger; approved paragraphs frozen)
    ↓
 requesting-peer-review        (constructive + adversarial)
    ↓

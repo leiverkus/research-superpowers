@@ -6,6 +6,55 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+These changes come from user feedback on the writing phase. The research part
+worked well. Two problems appeared once people worked on the real text:
+1. When a text was revised paragraph by paragraph, arguments agreed earlier in
+   the session seemed to be forgotten.
+2. Syntheses and conclusions read as sloppy and very general.
+
+### Added
+
+- **New skill `revising-manuscript`.** It works through an existing text
+  (the author's own draft, a drafted chapter, or a text after peer review)
+  paragraph by paragraph. Each decision made in that discussion goes into a
+  revision ledger on disk, at `outline/<name>-revision.md` next to the outline.
+  The ledger records:
+  - kept arguments
+  - fixed terms and wordings
+  - rejected proposals, with the reason
+  - open threads
+
+  Before each paragraph, the ledger is re-read from the file, not from memory.
+  Each edit is minimal (only what was discussed) and is shown as before/after
+  with a ledger check. Approved paragraphs are frozen and change only when they
+  are explicitly reopened. A look-back every ~5 paragraphs, and after any
+  context compaction, catches contradictions between paragraphs. Pressure
+  scenario: `tests/pressure/revising-manuscript/forgotten-decision.md`.
+- **Synthesis contract (`executing-research-plan` → *Writing a synthesis*).**
+  The author states the conclusion first. Source pages are re-read before
+  concluding; ingest summaries still in context are not enough. Each conclusion
+  becomes a claim block with:
+  - a concrete anchor
+  - the carrying sources and pages
+  - its kind (finding / reading / own thesis)
+  - a counter-position
+  - what would make it wrong
+
+  A **specificity test** cuts any sentence that would be just as true of a
+  neighbouring topic. The hermeneutic synthesis review checks both. The
+  template's `CLAUDE.md` (new projects only) summarises the rule.
+- **`semantic-wiki-review` flags generic conclusions** as `weak-support` with a
+  `generic:` detail. The schema is unchanged.
+- **`drafting-manuscript` precision rule: conclusions are specific.** The rule
+  now covers the conclusions of manuscript sections and chapters too.
+
+### Changed
+
+- `drafting-manuscript` no longer claims paragraph-level revision; it routes
+  that to `revising-manuscript`. The phase flow, the indexes and the docs list
+  the new skill between drafting and peer review, and the reviewer back-edge
+  now leads to `revising-manuscript`.
+
 ## [0.47.0] — 2026-11-13
 
 Minor: these changes come from an evaluation of Isabella Buck, *Wissenschaftliches
