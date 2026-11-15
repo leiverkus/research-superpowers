@@ -84,7 +84,7 @@ research-superpowers/
 ├── .claude-plugin/plugin.json
 ├── schema/                       # SOT — JSON Schema (mirrored into template)
 ├── hooks/                        # SessionStart injects session-context.md
-├── skills/                       # 17 SKILL.md files (SOT for workflows)
+├── skills/                       # 18 SKILL.md files (SOT for workflows)
 ├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline

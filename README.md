@@ -200,7 +200,7 @@ research-superpowers/
 │   ├── knowledge-frontmatter.schema.json
 │   └── README.md
 ├── hooks/                        # SessionStart hook injects the skill index
-├── skills/                       # 17 SKILL.md files (the SOT for each workflow)
+├── skills/                       # 18 SKILL.md files (the SOT for each workflow)
 ├── agents/                       # 7 thin-pointer subagents
 ├── templates/research-project-template/
 │   ├── CLAUDE.md                 # frontmatter declares methodology + discipline
