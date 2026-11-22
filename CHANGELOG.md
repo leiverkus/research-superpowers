@@ -6,11 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.48.0] — 2026-11-22
+
 These changes come from user feedback on the writing phase. The research part
 worked well. Two problems appeared once people worked on the real text:
 1. When a text was revised paragraph by paragraph, arguments agreed earlier in
    the session seemed to be forgotten.
 2. Syntheses and conclusions read as sloppy and very general.
+
+Minor release with one new skill. All changes are in skills, docs and tests,
+so synced projects need no update. The one template `CLAUDE.md` addition (the
+synthesis rule and the pointer to `revising-manuscript`) applies only to newly
+scaffolded projects. Existing projects can copy it by hand if they want.
 
 ### Added
 
