@@ -148,7 +148,7 @@ brainstorming-research → writing-research-plan → literature-review → acqui
 | `acquire-sources` | Acquisition | Auto-downloads OA PDFs for the A+B set; writes a manual-download worklist for paywalled sources; re-run to reconcile |
 | `ingest-source` | Intake | One acquired PDF → wiki source page + entities + BibTeX + log (hard-stops on a missing original) |
 | `executing-research-plan` | Execution | Routes tasks to subagents; methodology-aware review tiers |
-| `drafting-manuscript` | Drafting | Stable syntheses → publishable prose with inline citations, render-checked |
+| `drafting-manuscript` | Drafting | Stable syntheses → publishable prose with inline citations, render-checked. By default the whole text is sketched first (section arguments, paragraph plans for long sections, evidence gaps) and approved before any prose; per-section mode on request |
 | `revising-manuscript` | Revision | Works through an existing text paragraph by paragraph; every decision goes into a revision ledger on disk, re-read before each edit; minimal edits; approved paragraphs stay frozen |
 | `requesting-peer-review` | Review | Two-stage (constructive + adversarial) with discipline-specific checklists |
 | `finishing-a-research-project` | Closing | 13-item closing checklist, DOI, archive |

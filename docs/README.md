@@ -53,7 +53,8 @@ executing-research-plan       (review mode methodology-aware —
                                quant: two-stage spec+quality;
                                herm: synthesis-review)
    ↓
-drafting-manuscript           (SOFT-GATE: ≥1 stable synthesis + lint green)
+drafting-manuscript           (SOFT-GATE: ≥1 stable synthesis + lint green;
+                               default: whole-text sketch + gap list before prose)
    ↓
 revising-manuscript           (revision ledger; approved paragraphs frozen)
    ↓

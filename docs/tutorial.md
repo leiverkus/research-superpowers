@@ -128,7 +128,7 @@ Because `methodology: hermeneutic`, the review is a single-pass "synthesis revie
 
 Conditions 1 and 5 are exactly where the checked-in example stops: there `chronology-debate.md` is still `status: review` and carries an open `weak-support` flag, so drafting never starts and no override is logged. Here we got past it in Phase 6 by promoting the synthesis to `stable` after resolving the flag — that promotion is the difference between the two.
 
-Drafting runs in three stages, and no prose is written until the argument is settled — starting from a thesis you state yourself.
+Drafting runs in stages, and no prose is written until the argument is settled — starting from a thesis you state yourself. By default the whole article is sketched before the first paragraph is written; for a short article like this one the skill mentions that you could sketch and write section by section instead, and you keep the default.
 
 **Stage A — architecture.** First the skill asks *you* for the thesis — **STOP 0**. You answer roughly: "the fortresses don't decide anything, because their dates come from the same pottery". The skill keeps that sentence verbatim in the outline and builds on it. Then it writes `output/article/outline/main.md` — the path is derived from the target file, `article/main.qmd` → `article/outline/main.md`: a thesis, a claim chain, and a claim per section. Not a table of contents — a table of contents cannot be wrong, and the point of this stage is to put something on the table that *can* be.
 
@@ -156,7 +156,9 @@ Negev material settles nothing on its own (S6).
 
 **STOP 1.** You read the chain and push back: S6 is doing two jobs at once. The skill splits it, updates the outline, and asks again. This costs one exchange. Discovering it after 4000 words costs an afternoon.
 
-**Stage B — section by section.** For S3, the skill sketches the argument into the outline — the steps, which source carries each one, the concrete material (Tel Masos Stratum II), the counter-position (`[@mazar-2011-iron]`) and how it is handled. **STOP 2**: you approve the argument. Only then does the prose get written, citing inline as `[@cohen-1979-fortresses, p. 79]`, `[@finkelstein-1999-hazor]`. **STOP 3**: the prose comes back with a deviations line — "step 2 weaker than sketched: Finkelstein 1999 gives the Arad sequence, not Masos". You accept, the section is appended to `output/article/main.qmd`, its `Status` goes to `approved`, and the loop moves to S4.
+**Stage S — the whole sketch.** For every section the skill now sketches the argument into the outline — for S3: the steps, which source carries each one, the concrete material (Tel Masos Stratum II), the counter-position (`[@mazar-2011-iron]`) and how it is handled. No section here reaches 1200 words, so there are no paragraph plans. The evidence check marks one step thin: S5's claim that the 14C models "inherit" the circularity rests on a single source without a page anchor. The gap list proposes to narrow it to the one model that source discusses. **STOP S**: you read the gap list and the six sketches in one sitting, accept the narrowing, and approve.
+
+**Stage B — section by section.** S3's sketch still holds, so the prose gets written right away, citing inline as `[@cohen-1979-fortresses, p. 79]`, `[@finkelstein-1999-hazor]`. **STOP 3**: the prose comes back with a deviations line — "step 2 weaker than sketched: Finkelstein 1999 gives the Arad sequence, not Masos". You accept, the section is appended to `output/article/main.qmd`, its `Status` goes to `approved`, and the loop moves to S4.
 
 That deviation is the whole reason the stage exists. Drafted in one pass, it would have been quietly smoothed over and read as settled.
 

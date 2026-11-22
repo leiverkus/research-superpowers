@@ -58,6 +58,13 @@ Your job is to carry it out, not to improve on it.
 - The counter-position is engaged the way the sketch says it is handled.
 - The section ends where "Hands to next" says it ends. Do not annex the next
   section's ground because the sources happen to be rich here.
+- **If the parent supplies a paragraph plan**, write one prose paragraph per
+  planned paragraph, in that order and with that function and main statement,
+  using the named material. Split or merge only where the plan cannot be carried
+  out as written — and report it.
+- **Evidence-gap decisions are binding.** A step decided `narrow` uses the
+  narrowed wording; a step decided `bracket` is said openly in the text ("this
+  is not shown here"); do not fill a `research` gap that is still open — flag it.
 - **If the sketch is wrong** — a step does not survive contact with the source,
   the evidence does not carry what it was meant to carry — do not silently route
   around it. Draft what the sources support and report the divergence. Naming a
@@ -113,9 +120,10 @@ concession, definition, method, significance, transition, handoff). A paragraph
 you can only label `facts` is knowledge telling: rewrite it before returning.>
 
 ### Deviations from the sketch
-<Per approved step: carried out as sketched, or how it departed and why. Plus
-anything in the prose that was not in the sketch. If nothing departed, write
-"none" — but check before writing it.>
+<Per approved step: carried out as sketched, or how it departed and why. Where
+a paragraph plan was supplied, also per planned paragraph: written as planned,
+split, merged, moved, dropped, or added. Plus anything in the prose that was not
+in the sketch. If nothing departed, write "none" — but check before writing it.>
 
 ### Flagged issues
 - <claims without a matching source in the allowed list>

@@ -6,6 +6,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Sketch phase in `drafting-manuscript` (new default, `drafting_mode:
+  sketch-first`).** After the thesis and claim chain are approved, the whole
+  text is sketched before any prose exists:
+  - argument sketches for **all** sections, whose handoffs are read in sequence
+    against the claim chain
+  - a **paragraph plan** (function, main statement, evidence, material per
+    paragraph) for every section of 1200 words or more
+  - an **evidence check** that marks every step `carried`, `thin` or `missing`
+    and collects the gaps in the outline, each with a decision: research,
+    narrow, or bracket
+
+  The user approves the whole sketch at a new **STOP S**. A section with an
+  undecided `missing` gap is not drafted. Two optional steps are offered once:
+  the argument as a 1–2 page exposé, and an adversarial review of the sketch by
+  `peer-reviewer`. During writing, STOP 2 fires only when an approved sketch no
+  longer holds. The drafter follows the paragraph plan and reports deviations
+  against it.
+- **`per-section` mode** keeps the previous behaviour (sketch and prose
+  alternate per section). It applies when the user asks for it or the project's
+  `CLAUDE.md` sets it under `Manuscript style`. Choosing it is not a gate
+  override.
+
 ## [0.48.0] — 2026-11-22
 
 These changes come from user feedback on the writing phase. The research part
