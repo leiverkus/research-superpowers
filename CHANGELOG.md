@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-## [0.48.0] — 2026-11-15
+## [0.48.0] — 2026-11-22
 
 These changes come from user feedback on the writing phase. The research part
 worked well. Two problems appeared once people worked on the real text:
