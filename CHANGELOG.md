@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.49.0] — 2026-11-22
+
+Minor release that changes how `drafting-manuscript` works by default: the
+whole text is sketched and approved before any prose. Users who want the
+previous behaviour say "per-section", or set `Drafting mode: per-section` under
+`Manuscript style` in the project's `CLAUDE.md`. The changes are in skills,
+agents and docs, so synced projects need no update. The template `CLAUDE.md`
+addition (the `Drafting mode` line and the revised draft workflow) applies only
+to newly scaffolded projects. Outlines started before 0.49.0 resume where they
+left off: they have no `sketch_status`, so they continue section by section.
+
 ### Added
 
 - **Sketch phase in `drafting-manuscript` (new default, `drafting_mode:
