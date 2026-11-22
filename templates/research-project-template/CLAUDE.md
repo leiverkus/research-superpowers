@@ -329,6 +329,10 @@ project's discipline and genre.** Defaults:
   promotional adjectives.
 - **Every drafted section comes with a reverse outline** (function + main
   statement per paragraph) so you can check intent without rereading.
+- **Drafting mode: sketch-first.** The whole text is sketched (every section's
+  argument, paragraph plans for sections of 1200+ words, an evidence check with
+  a gap list) and approved before any prose. Change to `per-section` here if
+  this project prefers to sketch and write one section at a time.
 
 #### Style profile
 
@@ -512,7 +516,8 @@ The script checks deterministically and fast. Content checks
 Trigger: human says "Draft [section/chapter]."
 
 Drafting is staged, and the argument is settled with the human before any prose
-exists. Nothing is drafted in one pass.
+exists: by default the whole text is sketched and approved first, then written
+section by section along that sketch. Nothing is drafted in one pass.
 
 Steps:
 1. LLM gathers relevant Synthesis and Source pages.
@@ -525,22 +530,29 @@ Steps:
    `book/text/03-methods.qmd` → `book/outline/03-methods.md`). It is never
    rendered and is not listed in `_quarto.yml`.
    **The human approves the claim chain before drafting starts.**
-3. **Then section by section.** Per section: the LLM sketches the argument
-   (steps, evidence, the concrete material, the counter-position and how it is
-   handled) → human approves → prose for that section only → human approves,
-   with any deviation from the sketch named explicitly → append, mark the
-   section approved, next.
+3. **Sketch the whole text** (default). The LLM sketches the argument of every
+   section (steps, evidence, the concrete material, the counter-position and
+   how it is handled), adds a paragraph plan for sections of 1200+ words, and
+   marks each step as carried, thin or missing in the wiki. The gaps go on a
+   list with a proposed decision: research, narrow the claim, or bracket it.
+   On request it also writes the argument as a 1–2 page exposé and has the
+   sketch reviewed adversarially. **The human approves the whole sketch before
+   any prose is written.**
+4. **Then section by section.** Prose for one section at a time, along its
+   sketch and paragraph plan → human approves, with any deviation named
+   explicitly → append, mark the section approved, next. (In `per-section`
+   mode, each section's sketch is made and approved right before its prose.)
    - For a book chapter: in `output/book/`
    - For an article: in `output/article/`
-4. Prose follows the **Manuscript style (drafting depth)** rules above — develop
+5. Prose follows the **Manuscript style (drafting depth)** rules above — develop
    each point with examples and explanation drawn from the sources, do not
    reflow bullets into flat prose.
-5. Where a wiki page is too thin to develop a point, the LLM reaches back to the
+6. Where a wiki page is too thin to develop a point, the LLM reaches back to the
    source — its `### Direct quotes` / `### Examples & illustrations`, or the
    original PDF at `<library>/pdf/<bibkey>.pdf` at the cited pages — and cites what it uses.
-6. The draft contains Quarto citations (`@citekey`) referring to
+7. The draft contains Quarto citations (`@citekey`) referring to
    `output/bibtex/references.bib`.
-7. Human revises the draft. The outline is what you revise *against* — keep the
+8. Human revises the draft. The outline is what you revise *against* — keep the
    two in sync, and a chapter picked up weeks later needs no re-litigating.
    Going through a text paragraph by paragraph with the LLM (`revising-manuscript`)
    keeps every decision of that discussion in a revision ledger next to the

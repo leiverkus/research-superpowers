@@ -1,6 +1,6 @@
 ---
 name: drafting-manuscript
-description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Settles the argument architecture with the user first, then drafts section by section — each section's argument agreed before its prose is written. Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
+description: Use to draft a book chapter, article section, or grant exposé from synthesized wiki content. Settles the argument architecture with the user first; by default then sketches the WHOLE text — every section's argument, a paragraph plan for long sections, an evidence check with a gap list — and gets that sketch approved before any prose exists, then writes section by section along the plan (per-section mode on request). Pulls from stable synthesis pages and source pages, writes to `output/**/*.qmd` with proper citations. Never drafts from memory — always from the wiki.
 argument-hint: "<section, e.g. 3.2 Core arguments>"
 inputs:
   - name: plan_task_id
@@ -27,6 +27,9 @@ inputs:
   - name: target_word_count
     description: Target prose length (±15%), distributed over the sections as per-section budgets in the outline
     required: false
+  - name: drafting_mode
+    description: "sketch-first (default) — the whole text is sketched and approved before any prose; or per-section — sketch and prose alternate section by section. A project can fix it in its root CLAUDE.md under Manuscript style."
+    required: false
 outputs:
   - path: output/<book|article>/outline/<basename>.md
     kind: created_or_modified
@@ -44,9 +47,9 @@ Turn stable synthesis pages into publishable prose. Every claim gets a citation.
 
 But the wiki is deliberately terse — bullets, one-sentence claims, page numbers in parentheses. It is a **pointer to the depth, not the depth itself.** Drafting straight from it produces dense, compressed prose that reads like reflowed bullet points, without the examples and explanations a reader needs. The fix is *not* to write more from memory (that reintroduces hallucination) but to **reach back to the sources for depth**: the illustrative examples, the explanation of *why* a claim holds, and the surrounding argument live in the source pages' quote/example sections and — when those are too thin — in the original PDFs in the shared library (`<library>/pdf/<bibkey>.pdf`, put there by `acquire-sources`). Elaboration must be **grounded and cited**; only connective/expository framing (transitions, restating an argument's logic) is uncited. See [Writing with depth](#writing-with-depth-not-bullet-reflow).
 
-And the wiki tells you *what is claimed* — never *what this chapter argues*. The claim chain is the author's contribution, not the wiki's — which is why the thesis comes **from the author first** (STOP 0), and you sharpen it rather than propose it. A thesis the user merely approves looks like agreement but skips the thinking: a polished machine formulation reads as better than one's own and is accepted unchecked (automation bias). Formulating the thesis *is* the author's work; checking it against the wiki, naming its gaps and its strongest counter-position is yours. And the claim chain is the thing that drifts: drafted in one pass, a chapter wanders into whatever the sources happen to be rich about, and the drift only becomes visible once thousands of words exist and are expensive to throw away. So the argument is **settled on paper and discussed before any prose exists**, then carried out one section at a time, each section's argument agreed before it is written. See [The three stages](#the-three-stages).
+And the wiki tells you *what is claimed* — never *what this chapter argues*. The claim chain is the author's contribution, not the wiki's — which is why the thesis comes **from the author first** (STOP 0), and you sharpen it rather than propose it. A thesis the user merely approves looks like agreement but skips the thinking: a polished machine formulation reads as better than one's own and is accepted unchecked (automation bias). Formulating the thesis *is* the author's work; checking it against the wiki, naming its gaps and its strongest counter-position is yours. And the claim chain is the thing that drifts: drafted in one pass, a chapter wanders into whatever the sources happen to be rich about, and the drift only becomes visible once thousands of words exist and are expensive to throw away. So the argument is **settled on paper and discussed before any prose exists**, then carried out one section at a time. By default the whole text is sketched first — every section's argument, a paragraph plan for the long sections, and an evidence check that shows where the wiki does not carry a step — so that a weak step in section 5 is found before sections 1–4 are written, and a missing source is fetched before the paragraph that needs it. See [The stages](#the-stages) and [Sketch phase](#sketch-phase).
 
-**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`. Three stages: you state the thesis in your own words, we settle the argument architecture on it, then go section by section — argument, then prose, with a check-in at each."
+**Announce at start:** "Using drafting-manuscript to draft <chapter/section> into `<path>`. You state the thesis in your own words, we settle the argument architecture on it, then I sketch the whole text — the argument of every section, a paragraph plan for the long ones, and where the evidence is thin — and only once you have approved that sketch do we write, section by section along it. If you would rather sketch and write section by section, say so."
 
 <SOFT-GATE>
 Before drafting, check:
@@ -68,18 +71,21 @@ resolving it first (fix the page, set the flag `state: resolved`) over
 overriding. Note which page and flag `kind` in the override reason.
 </SOFT-GATE>
 
-## The three stages
+## The stages
 
 | Stage | Produces | Ends at |
 |-------|----------|---------|
 | **A — Architecture** | The author's thesis, then the sharpened thesis + claim chain + per-section claims, in the outline file | **STOP 0**: author states thesis · **STOP 1**: user approves the architecture |
-| **B — Section loop** | Per section: an argument sketch, then its prose | **STOP 2** and **STOP 3**, per section |
+| **S — Sketch** *(sketch-first mode, the default)* | Argument sketches for **all** sections, paragraph plans for sections of ≥ 1200 words, the evidence check with its gap list; optionally the argument in prose and an adversarial review of the sketch | **STOP S**: user approves the whole sketch |
+| **B — Section loop** | Per section: its prose (in per-section mode: first its argument sketch, then its prose) | **STOP 3** per section — and **STOP 2** in per-section mode, or when the sketch has to change |
 | **C — Finishing** | Citation check, render, log | Done |
+
+**Choosing the mode.** Sketch-first is the default. Use per-section when the user asks for it ("abschnittsweise", "sketch as we go"), or when the project's root `CLAUDE.md` sets `Drafting mode: per-section` under `Manuscript style`. Per-section suits short pieces (a grant exposé, a single article section) and exploratory writing where the argument is found by writing; say so once when the target looks like that, and let the user choose. Record the mode in the outline's frontmatter. A mode choice is not a gate override and is not logged as one.
 
 Stage B repeats per section. A chapter is finished when every section in the outline has `Status: approved`.
 
 <STAGE-GATE>
-Four stops. At each one you **present (or ask) and wait** — the message that
+Five stops (four in per-section mode). At each one you **present (or ask) and wait** — the message that
 presents a stop ends there. Do not present a stop and continue past it in the same message;
 that is not a check-in, it is an announcement.
 
@@ -108,14 +114,29 @@ the thesis and the claim chain (not the whole file — the user can read it) and
 ask whether the chain holds. Wait. No prose exists yet and none is written until
 this is approved.
 
-**STOP 2 — Section argument (per section, Stage B).** The section's
-Argumentationsgang is sketched into the outline. Present it. Ask whether the
-argument is right *before* it costs a thousand words. Wait. This is the cheap
-place to redirect — that is the entire point of the stage.
+**STOP S — The whole sketch (end of Stage S, sketch-first mode).** Every
+section's argument sketch, the paragraph plans, and the evidence check are in
+the outline. Present the gap list first (what the wiki does not carry, and the
+decision proposed for each gap), then the section sketches in order — the user
+reads the argument of the whole text in one place. If an argument in prose or
+an adversarial review of the sketch was made, present it here too. Wait. No
+prose is written until the sketch is approved, and no section with an open
+`missing` gap is drafted until that gap is decided.
+
+**STOP 2 — Section argument (per section, Stage B).** In **per-section mode**:
+the section's Argumentationsgang is sketched into the outline. Present it. Ask
+whether the argument is right *before* it costs a thousand words. Wait. This is
+the cheap place to redirect — that is the entire point of the stage. In
+**sketch-first mode** the section's sketch was approved at STOP S, so STOP 2
+fires only when it no longer holds: an earlier section's prose deviated in a way
+that moves this section's starting point, a gap decision changed a step, or a
+newly ingested source bears on it. Then present the changed sketch, marked as a
+change against the approved one, and wait. If nothing changed, say "S4: sketch
+unchanged since STOP S" in the STOP 3 message of the previous section and go on.
 
 **STOP 3 — Section prose (per section, Stage B).** The prose for THIS section
-only, plus an explicit line on where it deviates from the approved sketch (or
-"no deviations"), plus its **reverse outline** — one line per paragraph: its
+only, plus an explicit line on where it deviates from the approved sketch and,
+where there is one, the paragraph plan (or "no deviations"), plus its **reverse outline** — one line per paragraph: its
 function and its main statement (see [Reverse outline](#reverse-outline)). The
 reverse outline is what lets the user check in thirty seconds whether the prose
 says what they mean; reading a thousand words for that is what gets skipped.
@@ -128,7 +149,8 @@ whole thing"). That is legitimate. Name which stops you are skipping, write the
 reason to `knowledge/_meta/gate-overrides.log`, and proceed. An override is
 per-request, not permanent: it covers this draft, not the next one. Repeated
 overrides on STOP 2 mean the section loop is not earning its cost — worth saying
-so out loud.
+so out loud. Choosing per-section mode is not an override; skipping STOP S in
+sketch-first mode is.
 </STAGE-GATE>
 
 ## When to use
@@ -147,28 +169,38 @@ so out loud.
 2. **Pre-flight checks (SOFT-GATE)** — stable synthesis pages? BibTeX complete? wiki-lint green? No open `review_flags` on the pages you pull from?
 3. **Read all referenced synthesis pages** fully
 4. **Read all cited source pages** — the full page, especially the `### Direct quotes` and `### Examples & illustrations` sections (the raw material for depth), not just the one-line claims
-5. **Resume check** — if an outline already exists at the derived path, read it and continue from the first section whose `Status` is not `approved`. Do not restart the chapter.
-6. **STOP 0 — ask for the author's thesis** — one or two sentences plus a rough path, in their own words; no candidate of yours in that message. Wait. Skip on resume
-7. **Write the outline** — the author's formulation verbatim, then the sharpened thesis, claim chain, per-section claims, to `output/<book|article>/outline/<basename>.md` (see [Outline file](#outline-file)). Distribute `target_word_count` into per-section budgets
-8. **STOP 1** — present thesis + claim chain, wait for approval, revise until the chain holds
+5. **Resume check** — if an outline already exists at the derived path, read it and continue where it stands: an unapproved sketch (`sketch_status: draft`) resumes Stage S; otherwise continue from the first section whose `Status` is not `approved`. Do not restart the chapter.
+6. **Mode** — sketch-first unless the user or the project's `CLAUDE.md` says per-section (see [Choosing the mode](#the-stages)). For a short target, mention per-section once as an option. Skip on resume — the outline records it
+7. **STOP 0 — ask for the author's thesis** — one or two sentences plus a rough path, in their own words; no candidate of yours in that message. Wait. Skip on resume
+8. **Write the outline** — the author's formulation verbatim, then the sharpened thesis, claim chain, per-section claims, to `output/<book|article>/outline/<basename>.md` (see [Outline file](#outline-file)). Distribute `target_word_count` into per-section budgets
+9. **STOP 1** — present thesis + claim chain, wait for approval, revise until the chain holds. In per-section mode, continue with Stage B
+
+### Stage S — Sketch (sketch-first mode)
+
+10. **Sketch every section's argument** — the [section argument sketch](#section-argument-sketch) for each section, in order, into the outline. Each sketch's `Hands to next` must be what the next sketch starts from; read them in sequence before going on
+11. **Paragraph plans** — for every section whose budget is **≥ 1200 words**, a [paragraph plan](#paragraph-plan) under its sketch. Shorter sections may have one; they need not
+12. **Evidence check** — mark every step of every sketch `carried`, `thin` or `missing` against the source pages (and, where a page is thin, the PDF at the cited page), and collect the `thin` and `missing` steps in the outline's [evidence gaps](#evidence-check) list with a proposed decision each
+13. **Optional: argument in prose, adversarial review** — offer both once (see [Sketch phase](#sketch-phase)). Do them only if the user wants them
+14. **STOP S** — present the gap list, then the sketches; wait for approval; revise until the whole argument holds. Set `sketch_status: approved` and every section's `Status: sketched`
+15. **Close the gaps decided as `research`** before drafting the sections they belong to — `acquire-sources` / `ingest-source`, then re-run the evidence check for those steps. Sections whose gaps are decided otherwise (narrow, bracket) can be drafted at once
 
 ### Stage B — Section loop (repeat per section)
 
-9. **Sketch the section's argument** — claim, steps with their evidence, the concrete material, the counter-position and how it is handled, the handoff to the next section (see [Section argument sketch](#section-argument-sketch)). Write it into the outline under that section. Bullets, not prose
-10. **STOP 2** — present the sketch, wait for approval, revise until the argument is right
-11. **Draft prose for this section only** — against the approved sketch; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
-12. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
-13. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass. Then **write the reverse outline** (see [Reverse outline](#reverse-outline)) and read it against the sketch: a paragraph whose function you cannot name, two paragraphs with the same main statement, or a paragraph that only lines up facts (*knowledge telling*) is fixed now, before STOP 3. Check the [precision rules](#precision-rules) on the same pass
-14. **STOP 3** — present the prose + the deviation line + the reverse outline, wait for approval, revise
-15. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 9 for the next section
-16. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
+16. **The section's sketch** — per-section mode: sketch it now (claim, steps with their evidence, the concrete material, the counter-position and how it is handled, the handoff to the next section, see [Section argument sketch](#section-argument-sketch)), into the outline under that section; bullets, not prose. Sketch-first mode: re-read the approved sketch and paragraph plan, and check whether they still hold (see STOP 2)
+17. **STOP 2** — per-section mode: present the sketch, wait for approval, revise until the argument is right. Sketch-first mode: only if the sketch has to change
+18. **Draft prose for this section only** — against the approved sketch and, where there is one, along its paragraph plan, one planned paragraph per prose paragraph unless the plan says otherwise; develop each substantive point (assertion → grounding → example → significance, see [Writing with depth](#writing-with-depth-not-bullet-reflow)); citations inline as `[@bibkey]` or `[@bibkey, p. 152]`. For long sections, dispatch the `drafter` subagent (see [Subagent dispatch](#subagent-dispatch-per-section-not-per-chapter))
+19. **Reach back to sources where the wiki is thin** — when a page cannot support the needed elaboration, open its `### Direct quotes` / `### Examples & illustrations`; if still insufficient, open the original PDF at `<library>/pdf/<bibkey>.pdf` at the page anchors the source page cites, draw out the example/explanation, and cite it. Never fill the gap from memory
+20. **Check the prose against the sketch** — every approved step present? anything in the prose that is not in the sketch? Name deviations explicitly rather than hoping they pass. Where the section has a paragraph plan, check it paragraph by paragraph too: a planned paragraph missing, two merged, one added. Then **write the reverse outline** (see [Reverse outline](#reverse-outline)) and read it against the sketch (and the paragraph plan): a paragraph whose function you cannot name, two paragraphs with the same main statement, or a paragraph that only lines up facts (*knowledge telling*) is fixed now, before STOP 3. Check the [precision rules](#precision-rules) on the same pass
+21. **STOP 3** — present the prose + the deviation line + the reverse outline, wait for approval, revise
+22. **Append and mark** — append to the target `.qmd`, set the section's `Status: approved` in the outline, then go to step 16 for the next section
+23. **If the chain changed** — a STOP 2 or STOP 3 discussion may invalidate the architecture (a section's claim moves, a step migrates to a neighbour). Update the outline's claim chain and say so. In sketch-first mode, also check the approved sketches of the sections still to come: a sketch whose starting point moved is changed now and goes through STOP 2. Do not let the outline and the manuscript drift apart — a stale outline is worse than none
 
 ### Stage C — Finishing
 
-17. **Chapter coherence check** — once every section is approved, read the chapter as a whole, because each section passing on its own does not make the chapter cohere (LLM prose is typically coherent locally and breaks globally). (a) Join the section reverse outlines and read them against the outline's thesis and claim chain: does each section hand on what the next one starts from, does any step of the chain have no section carrying it? (b) **Introduction ↔ conclusion**: is every question, aim or promise the introduction announces answered or explicitly bracketed in the conclusion, and does the conclusion claim nothing the chapter did not argue? (c) Terminology: is each key term used in one sense throughout? Present the findings as a short list with locations; fix only what the user approves — this is a check, not a rewrite pass
-18. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
-19. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
-20. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
+24. **Chapter coherence check** — once every section is approved, read the chapter as a whole, because each section passing on its own does not make the chapter cohere (LLM prose is typically coherent locally and breaks globally). (a) Join the section reverse outlines and read them against the outline's thesis and claim chain: does each section hand on what the next one starts from, does any step of the chain have no section carrying it? (b) **Introduction ↔ conclusion**: is every question, aim or promise the introduction announces answered or explicitly bracketed in the conclusion, and does the conclusion claim nothing the chapter did not argue? (c) Terminology: is each key term used in one sense throughout? Present the findings as a short list with locations; fix only what the user approves — this is a check, not a rewrite pass
+25. **Verify every citation** — each `[@bibkey]` has a matching entry in `output/bibtex/references.bib`
+26. **Render check** — run `make render` (or `quarto render`) in the target `output/<book|article>/` directory; fix any errors
+27. **Log** — entry in `knowledge/_meta/log.md`: date, draft, target file, word count, source count
 
 ## Process Flow
 
@@ -185,6 +217,13 @@ digraph drafting {
     "Resume at first unapproved section" [shape=box];
     "STOP 1: architecture approved?" [shape=diamond];
     "Revise outline" [shape=box];
+    "Sketch-first mode?" [shape=diamond];
+    "Sketch all sections + paragraph plans" [shape=box];
+    "Evidence check: gap list" [shape=box];
+    "STOP S: whole sketch approved?" [shape=diamond];
+    "Revise sketch(es)" [shape=box];
+    "Close gaps decided as research" [shape=box];
+    "Sketch still holds?" [shape=diamond];
 
     "Next unapproved section" [shape=box];
     "Sketch section argument" [shape=box];
@@ -220,10 +259,21 @@ digraph drafting {
     "Write outline: thesis + claim chain" -> "STOP 1: architecture approved?";
     "STOP 1: architecture approved?" -> "Revise outline" [label="no"];
     "Revise outline" -> "STOP 1: architecture approved?";
-    "STOP 1: architecture approved?" -> "Next unapproved section" [label="yes"];
+    "STOP 1: architecture approved?" -> "Sketch-first mode?" [label="yes"];
+    "Sketch-first mode?" -> "Sketch all sections + paragraph plans" [label="yes (default)"];
+    "Sketch-first mode?" -> "Next unapproved section" [label="no, per-section"];
+    "Sketch all sections + paragraph plans" -> "Evidence check: gap list";
+    "Evidence check: gap list" -> "STOP S: whole sketch approved?";
+    "STOP S: whole sketch approved?" -> "Revise sketch(es)" [label="no"];
+    "Revise sketch(es)" -> "STOP S: whole sketch approved?";
+    "STOP S: whole sketch approved?" -> "Close gaps decided as research" [label="yes"];
+    "Close gaps decided as research" -> "Next unapproved section";
     "Resume at first unapproved section" -> "Next unapproved section";
 
-    "Next unapproved section" -> "Sketch section argument";
+    "Next unapproved section" -> "Sketch still holds?" [label="sketch-first"];
+    "Sketch still holds?" -> "Draft prose for THIS section" [label="yes"];
+    "Sketch still holds?" -> "Revise sketch" [label="no"];
+    "Next unapproved section" -> "Sketch section argument" [label="per-section"];
     "Sketch section argument" -> "STOP 2: argument approved?";
     "STOP 2: argument approved?" -> "Revise sketch" [label="no"];
     "Revise sketch" -> "STOP 2: argument approved?";
@@ -274,6 +324,8 @@ plan_task: "<Draft task id from <slug>-plan.md>"
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 target_words: 4500
+drafting_mode: sketch-first | per-section
+sketch_status: draft | approved     # sketch-first mode only
 status: draft | approved
 ---
 
@@ -315,20 +367,31 @@ a table of contents, not an argument.>
 
 ### S2 — <Section title>
 …
+
+## Evidence gaps            ← sketch-first mode, written at the evidence check
+
+| Gap | Section · step | Status | What is missing | Decision |
+|-----|----------------|--------|-----------------|----------|
+| G1 | S3 · step 2 | missing | No source in the wiki dates Arad XII independently of its pottery | research — Herzog 2002 (acquire + ingest) |
+| G2 | S4 · step 1 | thin | Only one source carries the claim, no page anchor | narrow — "in the Negev" instead of "in Judah" |
+
+## Argument in prose        ← optional, offered at Stage S
+<1–2 pages, exposé-like: the chapter's argument as a reader would follow it,
+for people who do not work in the outline.>
 ```
 
 ## Section argument sketch
 
-At STOP 2, this block goes into the outline **under the section it belongs to**, then gets approved. Bullets — writing prose here defeats the purpose.
+This block goes into the outline **under the section it belongs to** — for all sections at once in Stage S (sketch-first mode), or one section at a time at STOP 2 (per-section mode) — then gets approved. Bullets — writing prose here defeats the purpose.
 
 ```markdown
 #### Argument (approved YYYY-MM-DD)
 
 - **Claim:** <the section's claim, sharpened by the discussion>
 - **Steps:**
-  1. <step> — carried by `[@bibkey, p. XX]`
-  2. <step> — carried by `[@bibkey, p. XX]`
-  3. <step> — carried by `[@bibkey, p. XX]`
+  1. <step> — carried by `[@bibkey, p. XX]` · carried
+  2. <step> — carried by `[@bibkey, p. XX]` · thin → G2
+  3. <step> — carried by `[@bibkey, p. XX]` · carried
 - **Concrete material:** <the specific artefact / site / passage / dataset that
   illustrates the argument, named, with its source-page anchor. If you cannot
   name one, this section will be assertion-stacking — find one or narrow the
@@ -339,6 +402,83 @@ At STOP 2, this block goes into the outline **under the section it belongs to**,
 ```
 
 The counter-position line is not decoration. A section that cannot name what argues against it has not engaged the debate, and a reviewer will say so — cheaper to hear it here.
+
+## Sketch phase
+
+Stage S exists because the expensive mistakes in a long text are not in its
+sentences but in its argument: a step that the sources do not carry, two
+sections that make the same point, a conclusion that the middle never earned.
+Found in a sketch, each costs a few lines to fix; found in prose, it costs
+sections. The sketch is also what you can hand to a co-author or supervisor
+before anything is written.
+
+Sketch all sections **in order**, and read the `Hands to next` lines in
+sequence once they are all there: the chain of handoffs should read as the
+claim chain from STOP 1, step by step. Where it does not, fix the sketches
+before going on — this is the chapter coherence check (step 24), done while it
+is still cheap.
+
+### Paragraph plan
+
+For every section with a budget of **1200 words or more** (shorter sections may
+have one), the sketch is broken down to paragraphs. It goes under the section's
+sketch, and it is the reverse outline written in advance — after drafting, the
+reverse outline is read against it.
+
+```markdown
+#### Paragraph plan — S3 (~1600 words)
+| ¶ | Function | Main statement | Carried by | Material |
+|---|----------|----------------|------------|----------|
+| 1 | claim | The Negev argument rests on three sites dated by the horizon they date | — | — |
+| 2 | grounding | Tel Masos II is dated only by its pottery | [@finkelstein-1999-hazor, p. 61] | Masos II pottery horizon |
+| 3 | example | Arad XII shows the same loop | [@herzog-2002-arad, p. 14] → G1 | Arad XII |
+| 4 | counter-position | Mazar reads Arad independently | [@mazar-2011-iron] | — |
+| 5 | rebuttal | … | … | … |
+| 6 | handoff | The circularity is methodological, not evidential → S4 | — | — |
+```
+
+Functions are the reverse outline's (`claim`, `grounding`, `example`,
+`counter-position`, `rebuttal` / `concession`, `definition`, `method`,
+`significance`, `transition`, `handoff`). A planned paragraph whose main
+statement you cannot write is a step you have not understood yet; a section
+plan with no `example` row will be assertion-stacking. Plan roughly one
+paragraph per 150–250 words of budget; the plan is a contract for the
+argument, not for the word count.
+
+### Evidence check
+
+Before STOP S, every step of every sketch (and every paragraph-plan row that
+carries a claim) gets one mark against the source pages, read now:
+
+- **carried** — a source page states it, with a page anchor, within the scope
+  the step claims
+- **thin** — one source only, no page anchor, a narrower scope than the step
+  claims, or only a wiki bullet with nothing to develop it from (and the PDF at
+  the cited page does not help)
+- **missing** — no source in the wiki carries it
+
+Every `thin` and `missing` step goes into the outline's `Evidence gaps` list
+with a proposed decision: **research** (name the source to acquire and ingest),
+**narrow** (the step's claim, reworded to what the sources carry), or
+**bracket** (the text says openly that this is not shown here). The user
+decides at STOP S. A section with an undecided `missing` gap is not drafted;
+drafting around a gap is how the paragraph ends up written from memory.
+
+### Optional: argument in prose and adversarial review
+
+Offer both once, after the evidence check; do them only if the user wants them.
+
+- **Argument in prose** — 1–2 pages, exposé-like, written from the sketches:
+  the chapter's argument as a reader would follow it, with the evidence named
+  but not developed. It is for people who will not read an outline (a
+  co-author, a supervisor, an editor) and it is a test of the sketch: an
+  argument that cannot be told in two pages is not yet clear. It goes into the
+  outline under `Argument in prose`; it is never pasted into the manuscript.
+- **Adversarial review of the sketch** — dispatch the `peer-reviewer` subagent
+  in the `adversarial` role on the outline file (a structure pass: it reviews
+  the thesis, the claim chain, the sketches and the gap list, not prose).
+  Present its findings at STOP S next to the sketch; the user decides which
+  change it.
 
 ## Reverse outline
 
@@ -414,7 +554,7 @@ The single most common failure of wiki-driven drafting is **bullet-reflow**: eac
 
 A single terse wiki bullet typically becomes a **developed passage**, not a single sentence. If a paragraph has assertions but no example and no explanation, it is not finished.
 
-**Reach-back procedure** (checklist step 12) — escalate only as far as needed:
+**Reach-back procedure** (checklist step 19) — escalate only as far as needed:
 
 1. The source page's `### Direct quotes` and `### Examples & illustrations` sections — the cheapest, already-extracted depth.
 2. If still too thin: open the **original PDF** at `<library>/pdf/<bibkey>.pdf` at the page numbers the source page cites (the anchors point you straight to the passage — no full re-read), and draw out the example/explanation.
@@ -481,7 +621,7 @@ academic text are not grammatical; they are these:
   relation (cause, consequence, concession, contrast, means, time). Use the one
   the sketch's step actually asserts; if the relation is only sequence, do not
   dress it as consequence. Check every connective against the sketch on the
-  step-13 pass.
+  step-20 pass.
 - **No simplification at the cost of precision.** Do not drop the qualifiers the
   source gives — *probably*, *in the excavated area*, *for the 10th-century
   levels*, the sample size. A hedged claim in the source stays hedged in the prose.
@@ -525,14 +665,16 @@ author's wording.
 
 ## Subagent dispatch (per section, not per chapter)
 
-For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/drafter.md`) at checklist step 11 — **one section, after its sketch has passed STOP 2**. Never fan out across sections: a chapter drafted in parallel cannot be steered, which is the failure this skill's staging exists to prevent.
+For sections over ~1200 words, dispatch the `drafter` subagent (see `agents/drafter.md`) at checklist step 18 — **one section, after its sketch has been approved (STOP S or STOP 2)**. Never fan out across sections: a chapter drafted in parallel cannot be steered, which is the failure this skill's staging exists to prevent.
 
 The subagent receives:
 - **The approved argument sketch** for this section — its contract; the prose must carry out *this* argument, not a reasonable-looking alternative
+- **The section's paragraph plan**, if it has one — the prose follows it paragraph by paragraph, and the subagent reports deviations against it
+- **The section's evidence gaps and their decisions** — a `narrow` decision is the wording to use; a `bracket` decision is said openly in the text
 - **The timeline** of each contested concept the section treats (`wiki-to-graph.py timeline <slug>` output, pasted) — which source came first, who answered whom, what has been superseded
 - List of synthesis pages (paths) to pull from
 - List of source pages (paths) with allowed citation keys
-- **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 11). Without these, the subagent can only bullet-reflow
+- **List of the corresponding source PDF paths** (`<library>/pdf/<bibkey>.pdf` — resolve with `scripts/library.py`) — so the subagent can reach back for examples/context when a page is thin (checklist step 19). Without these, the subagent can only bullet-reflow
 - The section's word budget from the outline (a floor for development, not a ceiling to pad toward)
 - The project's **`Manuscript style` block** from the root `CLAUDE.md`, including the `Style profile` if one exists
 
@@ -557,6 +699,10 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 | "I'll show the outline and get started on section 1 — saves a round-trip" | A stop you walk past is not a stop. The message that presents a stop ends there. |
 | "The user approved the outline, so the sections are approved" | STOP 1 approves the *chain*. Each section's argument is its own agreement — that is where the focus is actually held. |
 | "I'll draft all the sections and we can discuss at the end" | Discussion after the fact is editing, not steering. By then the drift is expensive to undo — which is why it never gets undone. |
+| "The architecture is approved — I'll sketch each section when I get to it" | In sketch-first mode the whole sketch comes before any prose. Weak steps in S5 are cheap to find now and expensive after S1–S4 are written. |
+| "This step is thin, but I can write around it" | Writing around a gap is how a paragraph ends up from memory. Mark it, put it on the gap list, let the user decide: research, narrow, or bracket. |
+| "The sketch was approved, so it still holds for S5" | It held at STOP S. If S1–S4 deviated, check it before drafting — and present the change at STOP 2. |
+| "The paragraph plan is a suggestion; the prose found a better order" | Then it is a deviation — report it. The plan is the argument the user approved. |
 | "Section 3 needs a point from section 5, I'll pull it forward" | That is drift. Either change the outline and say so, or respect the section's "Not here" line. |
 | "The source is rich here, so I'll go deeper than the sketch said" | Source richness is not an argument. The sketch is the contract; if it is wrong, renegotiate it — don't silently exceed it. |
 | "Both positions are in the wiki, so I'll present both" | One may be thirty years older, and its author may have left it since. Check the years and the `supersedes` / `revises` edges before giving them equal weight. |
@@ -580,6 +726,7 @@ For articles, use `output/article/article.qmd` with single-file layout and `outp
 
 - **The thesis is the author's** — asked for before anything is proposed; you sharpen, check and challenge it
 - **Architecture before prose** — the thesis and claim chain are settled and approved before a single paragraph exists
+- **Sketch the whole text first** (default) — every section's argument, paragraph plans for long sections, gaps found and decided before writing; per-section mode on request
 - **The argument is agreed before it is written** — per section: sketch, discuss, then draft. Redirecting twenty lines is free; redirecting a thousand words is not
 - **A stop is a stop** — present and wait; never present and continue in the same message
 - **The outline is the memory** — status per section on disk, so a long chapter survives compaction, breaks, and revision rounds

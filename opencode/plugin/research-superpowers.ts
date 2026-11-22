@@ -76,7 +76,7 @@ the \`Skill\` tool (e.g. \`Skill ingest-source\`).
 4. **acquire-sources** — auto-download OA PDFs + write acquisition-todo.md manual worklist for paywalled sources; re-run to reconcile
 5. **ingest-source** — one acquired source PDF → wiki content (sources + entities + BibTeX + log)
 6. **executing-research-plan** — work plan tasks via subagents with two-stage review
-7. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd
+7. **drafting-manuscript** — stable synthesis pages → output/**/*.qmd (default: sketch the whole text and close evidence gaps first, then write section by section)
 8. **revising-manuscript** — work through an existing text paragraph by paragraph; decisions kept in a revision ledger, approved paragraphs frozen
 9. **requesting-peer-review** — manuscript → constructive + adversarial review
 10. **finishing-a-research-project** — closing checklist, archival
